@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>IllumiTile Light Engine Configurator</title>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="icon" type="image/x-icon" href="assets/icon/favicon.ico">
+		<link rel="manifest" href="manifest.json">
+		<meta name="theme-color" content="#ec7c24">
+
+		<!-- add to homescreen for ios -->
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<link rel="stylesheet" type="text/css" href="./assets/css/index.css" />
+		<link rel="stylesheet" type="text/css" href="./assets/css/ionicons.css" />
+		<link rel="stylesheet" type="text/css" href="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.css" />
+
+		<script src="./assets/js/jquery-3.2.1.js"></script>
+		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+		<script src="./assets/js/index.js"></script>
+	</head>
+
+	<body>
+		<header>
+
+			<div class="toolbar">
+				<button>Guide Me!</button>
+				<button>Help</button>
+				<button>Feedback</button>
+			</div>
+
+
+			<img class="logo" src="./assets/img/logo.jpg" />
+
+			<select id="projectMenu">
+				<option>Project</option>
+				<option>New</option>
+				<option>Open</option>
+				<option>Save</option>
+				<option>Export</option>
+				<option>Close</option>
+				<option>Print</option>
+			</select>
+
+			<span class="title">IllumiTile Light Engine Configurator</span>
+		</header>
+
+		<section class="canvas">
+			<div class="main-toolbar">
+				<button id="select" class="icon ion-arrow-left-c" style="transform: rotate(45deg);"></button>
+				<button id="move" class="icon ion-arrow-expand"></button>
+				<button id="zoomIn" class="icon ion-plus-circled"></button>
+				<button id="zoomOut" class="icon ion-minus-circled"></button>
+				<button id="undo" class="icon ion-reply"></button>
+			</div>
+
+			<div class="work-table"></div>
+		</section>
+
+		<footer>
+			<button id="footerHandle" class="footer-handle icon ion-arrow-down-a"></button>
+
+
+			<div class="tools">
+				<div  class="tool-button drag-to-canvas" rel="tile"><image src="assets/img/tile/illumitile_32x32.png" /></div>
+				<div  class="tool-button drag-to-canvas" rel="harness"><image src="assets/img/tile/harness_90x11.png" /></div>
+				<button class="tool-button icon ion-close" style="color: red"></button>
+				<button class="tool-button icon ion-gear-b" style="color: white"></button>
+			</div>
+
+			<section>
+				<p class="title">Select the desired Configuration Mode (Instructions will appear for each type.)</p>
+				<div><label><input type="radio" name="configuration" checked />Auto-Configuration for a Specified Illumination Area</label></div>
+				<div><label><input type="radio" name="configuration" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
+				<div><label><input type="radio" name="configuration" />Manual</label></div>
+
+				<p class="instructions">
+					<p class="title">INSTRUCTIONS: Auto-Configuration for a Specified Illumination Area</p>
+					<p>1. Insert the desired dimensions into the Illumination Area fields.</p>
+					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
+					<p>3. View the System Parameters and Components Required.</p>
+					<p>4. Switch to Manual Configuration Mode if any modifications are desired.</p>
+				</p>
+			</section>
+
+			<section>
+				<h1>System Specifications</h1>
+
+				<div class="setting">Area <span class="field">12.0</span>" X <span class="field">10.0</span>"</div>
+				<div class="setting">Voltage <span class="value">12.0</span> DC</div>
+				<div class="setting">Current <span class="value">1.6</span> Amps</div>
+				<div class="setting">Power <span class="value">19.2</span> Watts</div>
+				<div class="setting">
+					Derate
+					<select>
+						<option>10%</option>
+						<option>15%</option>
+						<option>20%</option>
+					</select>
+				</div>
+			</section>
+
+			<section>
+				<h1>System Components</h1>
+
+				<div class="setting">Minimum Power Supply Rating <span class="value">25</span> Watts</div>
+				<div class="setting">IllumiTile Light Engine Quantity <span class="value">6</span></div>
+				<div class="setting">IllumiSnap Harness D Quantity <span class="value">6</span></div>
+				<div class="setting">IllumiSnap Power Harness Quantity <span class="value">1</span></div>
+				<div class="setting">Number of Power Supplies</div>
+			</section>
+		</footer>
+	</body>
+</html>

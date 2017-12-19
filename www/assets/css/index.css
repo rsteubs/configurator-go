@@ -1,0 +1,218 @@
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 300;
+  src: local("Roboto Light"), local("Roboto-Light"), url("../fonts/roboto-light.woff2") format("woff2"), url("../fonts/roboto-light.woff") format("woff"), url("../fonts/roboto-light.ttf") format("truetype"); }
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Roboto"), local("Roboto-Regular"), url("../fonts/roboto-regular.woff2") format("woff2"), url("../fonts/roboto-regular.woff") format("woff"), url("../fonts/roboto-regular.ttf") format("truetype"); }
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 500;
+  src: local("Roboto Medium"), local("Roboto-Medium"), url("../fonts/roboto-medium.woff2") format("woff2"), url("../fonts/roboto-medium.woff") format("woff"), url("../fonts/roboto-medium.ttf") format("truetype"); }
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 700;
+  src: local("Roboto Bold"), local("Roboto-Bold"), url("../fonts/roboto-bold.woff2") format("woff2"), url("../fonts/roboto-bold.woff") format("woff"), url("../fonts/roboto-bold.ttf") format("truetype"); }
+
+body {
+	font-family: Roboto, arial;
+	min-width: 1200px;
+	min-height: 800px;
+	background-color: #666;
+}
+
+header {
+	display: block;
+	position: relative;
+	padding: 5px;
+	margin-bottom: 20px;
+}
+
+header .logo {
+	height: 200px;
+	margin-right: 10px;
+	vertical-align: top;
+}
+
+header .title {
+	display: block;
+	position: fixed;
+	top: 12px;
+	left: 0px;
+	right: 0px;
+	margin: 0px auto;
+	text-align: center;
+	font-weight: bold;
+	color: #fff;
+}
+
+header .toolbar {
+	float: right;
+}
+
+.canvas {
+	display: block;
+	height: 100%;
+}
+
+.canvas .work-table {
+	position: relative;
+	border: 1px solid white;
+	min-height: 1000px;
+}
+
+.canvas .work-table .component {
+	position: absolute;
+}
+
+.canvas .work-table .tile {
+	position: relative;
+	width: 252px;
+	height: 252px;
+	background-image: url(../img/tile/illumitile_252x252.png);
+}
+
+.canvas .work-table .tile .zone {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border: 1px solid red;
+	border-radius: 8px;
+}
+
+.canvas .work-table .tile .left {
+	position: absolute;
+	left: 5px;
+}
+
+.canvas .work-table .tile .right {
+	position: absolute;
+	right: 5px;
+}
+
+.canvas .work-table .tile .top {
+	position: absolute;
+	top: 70px;
+}
+
+.canvas .work-table .tile .bottom {
+	position: absolute;
+	bottom: 70px;
+}
+
+.main-toolbar {
+	position: absolute;
+	top: 250px;
+	left: 20px;
+	padding: 10px;
+	border: 3px solid white;
+	border-radius: 8px;
+	text-align: center;
+	width: 32px;
+}
+
+.main-toolbar button {
+	display: inline-block;
+	margin: 8px 0px;
+	font-size: 1.5em;
+	color: white;
+	background-color: transparent;
+	border: 0px;
+	cursor: pointer;
+}
+
+footer {
+	display: flex;
+	justify-content: space-evenly;
+	position: fixed;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	background-color: blue;
+	color: #fff;
+	padding: 20px;
+	z-index: 5;
+}
+
+footer .footer-handle {
+	position: absolute;
+	display: inline-block;
+	top: -15px;
+	right: 50px;
+	padding: 5px;
+	color: #fff;
+	background-color: blue;
+	border: 3px solid grey;
+	border-radius: 5px;
+}
+
+footer .tools {
+	position: absolute;
+	top: -70px;
+	padding: 10px;
+	border: 3px solid #fff;
+	border-radius: 8px;
+}
+
+footer .tools .tool-button {
+	display: inline-block;
+	padding: 5px;
+	margin: 0px 5px;
+	vertical-align: middle;
+	font-size: 1.5em;
+	background-color: transparent;
+	border: 1px solid white;
+	border-radius: 8px;
+}
+
+footer section {
+	margin: 0px 15px;
+}
+
+footer section h1 {
+	font-size: 1.5em;
+	text-transform: uppercase;
+	color: yellow;
+}
+
+footer section .title {
+	font-weight: bold;
+	color: yellow;
+}
+
+footer section .instructions {
+	margin-top: 20px;
+}
+
+footer section p {
+	margin: 0px;
+}
+
+footer section .setting {
+	font-weight: bold;
+	margin: 2px 0px;
+}
+
+footer section .field {
+	background-color: #666;
+	padding: 3px;
+	border: 1px solid #fff;
+	margin: 5px;
+}
+
+footer section .value {
+	color: yellow;
+}
+
+footer section select {
+	background-color: lightblue;
+	color: yellow;
+}
