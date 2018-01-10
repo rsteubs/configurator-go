@@ -2,7 +2,7 @@ $( function() {
 
 	 $(".drag-to-canvas")
 	 	.draggable({
-	 		grid: [20, 20],
+	 		//grid: [120, 120],
 	 		containment: ".work-table",
 	 		zIndex: $(this).attr("rel") == "harness" ? 2 : 1,
 	 		snap: $(this).attr("rel") == "harness" ? ".zone" : null,
@@ -38,7 +38,7 @@ $( function() {
 						zIndex: 2,
 					})
 					.draggable({
-						grid: [20, 20],
+						grid: [135, 135],
 	 					containment: ".work-table",
 					})
 					.appendTo($(".work-table"));
@@ -53,7 +53,7 @@ $( function() {
 							zIndex: 2,
 						})
 						.draggable({
-							grid: [20, 20],
+							//grid: [20, 20],
 		 					containment: ".work-table",
 						})
 						.appendTo($(".work-table"));

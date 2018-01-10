@@ -1,0 +1,32 @@
+CREATE TABLE IF NOT EXISTS profile
+(
+	handle varbinary(12) PRIMARY KEY NOT NULL,
+	username nvarchar(20) NOT NULL,
+	password varbinary(70)  NOT NULL,
+	salt varbinary(5) NOT NULL,
+	status tinyint NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ix_profile_username ON profile(username);
+
+CREATE TABLE IF NOT EXISTS project
+(
+	handle varbinary(12) PRIMARY KEY NOT NULL,
+	owner varbinary(12) NOT NULL,
+	title nvarchar(50) NOT NULL,
+	description nvarchar(140) NOT NULL,
+	content nvarchar(100000) NOT NULL,
+	status tinyint NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_project_owner ON project(owner);
+
+CREATE TABLE IF NOT EXISTS eventLog
+(
+	subject varbinary(12) NOT NULL,
+	eventType tinyint NOT NULL,
+	detail nvarchar(100000) NOT NULL,
+	eventDate DATETIME NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_eventLog_subject ON eventLog(subject);
