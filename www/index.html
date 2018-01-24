@@ -34,7 +34,7 @@
 			</div>
 
 
-			<img class="logo" src="./assets/img/logo.jpg" />
+			<img class="logo" src="./assets/img/logo.png" />
 
 			<select id="projectMenu">
 				<option>Project</option>
@@ -51,7 +51,7 @@
 
 		<section class="canvas">
 			<div class="main-toolbar">
-				<button id="select" class="icon ion-arrow-left-c" style="transform: rotate(45deg);"></button>
+				<button onclick="selectComponent()" id="select" class="icon ion-arrow-left-c" style="transform: rotate(45deg);"></button>
 				<button id="move" class="icon ion-arrow-expand"></button>
 				<button id="zoomIn" class="icon ion-plus-circled"></button>
 				<button id="zoomOut" class="icon ion-minus-circled"></button>
@@ -61,14 +61,13 @@
 			<div class="work-table"></div>
 		</section>
 
-		<footer class="closed">
+		<footer>
 			<button id="footerHandle" class="footer-handle icon ion-arrow-down-a"></button>
-
 
 			<div class="tools">
 				<div  class="tool-button drag-to-canvas" rel="tile"><image src="assets/img/tile/illumitile_32x32.png" /></div>
 				<div  class="tool-button drag-to-canvas" rel="harness"><image src="assets/img/tile/harness_90x11.png" /></div>
-				<button class="tool-button icon ion-close" style="color: red"></button>
+				<button onclick="removeComponents()" class="tool-button icon ion-close" style="color: red"></button>
 				<button class="tool-button icon ion-gear-b" style="color: white"></button>
 			</div>
 

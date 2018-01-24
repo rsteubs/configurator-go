@@ -37,9 +37,9 @@ header {
 }
 
 header .logo {
-	height: 200px;
+	width: 320px;
 	margin-right: 10px;
-	vertical-align: top;
+	vertical-align: middle;
 }
 
 header .title {
@@ -74,6 +74,13 @@ header .toolbar {
 	position: absolute;
 }
 
+.canvas .work-table .tile-slot {
+	display: inline-block;
+	width: 252px;
+	height: 252px;
+	margin: 10px;
+}
+
 .canvas .work-table .tile {
 	position: relative;
 	width: 252px;
@@ -83,30 +90,42 @@ header .toolbar {
 
 .canvas .work-table .tile .zone {
 	position: absolute;
-	width: 16px;
-	height: 16px;
 	border: 1px solid red;
-	border-radius: 8px;
 }
 
 .canvas .work-table .tile .left {
-	position: absolute;
-	left: 5px;
+	top: 113px;
+	left: 66px;
+	width: 10px;
+	height: 24px;
 }
 
 .canvas .work-table .tile .right {
-	position: absolute;
-	right: 5px;
+	top: 113px;
+	right: 66px;
+	width: 10px;
+	height: 24px;
 }
 
 .canvas .work-table .tile .top {
-	position: absolute;
-	top: 70px;
+	top: 64px;
+	left: 113px;
+	width: 24px;
+	height: 10px;
 }
 
 .canvas .work-table .tile .bottom {
+	bottom: 64px;
+	left: 113px;
+	width: 24px;
+	height: 10px;
+}
+
+.tile .top img, .tile .bottom img {
 	position: absolute;
-	bottom: 70px;
+	transform: rotate(90deg);
+	left: -80px;
+	top: 78px;
 }
 
 .main-toolbar {
@@ -118,6 +137,7 @@ header .toolbar {
 	border-radius: 8px;
 	text-align: center;
 	width: 32px;
+	z-index: 5;
 }
 
 .main-toolbar button {
@@ -130,14 +150,25 @@ header .toolbar {
 	cursor: pointer;
 }
 
+.highlight {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: yellow;
+	opacity: 0.6;
+	z-index: 5;
+}
+
 footer {
 	display: flex;
 	justify-content: space-evenly;
 	position: fixed;
-	bottom: -220px;
+	bottom: -230px;
 	left: 0px;
 	width: 100%;
-	background-color: blue;
+	background-color: #2002fe;
 	color: #fff;
 	padding: 20px;
 	z-index: 5;
@@ -150,7 +181,7 @@ footer .footer-handle {
 	right: 50px;
 	padding: 5px;
 	color: #fff;
-	background-color: blue;
+	background-color: #2002fe;
 	border: 3px solid grey;
 	border-radius: 5px;
 }
