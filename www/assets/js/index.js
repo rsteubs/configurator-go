@@ -16,7 +16,7 @@ $( function() {
 	 		zIndex: $(this).attr("rel") == "harness" ? 2 : 0,
 	 		snap: $(this).attr("rel") == "harness" ? ".zone" : ".tile-slot",
 	 		snapMode: "inner",
-	 		snapTolerance: 50,
+	 		//snapTolerance: 50,
 	 		helper: function() {
 	 			var component = "";
 
@@ -37,15 +37,13 @@ $( function() {
 	 	.droppable({
 	 		accept: "[rel=tile]",
 	 		drop: function(e, ui) {
-	 			var droppable = $(this);
+	 			var slot = $(this);
 
- 				var tile = $('	\
-	 				<div class="tile"> \
-						<div class="zone left"></div> \
-						<div class="zone right"></div> \
-						<div class="zone top"></div> \
-						<div class="zone bottom"></div> \
-					</div> \
+	 		 	var tile = $(' \
+	 		 		<div class="tile"> \
+				 		<div class="zone right"></div> \
+				 		<div class="zone bottom"></div> \
+				 	</div> \
 				')
 				.attr("src", ui.helper.attr("src"))
 				.click(function() {
@@ -61,10 +59,57 @@ $( function() {
 						}
 					}
 				})
-				.appendTo(droppable);
+				.appendTo(slot);
 
-				droppable.droppable("option", "disabled", true);
-				configureTileDrops();
+				tile.children(".zone")
+			 	.droppable({
+			 		accept: "[rel=harness]",
+			 		drop: function(e, ui) {
+			 			var zone = $(this);
+
+						$("<img />")
+							.attr({ src: ui.helper.attr("src") })
+							.css({ zIndex: 2 })
+							.click(function(ev) {
+								var i = -1;
+
+								if (selectingComponents) {
+									if ((i = selected.indexOf(this)) >= 0) {
+										$(this).css({backgroundColor: "transparent"});
+										selected.splice(i, 1);
+									} else {
+										$(this).css({backgroundColor: "yellow"});
+										selected.push(this);
+									}
+								}
+
+								ev.stopPropagation();
+							})
+							.appendTo(zone);
+
+						zone
+							.droppable("option", "disabled", true)
+							.css({zIndex: 2});
+			 		},
+			 		over: function(e, ui) {
+			 			var target = $(this);
+			 			if (target.hasClass("bottom")) {
+			 				ui.helper.css({
+			 					transform: "rotate(90deg)",
+			 					left: (target.offset().left - 500) + "px",
+			 					top: (target.offset().top + 1000) + "px",
+			 				});
+			 			}
+			 		},
+			 		out: function(e, ui) {
+			 			var target = $(this);
+			 			if (target.hasClass("bottom")) {
+			 				ui.helper.css({transform: "rotate(0deg)", left: "0px", top: "0px"});
+			 			}
+			 		}
+			 	});
+
+				slot.droppable("option", "disabled", true)
 	 		}
 	 	});
 
@@ -105,32 +150,4 @@ function removeComponents() {
 	}
 
 	selectComponent();
-}
-
-function configureTileDrops() {
-	$(".tile > .zone")
- 	.droppable({
- 		accept: "[rel=harness]",
- 		drop: function(e, ui) {
- 			var droppable = $(this);
-
-			$("<img />")
-				.attr({ src: ui.helper.attr("src") })
-				.css({ zIndex: 2 })
-				.appendTo(droppable);
-
-			droppable
-				.droppable("option", "disabled", true)
-				.css({zIndex: 2});
-
-			configureTileDrops();
- 		},
- 		over: function(e, ui) {
- 			$(this).css({border: "3px solid blue"});
- 		},
- 		out: function(e, ui) {
- 			$(this).css({border: "1px solid red"});
- 		}
- 	});
-
 }
