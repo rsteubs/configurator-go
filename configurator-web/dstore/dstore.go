@@ -7,7 +7,7 @@ import (
 	"cretin.co/forge/1.0/app"
 	"cretin.co/forge/1.0/context"
 
-	"configurator/config"
+	"configurator-web/config"
 )
 
 type Profile struct {

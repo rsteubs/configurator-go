@@ -8,7 +8,7 @@ import (
 	"cretin.co/forge/1.0/app"
 	"cretin.co/forge/1.0/context"
 
-	"configurator/dstore"
+	"configurator-web/dstore"
 )
 
 type User struct {

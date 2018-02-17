@@ -8,7 +8,7 @@ import (
 
 	"cretin.co/forge/1.0/app"
 
-	"configurator/dstore"
+	"configurator-web/dstore"
 )
 
 type ProjectStatus uint8
