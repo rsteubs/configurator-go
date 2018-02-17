@@ -1,1 +1,1 @@
-web: configurator-web
+web: configurator

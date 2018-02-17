@@ -14,7 +14,7 @@ import (
 	"cretin.co/forge/1.0/context"
 	"cretin.co/forge/1.0/context/http"
 
-	"configurator-web/service"
+	"configurator/service"
 )
 
 func CreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +104,7 @@ func _authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) f
 		c := httpContext.Create("Authorize Client", w, r)
 
 		t := r.Header.Get("Authorization")
-		u := r.Header.Get("x-configurator-web-user")
+		u := r.Header.Get("x-configurator-user")
 
 		test := func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -158,7 +158,7 @@ func _updateProject(w http.ResponseWriter, r *http.Request) func() {
 
 	return func() {
 		h := mux.Vars(r)["handle"]
-		u := r.Header.Get("x-configurator-web-user")
+		u := r.Header.Get("x-configurator-user")
 
 		d := struct {
 			Title       string `json:"title"`
@@ -198,7 +198,7 @@ func _createToken(handle string) (string, error) {
 	}{handle, "User"}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iss":  "configurator-web",
+		"iss":  "configurator",
 		"exp":  time.Now().Add(time.Minute * 30).Unix(),
 		"info": i,
 	})

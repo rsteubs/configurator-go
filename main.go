@@ -10,8 +10,8 @@ import (
 
 	"cretin.co/forge/1.0/context"
 
-	"configurator-web/config"
-	"configurator-web/http"
+	"configurator/config"
+	"configurator/http"
 )
 
 const (
