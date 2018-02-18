@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"cretin.co/forge/1.0/app"
 	"cretin.co/forge/1.0/context"
 
@@ -119,7 +121,7 @@ func CreateProject(owner string) (string, error) {
 		defer c.End()
 
 		handle := app.NewHandle(7)
-		query := "INSERT INTO project SELECT ?, ?, '', '', '', 1"
+		query := "INSERT INTO project SELECT ?, ?, '', '', '', 10"
 
 		if _, err := c.Connection().Exec(query, handle, owner); err != nil {
 			context.Logf(context.Error, "Error creating project: %v", err)
@@ -166,7 +168,7 @@ func UpdateProject(owner string, p Project) error {
 	} else {
 		defer c.End()
 
-		query := "UPDATE profile SET title = ?, description = ?, content = ? WHERE handle = ? AND owner = ?"
+		query := "UPDATE project SET title = ?, description = ?, content = ? WHERE handle = ? AND owner = ?"
 
 		_, err := c.Connection().Exec(query, p.Title, p.Description, p.Content, p.Handle, owner)
 
@@ -184,7 +186,7 @@ func WriteToken(owner, token string, expiration time.Time) error {
 
 		query := "INSERT INTO token SELECT ?, ?, ?"
 
-		if _, err := c.Connection().Exec(query, owner, token, expiration); err != nil {
+		if _, err := c.Connection().Exec(query, token, owner, expiration); err != nil {
 			context.Logf(context.Error, "Could not create user token: %v", err)
 			return err
 		}

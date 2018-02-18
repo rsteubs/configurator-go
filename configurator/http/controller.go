@@ -52,7 +52,7 @@ func _createAccount(w http.ResponseWriter, r *http.Request) func() {
 
 	return func() {
 		d := struct {
-			U string `json:"userame"`
+			U string `json:"username"`
 			P string `json:"password"`
 		}{}
 
@@ -65,7 +65,7 @@ func _createAccount(w http.ResponseWriter, r *http.Request) func() {
 			c.Error(errors.New("An unexpected error occurrred during profile creation."), http.StatusInternalServerError)
 		} else {
 			c.End(http.StatusOK, struct {
-				h string `json:"handle"`
+				H string `json:"handle"`
 			}{h})
 		}
 	}
@@ -112,7 +112,7 @@ func _authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) f
 				return nil, errors.New("Could not authorize request")
 			}
 
-			return u, nil
+			return []byte(u), nil
 		}
 
 		c.StartTransaction("validate token")
@@ -131,12 +131,11 @@ func _authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) f
 }
 
 func _createProject(w http.ResponseWriter, r *http.Request) func() {
-	c := httpContext.Create("Create Project", w, r)
-
 	return func() {
-		u := service.User{}
+		c := httpContext.Create("Create Project", w, r)
+		u := r.Header.Get("x-configurator-user")
 
-		if h, err := service.CreateProject(u.Handle); err != nil {
+		if h, err := service.CreateProject(u); err != nil {
 			if sErr, ok := err.(service.Error); ok {
 				c.Error(sErr, http.StatusNotAcceptable)
 			} else {
@@ -145,7 +144,7 @@ func _createProject(w http.ResponseWriter, r *http.Request) func() {
 			}
 		} else {
 			d := struct {
-				string `json:"Handle"`
+				string `json:"handle"`
 			}{h}
 
 			c.End(http.StatusOK, d)
@@ -195,7 +194,7 @@ func _createToken(handle string) (string, error) {
 	i := struct {
 		Name string
 		Role string
-	}{handle, "User"}
+	}{handle, "Client"}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"iss":  "configurator",
@@ -203,7 +202,7 @@ func _createToken(handle string) (string, error) {
 		"info": i,
 	})
 
-	return t.SignedString(handle)
+	return t.SignedString([]byte(handle))
 }
 
 func recoverFromPanic() {

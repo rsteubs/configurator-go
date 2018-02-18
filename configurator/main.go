@@ -32,13 +32,18 @@ func createServer() *http.Server {
 	r.HandleFunc("/auth", controllers.Auth).Methods("POST")
 	r.HandleFunc("/signup", controllers.CreateAccount).Methods("POST")
 
-	r.HandleFunc("/project", controllers.CreateProject).Methods("POST")
-	r.HandleFunc("/project/{handle}", controllers.UpdateProject).Methods("PUT")
+	pr := mux.NewRouter().PathPrefix("/project").Subrouter()
+	pr.HandleFunc("", controllers.CreateProject).Methods("POST")
+	pr.HandleFunc("/{handle}", controllers.UpdateProject).Methods("PUT")
+
+	n := negroni.New()
+	n.Use(negroni.NewStatic(http.Dir("http/www/")))
+	n.UseHandler(r)
 
 	r.
 		PathPrefix("/project").
 		Methods("PUT", "POST").
-		Handler(negroni.New(negroni.HandlerFunc(controllers.AuthorizeClient), negroni.Wrap(r)))
+		Handler(negroni.New(negroni.HandlerFunc(controllers.AuthorizeClient), negroni.Wrap(pr)))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   strings.Split(config.Get("CONFIGURATOR_ALLOWED_ORIGINS"), ","),
@@ -46,5 +51,5 @@ func createServer() *http.Server {
 		AllowCredentials: true,
 	})
 
-	return &http.Server{Addr: ":" + config.Get("PORT"), Handler: c.Handler(r)}
+	return &http.Server{Addr: ":" + config.Get("PORT"), Handler: c.Handler(n)}
 }
