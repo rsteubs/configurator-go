@@ -24,6 +24,10 @@
     margin-top: 5px;
 }
 
+.account form .g-recaptcha {
+    margin: 40px 20px;
+}
+
 .account form button {
     background: blue;
     color: yellow;

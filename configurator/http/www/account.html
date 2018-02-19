@@ -23,6 +23,8 @@
 		<script src="./assets/js/jquery-3.2.1.js"></script>
 		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 		<script src="./assets/js/account.js"></script>
+		
+		<script src='https://www.google.com/recaptcha/api.js'></script>
 	</head>
 
 	<body>
@@ -34,6 +36,12 @@
 			<form>
 				<label>Username (Email): <input id="username" type="email" /></label>
 				<label>Password: <input id="password" type="password" /></label>
+				
+				<div class="createAccount">
+					<label>Verify Password: <input id="verify" type="password" /></label>
+					
+					<div class="g-recaptcha" data-sitekey="6LdIR0cUAAAAAMa9h8RXFnQ0-mLmFiWl_KNHqmjW"></div>
+				</div>
 				
 				<button id="signIn">Sign In</button>
 				<button id="createAccount">Create Account</button>

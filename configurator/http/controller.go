@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -54,19 +57,26 @@ func _createAccount(w http.ResponseWriter, r *http.Request) func() {
 		d := struct {
 			U string `json:"username"`
 			P string `json:"password"`
+			C string `json:"captcha"`
 		}{}
 
 		if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 			c.Error(errors.New("Could not read request"), http.StatusBadRequest)
 		} else if len(d.U) == 0 || len(d.P) == 0 {
 			c.Error(errors.New("Must supply a username and a password"), http.StatusBadRequest)
+		} else if err := verifyCaptcha(d.C, c); err != nil {
+			return
 		} else if h, err := service.CreateProfile(d.U, d.P); err != nil {
 			context.Logf(context.Error, "Error creating profile: %v", err)
 			c.Error(errors.New("An unexpected error occurrred during profile creation."), http.StatusInternalServerError)
+		} else if t, err := _createToken(h); err != nil {
+			context.Logf(context.Error, "Error signing token for %s: %v", h, err)
+			c.Error(err, http.StatusInternalServerError)
 		} else {
 			c.End(http.StatusOK, struct {
 				H string `json:"handle"`
-			}{h})
+				T string `json:"token"`
+			}{h, t})
 		}
 	}
 }
@@ -207,6 +217,55 @@ func _createToken(handle string) (string, error) {
 	})
 
 	return t.SignedString([]byte(handle))
+}
+
+func verifyCaptcha(captcha string, c *httpContext.HttpContext) error {
+	tx := context.Current.StartTransaction("verifying captcha")
+
+	values := url.Values{
+		"secret":   {"6LdIR0cUAAAAAC8BuroicHko9U9UPj-SFd4MLnZ-"},
+		"response": {captcha},
+	}
+
+	context.Logf(context.Trace, "Captcha: %s", captcha)
+
+	if resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify", values); err != nil {
+		context.Logf(context.Error, "Error creating request: %v", err)
+		tx.StartTransaction("request failed")
+		c.Error(err, http.StatusInternalServerError)
+
+		return err
+	} else {
+		defer resp.Body.Close()
+
+		r := struct {
+			S bool     `json:"success"`
+			C []string `json:"error-codes"`
+		}{}
+
+		tx.StartTransaction("read response")
+
+		if b, err := ioutil.ReadAll(resp.Body); err != nil {
+			context.Logf(context.Error, "Error occurred while reading response: %v", err)
+			c.Error(err, http.StatusInternalServerError)
+
+			return err
+		} else if err := json.NewDecoder(bytes.NewBuffer(b)).Decode(&r); err != nil {
+			context.Logf(context.Error, "Error decoding response (%s): %v", string(b), err)
+			c.Error(err, http.StatusInternalServerError)
+
+			tx.StartTransaction("could not decode response")
+
+			return err
+		} else if !r.S {
+			err := errors.New("Invalid reCaptcha response. Please try again.")
+			c.Error(err, http.StatusUnauthorized)
+
+			return err
+		}
+	}
+
+	return nil
 }
 
 func recoverFromPanic() {
