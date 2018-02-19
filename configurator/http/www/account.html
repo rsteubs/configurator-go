@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>IllumiTile Light Engine Configurator</title>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="icon" type="image/x-icon" href="assets/icon/favicon.ico">
+		<link rel="manifest" href="manifest.json">
+		<meta name="theme-color" content="#ec7c24">
+
+		<!-- add to homescreen for ios -->
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<link rel="stylesheet" type="text/css" href="./assets/css/index.css" />
+		<link rel="stylesheet" type="text/css" href="./assets/css/account.css" />
+		<link rel="stylesheet" type="text/css" href="./assets/css/ionicons.css" />
+		<link rel="stylesheet" type="text/css" href="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.css" />
+
+		<script src="./assets/js/jquery-3.2.1.js"></script>
+		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+		<script src="./assets/js/account.js"></script>
+	</head>
+
+	<body>
+		<header>
+			<img class="logo" src="./assets/img/logo.png" />
+		</header>
+
+		<section class="account">
+			<form>
+				<label>Username (Email): <input id="username" type="email" /></label>
+				<label>Password: <input id="password" type="password" /></label>
+				
+				<button id="signIn">Sign In</button>
+				<button id="createAccount">Create Account</button>
+			</form>
+		</section>
+	</body>
+</html>

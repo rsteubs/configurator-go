@@ -85,8 +85,12 @@ func _auth(w http.ResponseWriter, r *http.Request) func() {
 		} else if len(d.U) == 0 || len(d.P) == 0 {
 			c.Error(errors.New("Must supply a username and a password"), http.StatusBadRequest)
 		} else if u, err := service.Authenticate(d.U, d.P); err != nil {
-			context.Logf(context.Error, "Error authenticating profile: %v", err)
-			c.Error(errors.New("An unexpected error occurrred during authentication."), http.StatusInternalServerError)
+			if sErr, ok := err.(service.Error); ok {
+				c.Error(sErr, http.StatusUnauthorized)
+			} else {
+				context.Logf(context.Error, "Error authenticating profile: %v", err)
+				c.Error(errors.New("An unexpected error occurrred during authentication."), http.StatusInternalServerError)
+			}
 		} else if t, err := _createToken(u.Handle); err != nil {
 			context.Logf(context.Error, "Error signing token for %s: %v", u.Handle, err)
 			c.Error(err, http.StatusInternalServerError)
