@@ -45,9 +45,34 @@ $(function() {
     $("#createAccount").click(function(ev) {
         event.preventDefault();
         
+		var createPanel = $(".createAccount")
+		
+		if (createPanel.height() < 250) {
+    		createPanel.animate({height: "250px"}, 300, "easeInBack");
+    		$("#signIn").hide();
+    		return; 
+		}
+        
+        
         var uname = $("#username").val();
         var pwd = $("#password").val();
+        var verify = $("#verify").val();
         var captcha = $("#g-recaptcha-response") .val();
+        
+        if (uname === "" || pwd === "") {
+            alert("Please provide both a username and a password.");
+            return;
+        }
+        
+        if (pwd !== verify) {
+            alert("The passwords entered do not appear to match.");
+            return;
+        }
+        
+        if (captcha === "") {
+            alert("Please verify that you are not a robot.");
+            return;
+        }
         
         $.post(
             "/signup", 
