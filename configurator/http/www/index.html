@@ -21,6 +21,7 @@
 
 		<script src="./assets/js/jquery-3.2.1.js"></script>
 		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+		<script src="./assets/js/lzstring.js"></script>
 		<script src="./assets/js/index.js"></script>
 	</head>
 
@@ -37,17 +38,32 @@
 			<img class="logo" src="./assets/img/logo.png" />
 
 			<select id="projectMenu">
-				<option>Project</option>
-				<option>New</option>
-				<option>Open</option>
-				<option>Save</option>
-				<option>Export</option>
-				<option>Close</option>
-				<option>Print</option>
+				<option value="">Project</option>
+				<option value="newProject">New</option>
+				<option value="openProject">Open</option>
+				<option value="saveProject">Save</option>
+				<option value="export">Export</option>
+				<option value="closeProject">Close</option>
+				<option value="print">Print</option>
 			</select>
 
 			<span class="title">IllumiTile Light Engine Configurator</span>
 		</header>
+
+		<div class="dialog saveProject">
+			<label>
+				Title
+				<input name="projectTitle" />
+			</label>
+			
+			<label>
+				Description
+				<textarea rows="5" cols="40"></textarea>
+			</label>
+			
+			<button action="save">Save</button>
+			<button action="close">Cancel</button>
+		</div>
 
 		<section class="canvas">
 			<div class="main-toolbar">

@@ -244,3 +244,52 @@ footer .temperature {
 footer .specs {
 	font-size: 1.5em;
 }
+
+.dialog {
+	display: none;
+	position: absolute;
+	background: blue;
+    border: 10px solid white;
+    border-radius: 8px;
+    padding: 10px;
+    width: 600px;
+    top: 100px;
+    left: 350px;
+    z-index: 2;
+}
+
+.dialog label {
+    display: block;
+    font-size: 1.25em;
+    font-weight: bold;
+    color: white;
+    margin: 20px;
+}
+
+.dialog label input {
+    display: block;
+    font-weight: bold;
+    font-size: 1.25em;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+
+.dialog label textarea {
+    display: block;
+    font-weight: bold;
+    font-size: 1.2em;
+    border: 1px solid white;
+    border: 1px solid white;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+
+.dialog button {
+    background: gray;
+    color: yellow;
+    font-weight: bold;
+    font-size: 1.5em;
+    border: 1px solid white;
+    padding: 5px;
+    margin: 0px 20px;
+}

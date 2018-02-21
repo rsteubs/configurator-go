@@ -14,11 +14,6 @@ import (
 	"configurator/http"
 )
 
-const (
-	prefixCurrent = "/bff/current"
-	prefix10      = "/bff/1.0"
-)
-
 func main() {
 	server := createServer()
 

@@ -8,6 +8,7 @@ $( function() {
 	for (var i = 0; i < 100; i++) {
 		holder.append($("<div></div>").addClass("tile-slot"));
 	}
+
 	$(".work-table").append(holder.html());
 
 	$(".drag-to-canvas")
@@ -128,6 +129,23 @@ $( function() {
 		}
 	});
 
+	$("#projectMenu").on("change", function() {
+		console.log("menu changed");
+		var menu = $(this);
+		var val = menu.val();
+		console.log("selected", val);
+		switch(val) {
+			case "newProject" : createProject(); break;
+			case "openProject" : openProject(); break;
+			case "saveProject" : saveProject(); break;
+			case "export" : exportProject(); break;
+			case "closeProject" : clearProject(); break;
+			case "print" : printProject(); break;
+			default : break;
+		}
+		
+		menu.val("");
+	});
 
 });
 
@@ -150,4 +168,43 @@ function removeComponents() {
 	}
 
 	selectComponent();
+}
+
+function createProject() {
+	$(".work-table").empty();	
+}
+
+function openProject() {
+	$(".work-table").empty();	
+}
+
+function saveProject() {
+	var dialog = $(".saveProject")
+	
+	dialog.show();
+	dialog.find("input").focus();
+	
+	dialog.find("button[action=close]").click(function() {
+		dialog.hide();
+	})
+}
+
+function exportProject() {
+	
+}
+
+function clearProject() {
+	$(".work-table").empty();	
+}
+
+function printProject() {
+	
+}
+
+function compressWorkspace() {
+	var lzstring = window.LZString;
+	var doc = $(".work-table").innerHTML();
+	var b64 = lzstring.compressToBase64(doc);
+	
+	return b64;
 }
