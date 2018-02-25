@@ -397,33 +397,31 @@ function loadProjects(next) {
 		success: function(resp) {
 			var projectList = $(".project-list");
 
-			for (var x = 0; x < 10; x++) {
-				for (var i = 0, project; project = resp.data[i]; i++) {
-					var content = project.content;
-					
-					$("<div />")
-						.append(
-							$("<a />")
-								.text(project.title)
-								.attr("href", "javascript:void(0)")
-								.attr("rel", i)
-								.click(function() { 
-									var project = resp.data[$(this).attr("rel")];
+			for (var i = 0, project; project = resp.data[i]; i++) {
+				var content = project.content;
+				
+				$("<div />")
+					.append(
+						$("<a />")
+							.text(project.title)
+							.attr("href", "javascript:void(0)")
+							.attr("rel", i)
+							.click(function() { 
+								var project = resp.data[$(this).attr("rel")];
 
-									Cookies.set("ws", project.handle);
-									decompressWorkspace(project.content);
-									
-									$(".openProject").hide();
-								})
-						)
-						.append(
-							$("<span />")
-								.text(project.description)
-						)
-						.appendTo(projectList)
-				}
+								Cookies.set("ws", project.handle);
+								decompressWorkspace(project.content);
+								
+								$(".openProject").hide();
+							})
+					)
+					.append(
+						$("<span />")
+							.text(project.description)
+					)
+					.appendTo(projectList)
 			}
-			
+
 			if (next) {
 				next(resp);
 			}
