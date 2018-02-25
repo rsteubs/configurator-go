@@ -4,15 +4,134 @@ var selected = [];
 
 var workspaces = [];
 
+var tileZoneConfig = {
+ 	accept: "[rel=harness]",
+ 	drop: function(e, ui) {
+ 		var zone = $(this);
+
+		zone.empty();
+
+		$("<img />")
+			.attr({ src: ui.helper.attr("src") })
+			.css({ zIndex: 2 })
+			.click(function(ev) {
+				var i = -1;
+
+				if (selectingComponents) {
+					if ((i = selected.indexOf(this)) >= 0) {
+						$(this).css({backgroundColor: "transparent"});
+						selected.splice(i, 1);
+					} else {
+						$(this).css({backgroundColor: "yellow"});
+						selected.push(this);
+					}
+				}
+
+				ev.stopPropagation();
+			})
+			.appendTo(zone);
+
+		zone
+			.droppable("option", "disabled", true)
+			.css({zIndex: 2});
+ 	},
+ 	over: function(e, ui) {
+ 		var target = $(this);
+ 		if (target.hasClass("bottom")) {
+ 			ui.helper.css({
+ 				transform: "rotate(90deg)",
+ 				left: (target.offset().left - 500) + "px",
+ 				top: (target.offset().top + 1000) + "px",
+ 			});
+ 		}
+ 	},
+ 	out: function(e, ui) {
+ 		var target = $(this);
+ 		if (target.hasClass("bottom")) {
+ 			ui.helper.css({transform: "rotate(0deg)", left: "0px", top: "0px"});
+ 		}
+ 	}
+}
+
 $( function() {
 
+	prepareWorkTable();
+
+	$("#footerHandle").on("click", function() {
+		var footer = $("footer");
+		var handle = $("#footerHandle");
+
+		if (footer.hasClass("closed")) {
+			footer.animate({bottom: 0}, 300, "easeInBack");
+			footer.removeClass("closed");
+			handle.switchClass("ion-arrow-up-a", "ion-arrow-down-a");
+		} else {
+			footer.animate({bottom: footer.outerHeight() * -1 + 20}, 300, "easeInBack");
+			footer.addClass("closed");
+			handle.switchClass("ion-arrow-down-a", "ion-arrow-up-a");
+		}
+	});
+
+	$("#projectMenu").on("change", function() {
+		console.log("menu changed");
+		var menu = $(this);
+		var val = menu.val();
+		console.log("selected", val);
+		switch(val) {
+			case "newProject" : startProject(); break;
+			case "openProject" : openProject(); break;
+			case "saveProject" : saveProject(); break;
+			case "export" : exportProject(); break;
+			case "closeProject" : prepareWorkTable(); break;
+			case "print" : printProject(); break;
+			default : break
+		}
+		
+		menu.val("");
+	});
+
+	var ws = null;
+	
+	if ((ws = Cookies.get("_ws"))) {
+		decompressWorkspace(ws);
+	} 
+
+	if (Cookies.get("_save")) {
+		 saveProject();		
+	} 
+
+	if (Cookies.get("auth")) {
+		loadProjects(function(resp) {
+			if (Cookies.get("_open")) {
+				 openProject();		
+			} else if ((ws = Cookies.get("ws"))) {
+				for (var i = 0, project; project = resp.data[i]; i++) {
+					if (project.handle === ws) {
+						var saveDialog = $(".saveProject");
+						var saveTitle = saveDialog.find("[name=projectTitle]");
+						var saveDescription = saveDialog.find("[name=projectDescription]");
+						
+						decompressWorkspace(project.content);
+						saveTitle.val(project.title);
+						saveDescription.val(project.description);
+					}
+				}
+			} 
+		})
+	}
+
+});
+
+function prepareWorkTable() {
 	var holder = $("<div></div>");
+	
 	for (var i = 0; i < 100; i++) {
 		holder.append($("<div></div>").addClass("tile-slot"));
 	}
 
+	$(".work-table").empty();
 	$(".work-table").append(holder.html());
-
+	
 	$(".drag-to-canvas")
 	 	.draggable({
 	 		containment: ".work-table",
@@ -63,116 +182,16 @@ $( function() {
 				})
 				.appendTo(slot);
 
-				tile.children(".zone")
-			 	.droppable({
-			 		accept: "[rel=harness]",
-			 		drop: function(e, ui) {
-			 			var zone = $(this);
-
-						$("<img />")
-							.attr({ src: ui.helper.attr("src") })
-							.css({ zIndex: 2 })
-							.click(function(ev) {
-								var i = -1;
-
-								if (selectingComponents) {
-									if ((i = selected.indexOf(this)) >= 0) {
-										$(this).css({backgroundColor: "transparent"});
-										selected.splice(i, 1);
-									} else {
-										$(this).css({backgroundColor: "yellow"});
-										selected.push(this);
-									}
-								}
-
-								ev.stopPropagation();
-							})
-							.appendTo(zone);
-
-						zone
-							.droppable("option", "disabled", true)
-							.css({zIndex: 2});
-			 		},
-			 		over: function(e, ui) {
-			 			var target = $(this);
-			 			if (target.hasClass("bottom")) {
-			 				ui.helper.css({
-			 					transform: "rotate(90deg)",
-			 					left: (target.offset().left - 500) + "px",
-			 					top: (target.offset().top + 1000) + "px",
-			 				});
-			 			}
-			 		},
-			 		out: function(e, ui) {
-			 			var target = $(this);
-			 			if (target.hasClass("bottom")) {
-			 				ui.helper.css({transform: "rotate(0deg)", left: "0px", top: "0px"});
-			 			}
-			 		}
-			 	});
+				tile.children(".zone").droppable(tileZoneConfig);
 
 				slot.droppable("option", "disabled", true)
 	 		}
 	 	});
-
-	$("#footerHandle").on("click", function() {
-		var footer = $("footer");
-		var handle = $("#footerHandle");
-
-		if (footer.hasClass("closed")) {
-			footer.animate({bottom: 0}, 300, "easeInBack");
-			footer.removeClass("closed");
-			handle.switchClass("ion-arrow-up-a", "ion-arrow-down-a");
-		} else {
-			footer.animate({bottom: footer.outerHeight() * -1 + 20}, 300, "easeInBack");
-			footer.addClass("closed");
-			handle.switchClass("ion-arrow-down-a", "ion-arrow-up-a");
-		}
-	});
-
-	$("#projectMenu").on("change", function() {
-		console.log("menu changed");
-		var menu = $(this);
-		var val = menu.val();
-		console.log("selected", val);
-		switch(val) {
-			case "newProject" : createProject(); break;
-			case "openProject" : openProject(); break;
-			case "saveProject" : saveProject(); break;
-			case "export" : exportProject(); break;
-			case "closeProject" : clearProject(); break;
-			case "print" : printProject(); break;
-			default : break;
-		}
-		
-		menu.val("");
-	});
-
-	var ws = null;
 	
-	if ((ws = Cookies.get("_ws"))) {
-		decompressWorkspace(ws);
-	} 
-
-	if (Cookies.get("_save")) {
-		 saveProject();		
-	} 
-
-	if (Cookies.get("auth")) {
-		loadProjects(function(resp) {
-			if (Cookies.get("_open")) {
-				 openProject();		
-			} else if ((ws = Cookies.get("ws"))) {
-				for (var i = 0, project; project = resp.data[i]; i++) {
-					if (project.handle === ws) {
-						decompressWorkspace(project.content);
-					}
-				}
-			} 
-		})
-	}
-
-});
+	
+	Cookies.remove("ws");
+	Cookies.remove("_ws");
+}
 
 function selectComponent(ev) {
 	selectingComponents = !selectingComponents;
@@ -195,8 +214,10 @@ function removeComponents() {
 	selectComponent();
 }
 
-function createProject() {
-	$(".work-table").empty();	
+function startProject() {
+	console.log("creating project");
+	prepareWorkTable();
+	createProject();
 }
 
 function openProject() {
@@ -304,10 +325,6 @@ function exportProject() {
 	
 }
 
-function clearProject() {
-	$(".work-table").empty();	
-}
-
 function printProject() {
 	
 }
@@ -325,6 +342,7 @@ function decompressWorkspace(b64) {
 	var doc = $(".work-table");
 
 	doc.html(lzstring.decompressFromBase64(b64));
+	$(".tile .zone").droppable(tileZoneConfig);
 }
 
 function createProject(next, err) {
