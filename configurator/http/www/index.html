@@ -22,6 +22,7 @@
 		<script src="./assets/js/jquery-3.2.1.js"></script>
 		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 		<script src="./assets/js/lzstring.js"></script>
+		<script src="./assets/js/js.cookie.js"></script>
 		<script src="./assets/js/index.js"></script>
 	</head>
 
@@ -58,10 +59,16 @@
 			
 			<label>
 				Description
-				<textarea rows="5" cols="40"></textarea>
+				<textarea name="projectDescription" rows="5" cols="40"></textarea>
 			</label>
 			
 			<button action="save">Save</button>
+			<button action="close">Cancel</button>
+		</div>
+		
+		<div class="dialog openProject">
+			<div class="project-list"></div>
+			
 			<button action="close">Cancel</button>
 		</div>
 

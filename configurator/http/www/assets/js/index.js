@@ -2,6 +2,8 @@
 var selectingComponents = false;
 var selected = [];
 
+var workspaces = [];
+
 $( function() {
 
 	var holder = $("<div></div>");
@@ -29,7 +31,6 @@ $( function() {
 	 			var helper = $("<img />")
 	 				.attr({ src: component, rel: $(this).attr("rel") });
 
-	 			console.log("using helper", helper);
 	 			return helper;
 	 		},
 	 	});
@@ -147,6 +148,30 @@ $( function() {
 		menu.val("");
 	});
 
+	var ws = null;
+	
+	if ((ws = Cookies.get("_ws"))) {
+		decompressWorkspace(ws);
+	} 
+
+	if (Cookies.get("_save")) {
+		 saveProject();		
+	} 
+
+	if (Cookies.get("auth")) {
+		loadProjects(function(resp) {
+			if (Cookies.get("_open")) {
+				 openProject();		
+			} else if ((ws = Cookies.get("ws"))) {
+				for (var i = 0, project; project = resp.data[i]; i++) {
+					if (project.handle === ws) {
+						decompressWorkspace(project.content);
+					}
+				}
+			} 
+		})
+	}
+
 });
 
 function selectComponent(ev) {
@@ -175,18 +200,104 @@ function createProject() {
 }
 
 function openProject() {
-	$(".work-table").empty();	
+	var token = Cookies.get("auth");
+	var user = Cookies.get("user");
+	var dialog = $(".openProject");
+	var close = dialog.find("[action=close]");
+	
+	close.click(function() {
+		dialog.hide();
+	})
+	
+	if (token) {
+		Cookies.remove("_open");
+		dialog.show();
+	} else {
+		Cookies.set("_open", 1);
+		window.location = "/account.html";
+	}
 }
 
 function saveProject() {
-	var dialog = $(".saveProject")
+	var ws = compressWorkspace();
 	
-	dialog.show();
-	dialog.find("input").focus();
+	console.log("compressed to", ws);
 	
-	dialog.find("button[action=close]").click(function() {
-		dialog.hide();
-	})
+	Cookies.remove("_ws");
+	Cookies.remove("_save");
+	
+	var token = Cookies.get("auth");
+	var user = Cookies.get("user");
+
+    var doSave = function(handle) {
+        var title = $("[name=projectTitle]").val();
+        var description = $("[name=projectDescription").val();
+
+		$.ajax({
+			url: "/project/" + handle,
+			method: "PUT",
+			
+            headers: {
+            	"Authorization": token,
+            	"x-configurator-user": user,
+            },
+
+			data: JSON.stringify({
+				title: title,
+				description: description,
+				content: ws,
+			}),
+			
+			success: function() {
+				dialog.hide();
+			}
+		})
+		.fail(function (resp) {
+            var response = resp.responseJSON && resp.responseJSON.response;
+            var message = (response && response.status < 500 && response.statusMessage) || "There was a problem saving your project. Please try again later.";
+
+            window.alert(message);
+		});
+    }
+
+	if (token) {
+		var dialog = $(".saveProject")
+		
+		dialog.show();
+		dialog.find("input").focus();
+		
+		dialog.find("button[action=save]").click(function() {
+			Cookies.remove("_save");
+			
+			var handle = Cookies.get("ws");
+
+			if (handle && handle.length > 0) {
+				doSave(handle);
+			} else {
+				createProject(
+					function(resp) { 
+						doSave(resp.data.handle);
+					},
+					function(resp) {
+			            var response = resp.responseJSON && resp.responseJSON.response;
+			            var message = (response && response.status < 500 && response.statusMessage) || "There was a problem saving your project. Please try again later.";
+			
+			            window.alert(message);
+					}
+				)
+			}
+		});
+
+		dialog.find("button[action=close]").click(function() {
+			dialog.hide();
+		});
+	} else {
+		Cookies.set("_ws", ws);
+		Cookies.set("_save", 1);
+		
+		window.location = "/account.html";
+	}
+
 }
 
 function exportProject() {
@@ -203,8 +314,107 @@ function printProject() {
 
 function compressWorkspace() {
 	var lzstring = window.LZString;
-	var doc = $(".work-table").innerHTML();
+	var doc = $(".work-table").html();
 	var b64 = lzstring.compressToBase64(doc);
 	
 	return b64;
+}
+
+function decompressWorkspace(b64) {
+	var lzstring = window.LZString;
+	var doc = $(".work-table");
+
+	doc.html(lzstring.decompressFromBase64(b64));
+}
+
+function createProject(next, err) {
+	var token = Cookies.get("auth");
+	var user = Cookies.get("user");
+
+	Cookies.remove("ws");
+
+    $.ajax({
+        url: "/project",
+        method: "POST",
+        
+        headers: {
+        	"Authorization": token,
+        	"x-configurator-user": user,
+        },
+
+        success: function(resp) {
+        	var handle = resp.data.handle;
+        	
+        	Cookies.set("ws", handle);
+        	
+        	if (next) {
+        		next(resp);
+        	}
+        }
+    })
+    .fail(function(resp) {
+    	console.warn("error creating project", resp);
+    	
+    	if (err) {
+    		err(resp);
+    	}
+    });
+}
+
+function loadProjects(next) {
+	var token = Cookies.get("auth");
+	var user = Cookies.get("user");
+
+	console.log("loading projects");
+
+    $.ajax({
+        url: "/project",
+        method: "GET",
+        
+        headers: {
+        	"Authorization": token,
+        	"x-configurator-user": user,
+        },
+
+		success: function(resp) {
+			var projectList = $(".project-list");
+
+			for (var x = 0; x < 10; x++) {
+				for (var i = 0, project; project = resp.data[i]; i++) {
+					var content = project.content;
+					
+					$("<div />")
+						.append(
+							$("<a />")
+								.text(project.title)
+								.attr("href", "javascript:void(0)")
+								.attr("rel", i)
+								.click(function() { 
+									var project = resp.data[$(this).attr("rel")];
+
+									Cookies.set("ws", project.handle);
+									decompressWorkspace(project.content);
+									
+									$(".openProject").hide();
+								})
+						)
+						.append(
+							$("<span />")
+								.text(project.description)
+						)
+						.appendTo(projectList)
+				}
+			}
+			
+			if (next) {
+				next(resp);
+			}
+		},	
+    })
+    .fail(function(resp) {
+        var response = resp.responseJSON && resp.responseJSON.response;
+        var message = (response && response.status < 500 && response.statusMessage) || "There was a problem retrieving your projects. Please try again later.";
+
+        window.alert(message);
+    });
 }

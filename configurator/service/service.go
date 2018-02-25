@@ -41,8 +41,36 @@ func CreateProject(owner string) (string, error) {
 	return dstore.CreateProject(owner)
 }
 
-func RetrieveProject(u User, project string) (Project, error) {
-	if d, err := dstore.FetchProject(u.Handle, project); err != nil {
+func GetProjects(owner string) ([]Project, error) {
+	if h, err := dstore.FetchAllProjects(owner); err != nil {
+		return nil, err
+	} else {
+		list := make([]Project, len(h))
+		c := make(chan Project)
+
+		fetch := func(h string) {
+			if p, err := RetrieveProject(owner, h); err != nil {
+				context.Logf(context.Warn, "Error retrieving project (%s): %v", h, err)
+				c <- Project{}
+			} else {
+				c <- p
+			}
+		}
+
+		for _, handle := range h {
+			go fetch(handle)
+		}
+
+		for i, _ := range h {
+			list[i] = <-c
+		}
+
+		return list, nil
+	}
+}
+
+func RetrieveProject(owner string, project string) (Project, error) {
+	if d, err := dstore.FetchProject(owner, project); err != nil {
 		if _, ok := err.(dstore.Error); ok {
 			return Project{}, projectNotAvailableError()
 		} else {

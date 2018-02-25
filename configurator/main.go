@@ -28,6 +28,7 @@ func createServer() *http.Server {
 	r.HandleFunc("/signup", controllers.CreateAccount).Methods("POST")
 
 	pr := mux.NewRouter().PathPrefix("/project").Subrouter()
+	pr.HandleFunc("", controllers.GetProjects).Methods("GET")
 	pr.HandleFunc("", controllers.CreateProject).Methods("POST")
 	pr.HandleFunc("/{handle}", controllers.UpdateProject).Methods("PUT")
 
@@ -37,7 +38,7 @@ func createServer() *http.Server {
 
 	r.
 		PathPrefix("/project").
-		Methods("PUT", "POST").
+		Methods("PUT", "POST", "GET").
 		Handler(negroni.New(negroni.HandlerFunc(controllers.AuthorizeClient), negroni.Wrap(pr)))
 
 	c := cors.New(cors.Options{

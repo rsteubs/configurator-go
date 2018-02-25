@@ -20,9 +20,11 @@ $(function() {
                 var data = resp.data;
                 
                 if (response.status == 200) {
-                    document.cookie = "user=" + data.handle;
-                    document.cookie = "token=" + data.token;
-                    
+                    var expires = new Date(data.expiration);
+
+                    Cookies.set("user", data.handle);
+                    Cookies.set("auth", data.token, {expires: expires});
+
                     window.location = "/";
                 } else {
                     window.alert("Your username or password were not accepted. Please try again, or create a new account.");
@@ -37,11 +39,7 @@ $(function() {
             grecaptcha.reset();
         });
     });
-    
-    $("#showMore").click(function() {
-        
-    });
-    
+
     $("#createAccount").click(function(ev) {
         event.preventDefault();
         
@@ -52,8 +50,7 @@ $(function() {
     		$("#signIn").hide();
     		return; 
 		}
-        
-        
+
         var uname = $("#username").val();
         var pwd = $("#password").val();
         var verify = $("#verify").val();

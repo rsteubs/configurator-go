@@ -134,6 +134,36 @@ func CreateProject(owner string) (string, error) {
 
 }
 
+func FetchAllProjects(owner string) ([]string, error) {
+	if c, err := context.NewDataContext("Get Project", dbDriver, conn); err != nil {
+		context.Logf(context.Error, "Error creating data connection: %v", err)
+		return nil, nil
+	} else {
+		defer c.End()
+
+		query := "SELECT handle FROM project WHERE owner = ? AND status = ?"
+
+		if rows, err := c.Connection().Query(query, owner, 10); err != nil {
+			c.Error(err)
+			return nil, err
+		} else {
+			var list []string
+
+			for rows.Next() {
+				var handle string
+
+				if err := rows.Scan(&handle); err != nil {
+					context.Logf(context.Warn, "Error reading project handle: %v", err)
+				} else {
+					list = append(list, handle)
+				}
+			}
+
+			return list[:], nil
+		}
+	}
+}
+
 func FetchProject(owner, handle string) (Project, error) {
 	if c, err := context.NewDataContext("Fetch Project", dbDriver, conn); err != nil {
 		context.Logf(context.Error, "Error creating data connection: %v", err)

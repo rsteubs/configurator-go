@@ -255,7 +255,7 @@ footer .specs {
     width: 600px;
     top: 100px;
     left: 350px;
-    z-index: 2;
+    z-index: 5;
 }
 
 .dialog label {
@@ -292,4 +292,24 @@ footer .specs {
     border: 1px solid white;
     padding: 5px;
     margin: 0px 20px;
+}
+
+.openProject .project-list {
+	padding: 10px;
+	margin: 20px;
+	font-weight: normal;
+	background-color: white;
+	max-height: 200px;
+	overflow: scroll;
+}
+
+.openProject .project-list div {
+	margin: 5px 0px;
+}
+
+.openProject .project-list a {
+	display: block;
+	font-weight: bold;
+	font-size: 1.25em;
+	color: black;
 }

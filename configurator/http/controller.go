@@ -50,6 +50,12 @@ func UpdateProject(w http.ResponseWriter, r *http.Request) {
 	_updateProject(w, r)()
 }
 
+func GetProjects(w http.ResponseWriter, r *http.Request) {
+	defer recoverFromPanic()
+
+	_getProjects(w, r)()
+}
+
 func _createAccount(w http.ResponseWriter, r *http.Request) func() {
 	c := httpContext.Create("Create Profile", w, r)
 
@@ -106,9 +112,10 @@ func _auth(w http.ResponseWriter, r *http.Request) func() {
 			c.Error(err, http.StatusInternalServerError)
 		} else {
 			c.End(http.StatusOK, struct {
-				H string `json:"handle"`
-				T string `json:"token"`
-			}{u.Handle, t})
+				H string    `json:"handle"`
+				T string    `json:"token"`
+				E time.Time `json:"expiration"`
+			}{u.Handle, t, time.Now().Add(time.Minute * 30).UTC()})
 		}
 	}
 }
@@ -162,6 +169,47 @@ func _createProject(w http.ResponseWriter, r *http.Request) func() {
 			}{h}
 
 			c.End(http.StatusOK, d)
+		}
+	}
+}
+
+func _getProjects(w http.ResponseWriter, r *http.Request) func() {
+	return func() {
+		c := httpContext.Create("Get Projects", w, r)
+		u := r.Header.Get("x-configurator-user")
+
+		if p, err := service.GetProjects(u); err != nil {
+			if sErr, ok := err.(service.Error); ok {
+				c.Error(sErr, http.StatusBadRequest)
+			} else {
+				context.Logf(context.Error, "Error retrieving user projcects for %s: %v", u, err)
+				c.Error(err, http.StatusInternalServerError)
+			}
+		} else {
+			type project struct {
+				Handle      string `json:"handle"`
+				Title       string `json:"title"`
+				Description string `json:"description"`
+				Content     string `json:"content"`
+			}
+
+			status := http.StatusOK
+			out := make([]project, len(p))
+			index := 0
+
+			for _, i := range p {
+				if len(i.Handle) == 0 {
+					status = http.StatusPartialContent
+				} else {
+					res := project{}
+					app.Translate(i, &res)
+
+					out[index] = res
+					index++
+				}
+			}
+
+			c.End(status, out)
 		}
 	}
 }
