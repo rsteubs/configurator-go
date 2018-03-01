@@ -34,6 +34,8 @@ var tileZoneConfig = {
 		zone
 			.droppable("option", "disabled", true)
 			.css({zIndex: 2});
+			
+		updateSystemSpecs();
  	},
  	over: function(e, ui) {
  		var target = $(this);
@@ -54,7 +56,7 @@ var tileZoneConfig = {
 }
 
 $( function() {
-
+	clearWorkTable();
 	prepareWorkTable();
 
 	$("#footerHandle").on("click", function() {
@@ -82,13 +84,18 @@ $( function() {
 			case "openProject" : openProject(); break;
 			case "saveProject" : saveProject(); break;
 			case "export" : exportProject(); break;
-			case "closeProject" : prepareWorkTable(); break;
+			case "closeProject" : closeProject(); break;
 			case "print" : printProject(); break;
 			default : break
 		}
 		
 		menu.val("");
 	});
+
+	$("input[name=temperature]")
+		.change(function() {
+			updateSystemSpecs();				
+		})
 
 	var ws = null;
 	
@@ -122,7 +129,15 @@ $( function() {
 
 });
 
-function prepareWorkTable() {
+function closeProject() {
+	clearWorkTable(); 
+	prepareWorkTable();	
+	
+	Cookies.remove("ws");
+	Cookies.remove("_ws");
+}
+
+function clearWorkTable() {
 	var holder = $("<div></div>");
 	
 	for (var i = 0; i < 100; i++) {
@@ -131,7 +146,9 @@ function prepareWorkTable() {
 
 	$(".work-table").empty();
 	$(".work-table").append(holder.html());
-	
+}
+
+function prepareWorkTable() {
 	$(".drag-to-canvas")
 	 	.draggable({
 	 		containment: ".work-table",
@@ -184,13 +201,11 @@ function prepareWorkTable() {
 
 				tile.children(".zone").droppable(tileZoneConfig);
 
-				slot.droppable("option", "disabled", true)
+				slot.droppable("option", "disabled", true);
+				
+				updateSystemSpecs();
 	 		}
 	 	});
-	
-	
-	Cookies.remove("ws");
-	Cookies.remove("_ws");
 }
 
 function selectComponent(ev) {
@@ -215,8 +230,7 @@ function removeComponents() {
 }
 
 function startProject() {
-	console.log("creating project");
-	prepareWorkTable();
+	closeProject();
 	createProject();
 }
 
@@ -228,7 +242,7 @@ function openProject() {
 	
 	close.click(function() {
 		dialog.hide();
-	})
+	});
 	
 	if (token) {
 		Cookies.remove("_open");
@@ -342,7 +356,43 @@ function decompressWorkspace(b64) {
 	var doc = $(".work-table");
 
 	doc.html(lzstring.decompressFromBase64(b64));
+	prepareWorkTable();
 	$(".tile .zone").droppable(tileZoneConfig);
+
+	$(".tile .zone img")
+		.click(function(ev) {
+			var i = -1;
+
+			if (selectingComponents) {
+				if ((i = selected.indexOf(this)) >= 0) {
+					$(this).css({backgroundColor: "transparent"});
+					selected.splice(i, 1);
+				} else {
+					$(this).css({backgroundColor: "yellow"});
+					selected.push(this);
+				}
+			}
+
+			ev.stopPropagation();
+		});
+		
+	$(".tile")		
+		.click(function() {
+			var i = -1;
+
+			if (selectingComponents) {
+				if ((i = selected.indexOf(this)) >= 0) {
+					$(this).children(".highlight").remove();
+					selected.splice(i, 1);
+				} else {
+					$(this).append($("<div class='highlight'></div>"));
+					selected.push(this);
+				}
+			}
+		});
+
+	
+	updateSystemSpecs();
 }
 
 function createProject(next, err) {
@@ -411,7 +461,7 @@ function loadProjects(next) {
 
 								Cookies.set("ws", project.handle);
 								decompressWorkspace(project.content);
-								
+
 								$(".openProject").hide();
 							})
 					)
@@ -433,4 +483,27 @@ function loadProjects(next) {
 
         window.alert(message);
     });
+}
+
+function updateSystemSpecs() {
+	var selectedTemperature = $("[name=temperature]:checked").val() || "cool";
+	var specs = temperature[selectedTemperature];
+	var workTable = $(".work-table");
+	var tileCount = workTable.find(".tile").length;
+	var harnessCount = workTable.find(".tile .zone img").length;
+	var fields = $(".specs");
+	var components = $(".components");
+
+	for (var i = 0, spec; spec = specs[i]; i++) {
+		if (spec.tiles == tileCount && spec.harnesses <= harnessCount) {
+			fields.find("[rel=voltage]").text(spec.voltage);
+			fields.find("[rel=current]").text(spec.current);
+			fields.find("[rel=power]").text(spec.power);
+			
+			break;
+		}
+	}
+	
+	components.find("[rel=tileCount]").text(tileCount);
+	components.find("[rel=harnessCount]").text(harnessCount);
 }

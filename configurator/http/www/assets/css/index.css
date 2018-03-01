@@ -26,7 +26,7 @@ body {
 	font-family: Roboto, arial;
 	min-width: 1200px;
 	min-height: 800px;
-	background-color: #666;
+	background-color: #303c3c;
 }
 
 header {
@@ -60,13 +60,13 @@ header .toolbar {
 }
 
 .canvas {
+	background: #3d3d3d;
 	display: block;
 	height: 100%;
 }
 
 .canvas .work-table {
 	position: relative;
-	border: 1px solid white;
 	min-height: 1000px;
 	padding-left: 100px;
 }
@@ -300,7 +300,7 @@ footer .specs {
 	font-weight: normal;
 	background-color: white;
 	max-height: 200px;
-	overflow: scroll;
+	overflow-y: auto;
 }
 
 .openProject .project-list div {

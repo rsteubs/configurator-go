@@ -23,6 +23,7 @@
 		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 		<script src="./assets/js/lzstring.js"></script>
 		<script src="./assets/js/js.cookie.js"></script>
+		<script src="./assets/js/temperature.js"></script>
 		<script src="./assets/js/index.js"></script>
 	</head>
 
@@ -97,9 +98,9 @@
 			<section>
 				<div class="temperature">
 					<p class="title">Select IllumiTile Temperature: </p>
-					<label><input type="radio" name="temperature" />Cool (6000K)</label>
-					<label><input type="radio" name="temperature" />Neutral (4500K)</label>
-					<label><input type="radio" name="temperature" />Warm (3000K)</label>
+					<label><input type="radio" name="temperature" value="cool" />Cool (6000K)</label>
+					<label><input type="radio" name="temperature" value="neutral" />Neutral (4500K)</label>
+					<label><input type="radio" name="temperature" value="warm" />Warm (3000K)</label>
 				</div>
 
 				<p class="title">Select the desired Configuration Mode (Instructions will appear for each type.)</p>
@@ -119,10 +120,10 @@
 			<section class="specs">
 				<h1>System Specifications</h1>
 
-				<div class="setting">Area <span class="field">12.0</span>" X <span class="field">10.0</span>"</div>
-				<div class="setting">Voltage <span class="value">12.0</span> DC</div>
-				<div class="setting">Current <span class="value">1.6</span> Amps</div>
-				<div class="setting">Power <span class="value">19.2</span> Watts</div>
+				<div class="setting">Area <span class="field" rel="width">12.0</span>" X <span class="field" rel="height">10.0</span>"</div>
+				<div class="setting">Voltage <span class="value" rel="voltage">0.0</span> DC</div>
+				<div class="setting">Current <span class="value" rel="current">0.0</span> Amps</div>
+				<div class="setting">Power <span class="value" rel="power">0.0</span> Watts</div>
 				<div class="setting">
 					Derate
 					<select>
@@ -133,12 +134,12 @@
 				</div>
 			</section>
 
-			<section>
+			<section class="components">
 				<h1>System Components</h1>
 
 				<div class="setting">Minimum Power Supply Rating <span class="value">25</span> Watts</div>
-				<div class="setting">IllumiTile Light Engine Quantity <span class="value">6</span></div>
-				<div class="setting">IllumiSnap Harness D Quantity <span class="value">6</span></div>
+				<div class="setting">IllumiTile Light Engine Quantity <span class="value" rel="tileCount">0</span></div>
+				<div class="setting">IllumiSnap Harness D Quantity <span class="value" rel="harnessCount">0</span></div>
 				<div class="setting">IllumiSnap Power Harness Quantity <span class="value">1</span></div>
 				<div class="setting">Number of Power Supplies</div>
 			</section>

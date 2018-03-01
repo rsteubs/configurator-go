@@ -209,7 +209,7 @@ func _getProjects(w http.ResponseWriter, r *http.Request) func() {
 				}
 			}
 
-			c.End(status, out)
+			c.End(status, out[:index])
 		}
 	}
 }
