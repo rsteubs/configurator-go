@@ -1,5 +1,6 @@
 
 var selectingComponents = false;
+var panning = false;
 var selected = [];
 
 var workspaces = [];
@@ -138,14 +139,8 @@ function closeProject() {
 }
 
 function clearWorkTable() {
-	var holder = $("<div></div>");
-	
-	for (var i = 0; i < 100; i++) {
-		holder.append($("<div></div>").addClass("tile-slot"));
-	}
-
 	$(".work-table").empty();
-	$(".work-table").append(holder.html());
+	addTileRow(0);
 }
 
 function prepareWorkTable() {
@@ -176,6 +171,13 @@ function prepareWorkTable() {
 	 		accept: "[rel=tile]",
 	 		drop: function(e, ui) {
 	 			var slot = $(this);
+	 			var row = slot.parent();
+	 			var nextIndex = parseInt(row.attr("y")) + 1;
+	 			var nextRow = $(".tile-row[y=" + nextIndex + "]");
+
+	 			if (nextRow.length === 0) {
+	 				addTileRow(nextIndex);
+	 			}
 
 	 		 	var tile = $(' \
 	 		 		<div class="tile"> \
@@ -206,6 +208,13 @@ function prepareWorkTable() {
 				updateSystemSpecs();
 	 		}
 	 	});
+	 	
+	 	$(".work-table")
+	 		.draggable({
+	 			//containment: "parent",
+	 			disabled: true,
+	 			//axis: "x",
+	 		});
 }
 
 function selectComponent(ev) {
@@ -227,6 +236,23 @@ function removeComponents() {
 	}
 
 	selectComponent();
+}
+
+function panWorkspace(ev) {
+	var button = $(ev.target);
+	var panning = (button.attr("enabled") || "false") === "false";
+
+	if (panning) {
+		$(".work-table")
+			.css({cursor: "move"})
+			.draggable("option", "disabled", false);
+	} else {
+		$(".work-table")
+			.css({cursor: "default"})
+			.draggable("option", "disabled", true);
+	}
+	
+	button.attr("enabled", panning);
 }
 
 function startProject() {
@@ -506,4 +532,74 @@ function updateSystemSpecs() {
 	
 	components.find("[rel=tileCount]").text(tileCount);
 	components.find("[rel=harnessCount]").text(harnessCount);
+	
+	var tiles = $(".tile");
+	
+	tiles.each(function(index) {
+		$(this).attr("rel", index);	
+	});
+	
+	// $(".tile .zone img")
+	// 	.each(function(hix, el) {
+	// 		var connections = 0;
+	// 		var harness = $(el);
+
+	// 		harness.attr("rel", hix);
+			
+	// 		tiles.each(function(index, el) {
+	// 			var tile = $(el);
+				
+	// 			if (is_colliding(harness, tile)) {
+					
+	// 				connections++;
+	// 			}
+	// 		});
+	// 		console.log("connections for 0" + index + ": ", connections);
+	// 		if (connections === 2) {
+	// 			harness.css({ background: "green", })
+	// 		}
+	// 	})
+}
+
+function is_colliding( $div1, $div2 ) {
+	// Div 1 data
+	var d1_offset             = $div1.offset();
+	var d1_height             = $div1.outerHeight( true );
+	var d1_width              = $div1.outerWidth( true );
+	var d1_distance_from_top  = d1_offset.top + d1_height;
+	var d1_distance_from_left = d1_offset.left + d1_width;
+
+	// Div 2 data
+	var d2_offset             = $div2.offset();
+	var d2_height             = $div2.outerHeight( true );
+	var d2_width              = $div2.outerWidth( true );
+	var d2_distance_from_top  = d2_offset.top + d2_height;
+	var d2_distance_from_left = d2_offset.left + d2_width;
+
+	var not_colliding = ( d1_distance_from_top < d2_offset.top || d1_offset.top > d2_distance_from_top || d1_distance_from_left < d2_offset.left || d1_offset.left > d2_distance_from_left );
+
+	// Return whether it IS colliding
+	return ! not_colliding;
+}
+
+function addTileRow(index) {
+	var row = $("<div></div>")
+		.addClass("tile-row")
+		.attr("y", index);
+
+	for (var i = 0; i < 20; i++) {
+		row.append($("<div />")
+			.addClass("tile-slot")
+			.attr("x", i)
+		);
+	}
+
+	$(".work-table")
+		.append(
+			$("<div />")
+				.addClass("tile-tray")
+				.append(row)
+		);
+		
+	prepareWorkTable();
 }

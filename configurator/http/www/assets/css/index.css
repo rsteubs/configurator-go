@@ -31,9 +31,13 @@ body {
 
 header {
 	display: block;
-	position: relative;
+	position: fixed;
+	background: inherit;
 	padding: 5px;
 	margin-bottom: 20px;
+	top: 0px;
+	width: 100%;
+	z-index: 5;
 }
 
 header .logo {
@@ -63,16 +67,23 @@ header .toolbar {
 	background: #3d3d3d;
 	display: block;
 	height: 100%;
+	margin-top: 120px;
+	overflow: visible;
 }
 
 .canvas .work-table {
-	position: relative;
 	min-height: 1000px;
+	min-width: 5600px;
 	padding-left: 100px;
+	overflow: visible;
 }
 
 .canvas .work-table .component {
 	position: absolute;
+}
+
+.canvas .work-table .tile-row {
+	white-space: nowrap;
 }
 
 .canvas .work-table .tile-slot {
@@ -80,6 +91,7 @@ header .toolbar {
 	width: 252px;
 	height: 252px;
 	margin: 13px;
+	border: 1px solid red;
 }
 
 .canvas .work-table .tile {
@@ -114,15 +126,15 @@ header .toolbar {
 }
 
 .main-toolbar {
-	position: absolute;
-	top: 250px;
+	position: fixed;
+	top: 130px;
 	left: 20px;
 	padding: 10px;
 	border: 3px solid white;
 	border-radius: 8px;
 	text-align: center;
 	width: 32px;
-	z-index: 5;
+	z-index: 4;
 	background: top left repeat-x url(../img/gradient.png);
 }
 

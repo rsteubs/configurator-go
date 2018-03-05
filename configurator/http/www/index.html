@@ -73,14 +73,15 @@
 			<button action="close">Cancel</button>
 		</div>
 
+		<div class="main-toolbar">
+			<button onclick="selectComponent()" id="select" class="icon ion-arrow-left-c" style="transform: rotate(45deg);"></button>
+			<button onclick="panWorkspace(event)" id="move" class="icon ion-arrow-expand"></button>
+			<button id="zoomIn" class="icon ion-plus-circled"></button>
+			<button id="zoomOut" class="icon ion-minus-circled"></button>
+			<button id="undo" class="icon ion-reply"></button>
+		</div>
+
 		<section class="canvas">
-			<div class="main-toolbar">
-				<button onclick="selectComponent()" id="select" class="icon ion-arrow-left-c" style="transform: rotate(45deg);"></button>
-				<button id="move" class="icon ion-arrow-expand"></button>
-				<button id="zoomIn" class="icon ion-plus-circled"></button>
-				<button id="zoomOut" class="icon ion-minus-circled"></button>
-				<button id="undo" class="icon ion-reply"></button>
-			</div>
 
 			<div class="work-table"></div>
 		</section>
