@@ -37,7 +37,7 @@ header {
 	margin-bottom: 20px;
 	top: 0px;
 	width: 100%;
-	z-index: 5;
+	z-index: 10;
 }
 
 header .logo {
@@ -63,12 +63,41 @@ header .toolbar {
 	float: right;
 }
 
+header .circuit-panel {
+	margin: 0px 110px;
+	white-space: nowrap;
+	overflow-x: auto;
+	padding-bottom: 8px;
+}
+
+header .circuit-panel .circuit-button {
+    display:  inline-block;
+    border: 3px solid white;
+    border-radius: 10px;
+    font-size: 0.75em;
+    color: white;
+    margin: 0px 5px;
+}
+
+header .circuit-panel .circuit-button .circuit-button-title {
+	border: 1px solid;
+	border-radius: 4px;
+	font-weight: bold;
+	text-align: center;
+	padding: 3px;
+	bottom: 3px;
+}
+
+header .circuit-panel .circuit-button .circuit-button-specs {
+	margin: 3px;
+}
+
 .canvas {
 	background: #3d3d3d;
 	display: block;
 	height: 100%;
-	margin-top: 120px;
-	overflow: visible;
+	margin-top: 190px;
+	overflow: auto;
 }
 
 .canvas .work-table {
@@ -94,6 +123,12 @@ header .toolbar {
 	border: 1px solid red;
 }
 
+.canvas .work-table .tile-circuit {
+	border: 10px solid;
+	border-radius: 4px;
+	margin: 3px;
+}
+
 .canvas .work-table .tile {
 	position: relative;
 	width: 252px;
@@ -110,12 +145,47 @@ header .toolbar {
 	right: -50px;
 	width: 125px;
 	height: 24px;
+	z-index: 4;
 }
 
 .canvas .work-table .tile .bottom {
 	bottom: 50px;
 	width: 100%;
 	height: 24px;
+}
+
+.canvas .work-table .tile .power {
+	position: absolute;
+	z-index: 5;
+}
+
+.canvas .work-table .tile .power-top, .canvas .work-table .tile .power-top {
+	left: -349px;
+}
+
+.canvas .work-table .tile .power-bottom {
+	bottom: -163px;
+}
+
+.canvas .work-table .tile .power-down {
+	top: -163px;
+}
+
+.canvas .work-table .tile .power-up {
+	bottom: -163px;
+	left: -350px;
+}
+
+.canvas .work-table .tile .power-center {
+	top: -3px;	
+}
+
+.canvas .work-table .tile .power-left {
+	left: -445px;
+}
+
+.canvas .work-table .tile .power-right {
+	right: -445px;
 }
 
 .tile .bottom img {
@@ -127,14 +197,14 @@ header .toolbar {
 
 .main-toolbar {
 	position: fixed;
-	top: 130px;
+	top: 180px;
 	left: 20px;
 	padding: 10px;
 	border: 3px solid white;
 	border-radius: 8px;
 	text-align: center;
 	width: 32px;
-	z-index: 4;
+	z-index: 10;
 	background: top left repeat-x url(../img/gradient.png);
 }
 
@@ -221,6 +291,7 @@ footer section .title {
 }
 
 footer section .instructions {
+	display: none;
 	margin-top: 20px;
 }
 
@@ -238,6 +309,11 @@ footer section .field {
 	padding: 3px;
 	border: 1px solid #fff;
 	margin: 5px;
+	color: white;
+	font-weight: bold;
+	width: 	40px;
+	margin-right: -3px;
+	text-align: center;
 }
 
 footer section .value {

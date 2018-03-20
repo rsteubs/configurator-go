@@ -128,6 +128,31 @@ $( function() {
 		})
 	}
 
+	$("[name=work-table-width], [name=work-table-height]")
+		.change(function() {
+			var field = $(this);
+			var val = parseFloat(field.val());
+			
+			if (isNaN(val) || val < 4) {
+				val = 4;
+			}
+
+			field.val(val.toFixed(1));
+			
+			dimensionWorkTable();
+		});
+		
+	$("input[type=radio][name=configuration]")
+		.click(function() {
+			var option = $(this);
+			var instruction = option.attr("rel");
+
+			$(".instructions").hide();
+			$(".instructions[rel=" + instruction + "]").show();
+		})
+		.first()
+		.click();
+
 });
 
 function closeProject() {
@@ -144,6 +169,8 @@ function clearWorkTable() {
 }
 
 function prepareWorkTable() {
+	var workTable = $(".work-table");
+	
 	$(".drag-to-canvas")
 	 	.draggable({
 	 		containment: ".work-table",
@@ -204,12 +231,12 @@ function prepareWorkTable() {
 				tile.children(".zone").droppable(tileZoneConfig);
 
 				slot.droppable("option", "disabled", true);
-				
+
 				updateSystemSpecs();
 	 		}
 	 	});
 	 	
-	 	$(".work-table")
+	 	workTable
 	 		.draggable({
 	 			//containment: "parent",
 	 			disabled: true,
@@ -228,11 +255,22 @@ function selectComponent(ev) {
 }
 
 function removeComponents() {
-	while (selected.length > 0) {
-		var component = $(selected.pop());
+	
+	if (selectingComponents) {
+		while (selected.length > 0) {
+			var component = $(selected.pop());
+	
+			component.parent().droppable("option", "disabled", false);
+			component.remove();
+		}
 
-		component.parent().droppable("option", "disabled", false);
-		component.remove();
+		$(".tile-row:not(:has(.tile))").remove();
+		addTileRow(1);
+		
+		$(".tile-row")
+			.each(function(i, el) {
+				$(el).attr("y", i);
+			});
 	}
 
 	selectComponent();
@@ -561,45 +599,324 @@ function updateSystemSpecs() {
 	// 	})
 }
 
-function is_colliding( $div1, $div2 ) {
-	// Div 1 data
-	var d1_offset             = $div1.offset();
-	var d1_height             = $div1.outerHeight( true );
-	var d1_width              = $div1.outerWidth( true );
-	var d1_distance_from_top  = d1_offset.top + d1_height;
-	var d1_distance_from_left = d1_offset.left + d1_width;
-
-	// Div 2 data
-	var d2_offset             = $div2.offset();
-	var d2_height             = $div2.outerHeight( true );
-	var d2_width              = $div2.outerWidth( true );
-	var d2_distance_from_top  = d2_offset.top + d2_height;
-	var d2_distance_from_left = d2_offset.left + d2_width;
-
-	var not_colliding = ( d1_distance_from_top < d2_offset.top || d1_offset.top > d2_distance_from_top || d1_distance_from_left < d2_offset.left || d1_offset.left > d2_distance_from_left );
-
-	// Return whether it IS colliding
-	return ! not_colliding;
-}
-
 function addTileRow(index) {
+	var workTable = $(".work-table");
+	var orientation = workTable.attr("orientation");
+	var cols = orientation === "portrait" ? 8 : 20;
 	var row = $("<div></div>")
 		.addClass("tile-row")
 		.attr("y", index);
 
-	for (var i = 0; i < 20; i++) {
+	for (var i = 0; i < cols; i++) {
 		row.append($("<div />")
 			.addClass("tile-slot")
 			.attr("x", i)
 		);
 	}
 
+	workTable.append(row);
+
+	prepareWorkTable();
+	
+	return row;
+}
+
+function scaleCanvas(direction) {
+	var canvas = $(".work-table");
+	var scale = parseFloat(canvas.attr("scale") || 1.0);
+	var step = 0.15;
+	var max = 5;
+	
+	if (isNaN(scale)) {
+		scale = 1.0;
+	}
+	
+	switch (direction) {
+		case "-": {
+			scale -= step;
+			
+			if (scale < step) {
+				scale = step;
+			}
+			
+			break;
+		}
+		
+		case "+": 
+		default : {
+			scale += step;
+			
+			if (scale > max) {
+				scale = max;
+			}
+		}
+	}
+	
+	canvas.css("transform", "scale(" + scale + ")");
+	canvas.attr("scale", scale);
+}
+
+function dimensionWorkTable() {
+	var tileDimension = 4.0;
+	var width = parseFloat($("[name=work-table-width]").val());
+	var height = parseFloat($("[name=work-table-height]").val());
+	var workspaceWidth = Math.floor(width / tileDimension);
+	var workspaceHeight = Math.floor(height / tileDimension);
+
+	if (workspaceHeight > workspaceWidth) {
+		$(".work-table").attr("orientation", "portrait");
+	} else {
+		$(".work-table").attr("orientation", "landscape");
+	}
+	
 	$(".work-table")
+		.empty()
+		.css({
+			transform: "scale(1.0)",
+			top: "0px",
+			left: "0px",
+		})
+		.attr("scale", "1.0");
+
+	$(".circuit-panel").empty();
+	
+	for (var y = 0; y < workspaceHeight; y++) {
+		addTileRow(y);
+	}
+	
+	for (var i = 0, circuits = splitCircuit(workspaceWidth, workspaceHeight), circuit; circuit = circuits[i]; i++) {
+		createCircuit(circuit.number, circuit.startX, circuit.startY, circuit.width, circuit.height);
+	}
+
+	prepareWorkTable();
+	updateSystemSpecs();
+	
+}
+
+function splitCircuit(maxWidth, maxHeight) {
+	if (maxWidth * maxHeight <= 20) {
+		return [{
+			startX: 0,
+			startY: 0,
+			width: maxWidth,
+			height: maxHeight,
+		}];
+	}
+	
+	var width = 0;
+	var height = 0;
+	var startX = 0;
+	var startY = 0;
+	var number = 1;
+	var list = [];
+	
+	var circuitSize = 0;
+	
+	while (circuitSize < maxWidth * maxHeight) {
+		while (width < maxWidth && height < maxHeight && width * height < 20 && width * height + circuitSize < maxWidth * maxHeight) {
+			width += 1;
+			
+			if (width * height < 20 && width * height + circuitSize < maxWidth * maxHeight) {
+				height += 1;
+			}
+		}
+		
+		list.push({
+			number: number,
+			width: width,
+			height: height,
+			startX: startX,
+			startY: startY,
+		});
+		
+		number += 1;
+		
+		if (startX + width < maxWidth) {
+			startX += width;
+		} else {
+			startX = 0;
+			startY += height;
+		}
+		
+		circuitSize += (width * height);
+		
+		height = width = 0;
+	}
+
+	console.log("circuit list", list)
+	
+	return list;
+}
+
+function setDesignMode(mode) {
+	$(".work-table").attr("design-mode", mode);
+}
+
+function createCircuit(number, startX, startY, width, height) {
+	var circuitColor = randomColor();
+
+	var circuitName = [
+		"None", 
+		"One", 
+		"Two", 
+		"Three", 
+		"Four", 
+		"Five", 
+		"Six", 
+		"Seven", 
+		"Eight", 
+		"Nine", 
+		"Ten", 
+		"Eleven", 
+		"Tweleve"
+	];
+
+	var placePowerSupply = function() {
+		var selectedTile = { x: 0, y: 0 };
+		
+		if (startX === startY && startY === 0) {
+			if (height >= width) {
+				selectedTile = { x: 0, y: Math.floor(height / 2)};
+			} else {
+				selectedTile = { y: 0, x: Math.floor(width / 2)};
+			}
+		} else if (startY === 0) {
+			selectedTile = { x: startX + Math.floor(width / 2), y: 0};
+		} else if (startX === 0) {
+			selectedTile = { x: 0, y: startY + Math.floor(height / 2)};
+		} else {
+			selectedTile = { x: startX + Math.floor(width / 2), y: startY + height - 1};
+		}
+
+		var ps = $("<img />");
+		
+		if (selectedTile.x === 0) {
+			ps
+			.addClass("power power-left power-center")
+			.attr("src", "assets/img/powersupply/center-right.png");
+		} else if (selectedTile.y === 0) {
+			ps
+			.addClass("power power-top power-down")
+			.attr("src", "assets/img/powersupply/corner-down.png");
+		} else if (width > height) {
+			ps
+			.addClass("power power-bottom power-up")
+			.attr("src", "assets/img/powersupply/corner-up.png");
+		} else {
+			ps
+			.addClass("power power-right power-center")
+			.attr("src", "assets/img/powersupply/center-left.png");
+		}
+		
+		$(".tile-row[y=" + selectedTile.y + "] > .tile-slot[x=" + selectedTile.x + "] > .tile").append(ps);
+	};
+
+	for (var y = 0; y < height; y++) {
+		var row = $(".work-table").find(".tile-row[y=" + (y + startY) + "]");
+
+		for (var x = 0; x < width; x++) {
+			var slot = row.find(".tile-slot[x=" + (x + startX) + "]");
+			
+	 	 	var tile = $(' \
+	 	 		<div class="tile"> \
+			 		<div class="zone right"></div> \
+			 		<div class="zone bottom"></div> \
+			 	</div> \
+			')
+			.attr("src", "./assets/img/tile/illumitile_252x252.png")
+			.attr("circuit", number)
+			.click(function() {
+				var i = -1;
+	
+				if (selectingComponents) {
+					if ((i = selected.indexOf(this)) >= 0) {
+						$(this).children(".highlight").remove();
+						selected.splice(i, 1);
+					} else {
+						$(this).append($("<div class='highlight'></div>"));
+						selected.push(this);
+					}
+				}
+			})
+			.appendTo(slot);
+	
+			slot
+				.droppable("option", "disabled", true)
+				.addClass("tile-circuit")
+				.css({borderColor: circuitColor});
+		}
+		
+	}
+	
+	var rows= [];
+	var cells = [];
+	
+	for (var i = 0; i < height; i++) {
+		rows.push(startY + i);
+	}	
+	
+	for (var i = 0; i < width; i++) {
+		cells.push(startX + i);
+	}
+	
+	distributeHarnesses(rows, cells);
+	placePowerSupply();
+	
+	$("<div />")
+		.addClass("circuit-button")
+		.attr("rel", number)
 		.append(
 			$("<div />")
-				.addClass("tile-tray")
-				.append(row)
-		);
+				.addClass("circuit-button-title")
+				.css({backgroundColor: circuitColor, borderColor: circuitColor})
+				.text("Circuit " + circuitName[number])
+		)
+		.append(
+			$("<div />")
+				.addClass("circuit-button-specs")
+				.html("Current 0.51 Amps<br />Power 1.5 Watts")
+		)
+		.appendTo($(".circuit-panel"));
+	
+}
+
+function distributeHarnesses(rows, cells) {
+	var harness = function() {
 		
-	prepareWorkTable();
+		return $("<img />")
+			.attr({ src: "./assets/img/tile/harness_180x22.png" })
+			.css({ zIndex: 2 })
+			.click(function(ev) {
+				var i = -1;
+
+				if (selectingComponents) {
+					if ((i = selected.indexOf(this)) >= 0) {
+						$(this).css({backgroundColor: "transparent"});
+						selected.splice(i, 1);
+					} else {
+						$(this).css({backgroundColor: "yellow"});
+						selected.push(this);
+					}
+				}
+
+				ev.stopPropagation();
+			});
+
+	};
+	
+	for (var y = 0; y < rows.length; y++) {
+		var row = $(".tile-row[y=" + rows[y] + "]");
+
+		for (var x = 0; x < cells.length; x++) {
+			var tile = row.find(".tile-slot[x=" + cells[x] + "] > .tile");
+
+			if (y < rows.length - 1) {
+				tile.find(".bottom").append(harness());
+			}
+			
+			if (x < cells.length - 1) {
+				tile.find(".right").append(harness());
+			}
+		}
+	}
 }

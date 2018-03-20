@@ -23,6 +23,7 @@
 		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 		<script src="./assets/js/lzstring.js"></script>
 		<script src="./assets/js/js.cookie.js"></script>
+		<script src="./assets/js/randomcolor.js"></script>
 		<script src="./assets/js/temperature.js"></script>
 		<script src="./assets/js/index.js"></script>
 	</head>
@@ -50,6 +51,8 @@
 			</select>
 
 			<span class="title">IllumiTile Light Engine Configurator</span>
+			
+			<div class="circuit-panel"></div>
 		</header>
 
 		<div class="dialog saveProject">
@@ -76,14 +79,14 @@
 		<div class="main-toolbar">
 			<button onclick="selectComponent()" id="select" class="icon ion-arrow-left-c" style="transform: rotate(45deg);"></button>
 			<button onclick="panWorkspace(event)" id="move" class="icon ion-arrow-expand"></button>
-			<button id="zoomIn" class="icon ion-plus-circled"></button>
-			<button id="zoomOut" class="icon ion-minus-circled"></button>
+			<button onclick="scaleCanvas('+')" class="icon ion-plus-circled"></button>
+			<button onclick="scaleCanvas('-')" class="icon ion-minus-circled"></button>
 			<button id="undo" class="icon ion-reply"></button>
 		</div>
 
 		<section class="canvas">
 
-			<div class="work-table"></div>
+			<div class="work-table" design-mode="auto"></div>
 		</section>
 
 		<footer>
@@ -105,23 +108,44 @@
 				</div>
 
 				<p class="title">Select the desired Configuration Mode (Instructions will appear for each type.)</p>
-				<div><label><input type="radio" name="configuration" checked />Auto-Configuration for a Specified Illumination Area</label></div>
-				<div><label><input type="radio" name="configuration" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
-				<div><label><input type="radio" name="configuration" />Manual</label></div>
+				<div><label><input type="radio" onclick="setDesignMode('auto');" name="configuration" rel="auto" checked />Auto-Configuration for a Specified Illumination Area</label></div>
+				<div><label><input type="radio" onclick="setDesignMode('auto');" name="configuration" rel="auto-area" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
+				<div><label><input type="radio" onclick="setDesignMode('manual');" name="configuration" rel="manual" />Manual</label></div>
 
-				<p class="instructions">
+				<div class="instructions" rel="auto">
 					<p class="title">INSTRUCTIONS: Auto-Configuration for a Specified Illumination Area</p>
 					<p>1. Insert the desired dimensions into the Illumination Area fields.</p>
 					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
 					<p>3. View the System Parameters and Components Required.</p>
 					<p>4. Switch to Manual Configuration Mode if any modifications are desired.</p>
-				</p>
+				</div>
+				
+				<div class="instructions" rel="auto-area">
+					<p class="title">INSTRUCTIONS: Auto-Configuration for an Illumination Area Adjust to Your Layout</p>
+					<p>1. Click and drag IllumiTiles onto the build area as your physical layout requires. IllumiSnap harnesses will automatically be inserted, and the Effective Illumination Area will adjust to your layout.</p>
+					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
+					<p>3. Observe System Statistics and Required Components as you layout your system.</p>
+				</div>
+				
+				<div class="instructions" rel="manual">
+					<p class="title">INSTRUCTIONS: Manual Configuration</p>
+					<p>1. Click and drag IllumiTiles and IllumiSnap Harnesses onto the build area as your physical layout requires.</p>
+					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
+					<p>3. View System Statistics and Components Required as you layout your system.</p>
+				</div>
+				
 			</section>
 
 			<section class="specs">
 				<h1>System Specifications</h1>
 
-				<div class="setting">Area <span class="field" rel="width">12.0</span>" X <span class="field" rel="height">10.0</span>"</div>
+				<div class="setting">
+					Area 
+					<input type="text" class="field" name="work-table-width" value="12.0" />
+					" X 
+					<input type="text" class="field" name="work-table-height" value="10.0" />
+					"
+				</div>
 				<div class="setting">Voltage <span class="value" rel="voltage">0.0</span> DC</div>
 				<div class="setting">Current <span class="value" rel="current">0.0</span> Amps</div>
 				<div class="setting">Power <span class="value" rel="power">0.0</span> Watts</div>
