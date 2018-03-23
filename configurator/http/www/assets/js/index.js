@@ -1,6 +1,5 @@
 
 var selectingComponents = false;
-var panning = false;
 var selected = [];
 
 var workspaces = [];
@@ -54,7 +53,7 @@ var tileZoneConfig = {
  			ui.helper.css({transform: "rotate(0deg)", left: "0px", top: "0px"});
  		}
  	}
-}
+};
 
 $( function() {
 	clearWorkTable();
@@ -87,7 +86,7 @@ $( function() {
 			case "export" : exportProject(); break;
 			case "closeProject" : closeProject(); break;
 			case "print" : printProject(); break;
-			default : break
+			default : break;
 		}
 		
 		menu.val("");
@@ -96,7 +95,7 @@ $( function() {
 	$("input[name=temperature]")
 		.change(function() {
 			updateSystemSpecs();				
-		})
+		});
 
 	var ws = null;
 	
@@ -246,7 +245,7 @@ function prepareWorkTable() {
 
 function selectComponent(ev) {
 	selectingComponents = !selectingComponents;
-	console.log("select mode", selectingComponents)
+
 	if (selectingComponents) {
 		$(".work-table").css({cursor: "pointer"});
 	} else {
@@ -357,7 +356,7 @@ function saveProject() {
 
             window.alert(message);
 		});
-    }
+    };
 
 	if (token) {
 		var dialog = $(".saveProject")
@@ -383,7 +382,7 @@ function saveProject() {
 			
 			            window.alert(message);
 					}
-				)
+				);
 			}
 		});
 
@@ -533,7 +532,7 @@ function loadProjects(next) {
 						$("<span />")
 							.text(project.description)
 					)
-					.appendTo(projectList)
+					.appendTo(projectList);
 			}
 
 			if (next) {
@@ -549,18 +548,18 @@ function loadProjects(next) {
     });
 }
 
-function updateSystemSpecs() {
+function updateSystemSpecs(circuitNumber) {
 	var selectedTemperature = $("[name=temperature]:checked").val() || "cool";
 	var specs = temperature[selectedTemperature];
 	var workTable = $(".work-table");
-	var tileCount = workTable.find(".tile").length;
-	var harnessCount = workTable.find(".tile .zone img").length;
-	var fields = $(".specs");
+	var tiles = workTable.find(".tile[circuit=" + circuitNumber + "]");
+	var harnessCount = tiles.find(".zone img").length;
+	var fields = $(".circuit-panel [rel=" + circuitNumber + "]");
 	var components = $(".components");
 
 	for (var i = 0, spec; spec = specs[i]; i++) {
-		if (spec.tiles == tileCount && spec.harnesses <= harnessCount) {
-			fields.find("[rel=voltage]").text(spec.voltage);
+		if (spec.tiles == tiles.length && spec.harnesses <= harnessCount) {
+			//fields.find("[rel=voltage]").text(spec.voltage);
 			fields.find("[rel=current]").text(spec.current);
 			fields.find("[rel=power]").text(spec.power);
 			
@@ -568,7 +567,7 @@ function updateSystemSpecs() {
 		}
 	}
 	
-	components.find("[rel=tileCount]").text(tileCount);
+	components.find("[rel=tileCount]").text(tiles.length);
 	components.find("[rel=harnessCount]").text(harnessCount);
 	
 	var tiles = $(".tile");
@@ -662,6 +661,7 @@ function dimensionWorkTable() {
 	var height = parseFloat($("[name=work-table-height]").val());
 	var workspaceWidth = Math.floor(width / tileDimension);
 	var workspaceHeight = Math.floor(height / tileDimension);
+	var panningEnabled = !$(".work-table").draggable("option", "disabled");
 
 	if (workspaceHeight > workspaceWidth) {
 		$(".work-table").attr("orientation", "portrait");
@@ -689,13 +689,18 @@ function dimensionWorkTable() {
 	}
 
 	prepareWorkTable();
-	updateSystemSpecs();
-	
+
+	if (panningEnabled) {
+		$(".work-table")
+			.css({cursor: "move"})
+			.draggable("option", "disabled", false);
+	}
 }
 
 function splitCircuit(maxWidth, maxHeight) {
 	if (maxWidth * maxHeight <= 20) {
 		return [{
+			number: 1,
 			startX: 0,
 			startY: 0,
 			width: maxWidth,
@@ -743,8 +748,6 @@ function splitCircuit(maxWidth, maxHeight) {
 		height = width = 0;
 	}
 
-	console.log("circuit list", list)
-	
 	return list;
 }
 
@@ -811,6 +814,47 @@ function createCircuit(number, startX, startY, width, height) {
 		$(".tile-row[y=" + selectedTile.y + "] > .tile-slot[x=" + selectedTile.x + "] > .tile").append(ps);
 	};
 
+	var distributeHarnesses = function (rows, cells) {
+		var harness = function() {
+			
+			return $("<img />")
+				.attr({ src: "./assets/img/tile/harness_180x22.png" })
+				.css({ zIndex: 2 })
+				.click(function(ev) {
+					var i = -1;
+	
+					if (selectingComponents) {
+						if ((i = selected.indexOf(this)) >= 0) {
+							$(this).css({backgroundColor: "transparent"});
+							selected.splice(i, 1);
+						} else {
+							$(this).css({backgroundColor: "yellow"});
+							selected.push(this);
+						}
+					}
+	
+					ev.stopPropagation();
+				});
+	
+		};
+		
+		for (var y = 0; y < rows.length; y++) {
+			var row = $(".tile-row[y=" + rows[y] + "]");
+	
+			for (var x = 0; x < cells.length; x++) {
+				var tile = row.find(".tile-slot[x=" + cells[x] + "] > .tile");
+	
+				if (y < rows.length - 1) {
+					tile.find(".bottom").append(harness());
+				}
+				
+				if (x < cells.length - 1) {
+					tile.find(".right").append(harness());
+				}
+			}
+		}
+	};
+
 	for (var y = 0; y < height; y++) {
 		var row = $(".work-table").find(".tile-row[y=" + (y + startY) + "]");
 
@@ -874,49 +918,95 @@ function createCircuit(number, startX, startY, width, height) {
 		.append(
 			$("<div />")
 				.addClass("circuit-button-specs")
-				.html("Current 0.51 Amps<br />Power 1.5 Watts")
+				.append(
+					$("<div />")
+						.append($("<span />").text("Current "))
+						.append($("<span />").attr("rel", "current"))
+						.append($("<span />").text(" Amps"))
+				)
+				.append(
+					$("<div />")
+						.append($("<span />").text("Power "))
+						.append($("<span />").attr("rel", "power"))
+						.append($("<span />").text(" Watts"))
+				)
 		)
+		.click(function() {
+			var button = $(this);
+			var testing = !button.hasClass("circuit-button-test");
+			
+			button.toggleClass("circuit-button-test");
+			
+			testCircuit(number, testing);
+		})
 		.appendTo($(".circuit-panel"));
+		
+	updateSystemSpecs(number);
 	
 }
 
-function distributeHarnesses(rows, cells) {
-	var harness = function() {
-		
-		return $("<img />")
-			.attr({ src: "./assets/img/tile/harness_180x22.png" })
-			.css({ zIndex: 2 })
-			.click(function(ev) {
-				var i = -1;
-
-				if (selectingComponents) {
-					if ((i = selected.indexOf(this)) >= 0) {
-						$(this).css({backgroundColor: "transparent"});
-						selected.splice(i, 1);
-					} else {
-						$(this).css({backgroundColor: "yellow"});
-						selected.push(this);
-					}
-				}
-
-				ev.stopPropagation();
-			});
-
-	};
-	
-	for (var y = 0; y < rows.length; y++) {
-		var row = $(".tile-row[y=" + rows[y] + "]");
-
-		for (var x = 0; x < cells.length; x++) {
-			var tile = row.find(".tile-slot[x=" + cells[x] + "] > .tile");
-
-			if (y < rows.length - 1) {
-				tile.find(".bottom").append(harness());
-			}
+function testCircuit(number, enabled) {
+	if (!enabled) {
+		$(".tile[circuit=" + number + "]")
+			.removeClass("test-pass")
+			.removeClass("test-fail");
 			
-			if (x < cells.length - 1) {
-				tile.find(".right").append(harness());
-			}
+		return;
+	}
+	
+	var circuit = $(".work-table .tile[circuit=" + number + "]");
+	
+	if (circuit.find(".power").length === 0) {
+		circuit.addClass("test-fail");
+		return;
+	}
+	
+	var zones = $(".work-table [circuit=" + number + "] .zone:empty");
+	var disconnect = [];
+	
+	circuit.addClass("test-pass");
+	
+	circuit
+		.parents(".tile-row[y=0]")
+		.find(".tile-slot")
+		.each(function(_, el) {
+			disconnect["0:" + $(el).attr("x")] = 1;
+		});
+	
+	circuit
+		.parents(".tile-slot[x=0]")
+		.each(function(_, el) {
+			disconnect[$(el).parent(".tile-row").attr("y") + ":0"] = 1;
+		});
+
+	zones.each(function(i, el) {
+		var zone = $(el);
+		var slot = zone.parents(".tile-slot");
+		var row = zone.parents(".tile-row");
+		var effectiveRowIndex = parseInt(row.attr("y")) + (zone.hasClass("right") ? 0 : 1);
+		var effectiveSlotIndex = parseInt(slot.attr("x")) + (zone.hasClass("bottom") ? 0 : 1);
+		var effectiveRow = $(".work-table .tile-row[y=" + effectiveRowIndex + "]");
+		var effectiveSlot = effectiveRow.find(".tile-slot[x=" + effectiveSlotIndex + "]");
+
+		if (effectiveSlot.length === 1) {
+			var dIndex = effectiveRowIndex + ":" + effectiveSlotIndex;
+
+			disconnect[dIndex] = (disconnect[dIndex] || 0) + 1;
+		}
+
+	});
+	
+	console.log("possible defects", disconnect);
+
+	for (var key in disconnect) {
+
+		if (disconnect[key] > 1) {
+			var index = key.split(":");
+			
+			$(".work-table .tile-row[y=" + index[0] + "] .tile-slot[x=" + index[1] + "] .tile")
+				.removeClass("test-pass")
+				.addClass("test-fail");
 		}
 	}
+	
 }
