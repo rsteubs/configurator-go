@@ -949,64 +949,95 @@ function testCircuit(number, enabled) {
 	if (!enabled) {
 		$(".tile[circuit=" + number + "]")
 			.removeClass("test-pass")
-			.removeClass("test-fail");
+			.removeClass("test-fail")
+			.removeAttr("tested");
 			
 		return;
 	}
 	
 	var circuit = $(".work-table .tile[circuit=" + number + "]");
-	
-	if (circuit.find(".power").length === 0) {
-		circuit.addClass("test-fail");
-		return;
-	}
-	
-	var zones = $(".work-table [circuit=" + number + "] .zone:empty");
-	var disconnect = [];
-	
-	circuit.addClass("test-pass");
-	
-	circuit
-		.parents(".tile-row[y=0]")
-		.find(".tile-slot")
-		.each(function(_, el) {
-			disconnect["0:" + $(el).attr("x")] = 1;
-		});
-	
-	circuit
-		.parents(".tile-slot[x=0]")
-		.each(function(_, el) {
-			disconnect[$(el).parent(".tile-row").attr("y") + ":0"] = 1;
-		});
+	var source = circuit.find(".power").parent(".tile");
 
-	zones.each(function(i, el) {
-		var zone = $(el);
-		var slot = zone.parents(".tile-slot");
-		var row = zone.parents(".tile-row");
-		var effectiveRowIndex = parseInt(row.attr("y")) + (zone.hasClass("right") ? 0 : 1);
-		var effectiveSlotIndex = parseInt(slot.attr("x")) + (zone.hasClass("bottom") ? 0 : 1);
-		var effectiveRow = $(".work-table .tile-row[y=" + effectiveRowIndex + "]");
-		var effectiveSlot = effectiveRow.find(".tile-slot[x=" + effectiveSlotIndex + "]");
+	var testNeighbor = function(key) {
+		if (key.length === 0) return;
+		
+		var row = key.parents(".tile-row");
+		var cell = key.parents(".tile-slot");
+		var x = parseInt(cell.attr("x"));
+		var y = parseInt(row.attr("y"));
 
-		if (effectiveSlot.length === 1) {
-			var dIndex = effectiveRowIndex + ":" + effectiveSlotIndex;
+		var fore = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x - 1) + "] .tile");
+		var aft = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x + 1) + "] .tile");
+		var above = circuit.parents(".tile-row[y=" + (y - 1) + "]").find(".tile-slot[x=" + x + "] .tile");
+		var below = circuit.parents(".tile-row[y=" + (y + 1) + "]").find(".tile-slot[x=" + x + "] .tile");
+		
+		key.attr("tested", "1");
 
-			disconnect[dIndex] = (disconnect[dIndex] || 0) + 1;
-		}
-
-	});
-	
-	console.log("possible defects", disconnect);
-
-	for (var key in disconnect) {
-
-		if (disconnect[key] > 1) {
-			var index = key.split(":");
+		if (key.hasClass("test-pass") ||
+			key.find(".power").length > 0 ||
+			(fore.hasClass("test-pass") && fore.find(".zone.right img").length > 0) ||
+			(above.hasClass("test-pass") && above.find(".zone.bottom img").length > 0) ||
+			(below.hasClass("test-pass") && key.find(".zone.bottom img").length > 0) ||
+			(aft.hasClass("test-pass") && key.find(".zone.right img").length > 0)) {
+				
+			key.addClass("test-pass");
+			key.removeClass("test-fail");
 			
-			$(".work-table .tile-row[y=" + index[0] + "] .tile-slot[x=" + index[1] + "] .tile")
-				.removeClass("test-pass")
-				.addClass("test-fail");
+			if (key.find(".zone.right img").length > 0) {
+				aft.addClass("test-pass");
+				aft.removeClass("test-fail");
+			}
+
+			if (key.find(".zone.bottom img").length > 0) {
+				below.addClass("test-pass");
+				below.removeClass("test-fail");
+			}
+		} 
+
+		if (fore.attr("tested") !== "1") {
+			testNeighbor(fore);
 		}
-	}
+
+		if (aft.attr("tested") !== "1") {
+			testNeighbor(aft);
+		}
+
+		if (above.attr("tested") !== "1") {
+			testNeighbor(above);
+		}
+
+		if (below.attr("tested") !== "1") {
+			testNeighbor(below);
+		}
+
+	};
 	
+	circuit.addClass("test-fail");
+	testNeighbor(source);
+
+}
+function joinCircuit(number, key) {
+	if (key.length === 0) return;
+	
+	var circuit = $(".work-table .tile[circuit=" + key.attr("circuit") + "]");
+	var row = key.parents(".tile-row");
+	var cell = key.parents(".tile-slot");
+	var x = parseInt(cell.attr("x"));
+	var y = parseInt(row.attr("y"));
+
+	var fore = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x - 1) + "] .tile");
+	var aft = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x + 1) + "] .tile");
+	var above = circuit.parents(".tile-row[y=" + (y - 1) + "]").find(".tile-slot[x=" + x + "] .tile");
+	var below = circuit.parents(".tile-row[y=" + (y + 1) + "]").find(".tile-slot[x=" + x + "] .tile");
+	
+	if (fore.find(".zone.right img").length > 0) fore.attr("circuit", number);
+	if (above.find(".zone.bottom img").length > 0) above.attr("circuit", number);
+	if (key.find(".zone.bottom img").length > 0) fore.attr("circuit", number);
+	if (key.find(".zone.right img").length > 0) fore.attr("circuit", number);
+			
+	joinCircuit(fore);
+	joinCircuit(aft);
+	joinCircuit(above);
+	joinCircuit(below);
+
 }
