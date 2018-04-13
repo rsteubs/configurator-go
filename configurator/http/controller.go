@@ -4,128 +4,125 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo"
 
 	"cretin.co/forge/1.0/app"
 	"cretin.co/forge/1.0/context"
-	"cretin.co/forge/1.0/context/http"
 
 	"configurator/service"
 )
 
-func CreateAccount(w http.ResponseWriter, r *http.Request) {
-	defer recoverFromPanic()
-
-	_createAccount(w, r)()
+func CreateAccount(c echo.Context) error {
+	return _createAccount(c)()
 }
 
-func Auth(w http.ResponseWriter, r *http.Request) {
-	defer recoverFromPanic()
-
-	_auth(w, r)()
+func Auth(c echo.Context) error {
+	return _auth(c)()
 }
 
-func AuthorizeClient(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	defer recoverFromPanic()
-
-	_authorize(w, r, next)()
+func CreateProject(c echo.Context) error {
+	return _createProject(c)()
 }
 
-func CreateProject(w http.ResponseWriter, r *http.Request) {
-	defer recoverFromPanic()
-
-	_createProject(w, r)()
+func UpdateProject(c echo.Context) error {
+	return _updateProject(c)()
 }
 
-func UpdateProject(w http.ResponseWriter, r *http.Request) {
-	defer recoverFromPanic()
-
-	_updateProject(w, r)()
+func GetProjects(c echo.Context) error {
+	return _getProjects(c)()
 }
 
-func GetProjects(w http.ResponseWriter, r *http.Request) {
-	defer recoverFromPanic()
-
-	_getProjects(w, r)()
-}
-
-func _createAccount(w http.ResponseWriter, r *http.Request) func() {
-	c := httpContext.Create("Create Profile", w, r)
-
-	return func() {
+func _createAccount(c echo.Context) func() error {
+	return func() error {
 		d := struct {
 			U string `json:"username"`
 			P string `json:"password"`
 			C string `json:"captcha"`
 		}{}
 
-		if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-			c.Error(errors.New("Could not read request"), http.StatusBadRequest)
+		if err := json.NewDecoder(c.Request().Body).Decode(&d); err != nil {
+			c.Error(httpError(errors.New("Could not read request"), http.StatusBadRequest))
+			return errors.New("Could not read request")
 		} else if len(d.U) == 0 || len(d.P) == 0 {
-			c.Error(errors.New("Must supply a username and a password"), http.StatusBadRequest)
+			c.Error(httpError(errors.New("Must supply a username and a password"), http.StatusBadRequest))
+			return errors.New("Must supply a username and a password")
 		} else if err := verifyCaptcha(d.C, c); err != nil {
-			return
+			return err
 		} else if h, err := service.CreateProfile(d.U, d.P); err != nil {
 			context.Logf(context.Error, "Error creating profile: %v", err)
-			c.Error(errors.New("An unexpected error occurrred during profile creation."), http.StatusInternalServerError)
+			c.Error(httpError(errors.New("An unexpected error occurrred during profile creation."), http.StatusInternalServerError))
+			return errors.New("An unexpected error occurrred during profile creation.")
 		} else if t, err := _createToken(h); err != nil {
 			context.Logf(context.Error, "Error signing token for %s: %v", h, err)
-			c.Error(err, http.StatusInternalServerError)
+			c.Error(httpError(err, http.StatusInternalServerError))
+			return err
 		} else {
-			c.End(http.StatusOK, struct {
-				H string `json:"handle"`
-				T string `json:"token"`
-			}{h, t})
+			status := http.StatusOK
+
+			res := jsonResponse(status,
+				httpStatus(status),
+				struct {
+					H string `json:"handle"`
+					T string `json:"token"`
+				}{h, t})
+
+			return c.JSON(http.StatusOK, res)
 		}
 	}
 }
 
-func _auth(w http.ResponseWriter, r *http.Request) func() {
-	c := httpContext.Create("Authenticate", w, r)
-
-	return func() {
+func _auth(c echo.Context) func() error {
+	return func() error {
 		d := struct {
 			U string `json:"username"`
 			P string `json:"password"`
 		}{}
 
-		if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-			c.Error(errors.New("Could not read request"), http.StatusBadRequest)
+		if err := json.NewDecoder(c.Request().Body).Decode(&d); err != nil {
+			c.Error(httpError(errors.New("Could not read request"), http.StatusBadRequest))
+			return errors.New("Could not read request")
 		} else if len(d.U) == 0 || len(d.P) == 0 {
-			c.Error(errors.New("Must supply a username and a password"), http.StatusBadRequest)
+			c.Error(httpError(errors.New("Must supply a username and a password"), http.StatusBadRequest))
+			return errors.New("Must supply a username and a password")
 		} else if u, err := service.Authenticate(d.U, d.P); err != nil {
 			if sErr, ok := err.(service.Error); ok {
-				c.Error(sErr, http.StatusUnauthorized)
+				c.Error(httpError(sErr, http.StatusUnauthorized))
+				return sErr
 			} else {
 				context.Logf(context.Error, "Error authenticating profile: %v", err)
-				c.Error(errors.New("An unexpected error occurrred during authentication."), http.StatusInternalServerError)
+				c.Error(httpError(errors.New("An unexpected error occurrred during authentication."), http.StatusInternalServerError))
+				return errors.New("An unexpected error occurrred during authentication.")
 			}
 		} else if t, err := _createToken(u.Handle); err != nil {
 			context.Logf(context.Error, "Error signing token for %s: %v", u.Handle, err)
-			c.Error(err, http.StatusInternalServerError)
+			c.Error(httpError(err, http.StatusInternalServerError))
+			return err
 		} else {
-			c.End(http.StatusOK, struct {
-				H string    `json:"handle"`
-				T string    `json:"token"`
-				E time.Time `json:"expiration"`
-			}{u.Handle, t, time.Now().Add(time.Minute * 30).UTC()})
+			status := http.StatusOK
+
+			res := jsonResponse(status,
+				httpStatus(status),
+				struct {
+					H string    `json:"handle"`
+					T string    `json:"token"`
+					E time.Time `json:"expiration"`
+				}{u.Handle, t, time.Now().Add(time.Minute * 30).UTC()})
+
+			return c.JSON(http.StatusOK, res)
 		}
 	}
 }
 
-func _authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) func() {
-	return func() {
-		c := httpContext.Create("Authorize Client", w, r)
-
-		t := r.Header.Get("Authorization")
-		u := r.Header.Get("x-configurator-user")
+func AuthorizeClient(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		t := c.Request().Header.Get("Authorization")
+		u := c.Request().Header.Get("x-configurator-user")
 
 		test := func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -136,54 +133,56 @@ func _authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) f
 			return []byte(u), nil
 		}
 
-		c.StartTransaction("validate token")
-
 		if token, err := jwt.Parse(t, test); err != nil {
-			context.Logf(context.Error, "Client validation error: %v", err)
-			c.Error(errors.New("Could not authorize request"), http.StatusForbidden)
-			return
+			return echo.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
 		} else if token.Valid {
-			c.StartTransaction("authorization complete")
-			next(w, r)
+			c.Set("user", token)
+			return next(c)
 		} else {
-			c.End(http.StatusForbidden, nil)
+			return echo.NewHTTPError(http.StatusUnauthorized, "invalid or expired jwt")
 		}
 	}
 }
 
-func _createProject(w http.ResponseWriter, r *http.Request) func() {
-	return func() {
-		c := httpContext.Create("Create Project", w, r)
-		u := r.Header.Get("x-configurator-user")
+func _createProject(c echo.Context) func() error {
+	return func() error {
+		u := c.Request().Header.Get("x-configurator-user")
 
 		if h, err := service.CreateProject(u); err != nil {
 			if sErr, ok := err.(service.Error); ok {
-				c.Error(sErr, http.StatusNotAcceptable)
+				c.Error(httpError(sErr, http.StatusNotAcceptable))
+				return sErr
 			} else {
 				context.Logf(context.Error, "Error encountered while creating project: %v", err)
-				c.Error(err, http.StatusInternalServerError)
+				c.Error(httpError(err, http.StatusInternalServerError))
+				return err
 			}
 		} else {
-			d := struct {
-				string `json:"handle"`
-			}{h}
+			status := http.StatusOK
 
-			c.End(http.StatusOK, d)
+			res := jsonResponse(status,
+				httpStatus(status),
+				struct {
+					string `json:"handle"`
+				}{h})
+
+			return c.JSON(http.StatusOK, res)
 		}
 	}
 }
 
-func _getProjects(w http.ResponseWriter, r *http.Request) func() {
-	return func() {
-		c := httpContext.Create("Get Projects", w, r)
-		u := r.Header.Get("x-configurator-user")
+func _getProjects(c echo.Context) func() error {
+	return func() error {
+		u := c.Request().Header.Get("x-configurator-user")
 
 		if p, err := service.GetProjects(u); err != nil {
 			if sErr, ok := err.(service.Error); ok {
-				c.Error(sErr, http.StatusBadRequest)
+				c.Error(httpError(sErr, http.StatusBadRequest))
+				return sErr
 			} else {
 				context.Logf(context.Error, "Error retrieving user projcects for %s: %v", u, err)
-				c.Error(err, http.StatusInternalServerError)
+				c.Error(httpError(err, http.StatusInternalServerError))
+				return err
 			}
 		} else {
 			type project struct {
@@ -209,17 +208,16 @@ func _getProjects(w http.ResponseWriter, r *http.Request) func() {
 				}
 			}
 
-			c.End(status, out[:index])
+			res := jsonResponse(status, httpStatus(status), out[:index])
+			return c.JSON(status, res)
 		}
 	}
 }
 
-func _updateProject(w http.ResponseWriter, r *http.Request) func() {
-	c := httpContext.Create("Create Project", w, r)
-
-	return func() {
-		h := mux.Vars(r)["handle"]
-		u := r.Header.Get("x-configurator-user")
+func _updateProject(c echo.Context) func() error {
+	return func() error {
+		h := c.QueryParam("handle")
+		u := c.Request().Header.Get("x-configurator-user")
 
 		d := struct {
 			Title       string `json:"title"`
@@ -227,11 +225,13 @@ func _updateProject(w http.ResponseWriter, r *http.Request) func() {
 			Content     string `json:"content"`
 		}{}
 
-		if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+		if err := json.NewDecoder(c.Request().Body).Decode(&d); err != nil {
 			context.Logf(context.Warn, "Malformed project request detected: %v", d)
-			c.Error(err, http.StatusInternalServerError)
+			c.Error(httpError(err, http.StatusInternalServerError))
+			return err
 		} else if len(d.Title) == 0 || len(d.Description) == 0 || len(d.Content) == 0 {
-			c.Error(errors.New("Must supply a title, description, and content."), http.StatusNotAcceptable)
+			c.Error(httpError(errors.New("Must supply a title, description, and content."), http.StatusNotAcceptable))
+			return errors.New("Must supply a title, description, and content.")
 		} else {
 			p := service.Project{}
 
@@ -240,13 +240,19 @@ func _updateProject(w http.ResponseWriter, r *http.Request) func() {
 
 			if err := service.SaveProject(u, p); err != nil {
 				if sErr, ok := err.(service.Error); ok {
-					c.Error(sErr, http.StatusNotAcceptable)
+					c.Error(httpError(sErr, http.StatusNotAcceptable))
+					return sErr
 				} else {
 					context.Logf(context.Error, "Error updating project: %v", err)
-					c.Error(err, http.StatusInternalServerError)
+					c.Error(httpError(err, http.StatusInternalServerError))
+					return err
 				}
 			} else {
-				c.End(http.StatusOK, nil)
+				status := http.StatusOK
+
+				res := jsonResponse(status, httpStatus(status), nil)
+
+				return c.JSON(http.StatusOK, res)
 			}
 		}
 	}
@@ -267,20 +273,14 @@ func _createToken(handle string) (string, error) {
 	return t.SignedString([]byte(handle))
 }
 
-func verifyCaptcha(captcha string, c *httpContext.HttpContext) error {
-	tx := context.Current.StartTransaction("verifying captcha")
-
+func verifyCaptcha(captcha string, c echo.Context) error {
 	values := url.Values{
 		"secret":   {"6LdIR0cUAAAAAC8BuroicHko9U9UPj-SFd4MLnZ-"},
 		"response": {captcha},
 	}
 
-	context.Logf(context.Trace, "Captcha: %s", captcha)
-
 	if resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify", values); err != nil {
-		context.Logf(context.Error, "Error creating request: %v", err)
-		tx.StartTransaction("request failed")
-		c.Error(err, http.StatusInternalServerError)
+		c.Error(httpError(err, http.StatusInternalServerError))
 
 		return err
 	} else {
@@ -291,23 +291,19 @@ func verifyCaptcha(captcha string, c *httpContext.HttpContext) error {
 			C []string `json:"error-codes"`
 		}{}
 
-		tx.StartTransaction("read response")
-
 		if b, err := ioutil.ReadAll(resp.Body); err != nil {
 			context.Logf(context.Error, "Error occurred while reading response: %v", err)
-			c.Error(err, http.StatusInternalServerError)
+			c.Error(httpError(err, http.StatusInternalServerError))
 
 			return err
 		} else if err := json.NewDecoder(bytes.NewBuffer(b)).Decode(&r); err != nil {
 			context.Logf(context.Error, "Error decoding response (%s): %v", string(b), err)
-			c.Error(err, http.StatusInternalServerError)
-
-			tx.StartTransaction("could not decode response")
+			c.Error(httpError(err, http.StatusInternalServerError))
 
 			return err
 		} else if !r.S {
 			err := errors.New("Invalid reCaptcha response. Please try again.")
-			c.Error(err, http.StatusUnauthorized)
+			c.Error(httpError(err, http.StatusUnauthorized))
 
 			return err
 		}
@@ -316,12 +312,6 @@ func verifyCaptcha(captcha string, c *httpContext.HttpContext) error {
 	return nil
 }
 
-func recoverFromPanic() {
-	if x := recover(); x != nil {
-		context.Logf(context.Error, "Recovered from panic: %v", x)
-
-		if httpContext.Current != nil {
-			httpContext.Current.Error(fmt.Errorf("Panic enounctered: %v", x), http.StatusInternalServerError)
-		}
-	}
+func httpError(err error, code int) *echo.HTTPError {
+	return echo.NewHTTPError(code, err.Error())
 }

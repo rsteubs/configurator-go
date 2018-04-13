@@ -8,34 +8,38 @@ var tileZoneConfig = {
  	accept: "[rel=harness]",
  	drop: function(e, ui) {
  		var zone = $(this);
+		var tile = zone.parents(".tile");
+		var map = tilePosition(tile);
 
+		if ((zone.hasClass("bottom") && map.below.length === 0) || (zone.hasClass("right") && map.aft.length === 0)) {
+			return;
+		}
+		
 		zone.empty();
 
 		$("<img />")
 			.attr({ src: ui.helper.attr("src") })
 			.css({ zIndex: 2 })
-			.click(function(ev) {
-				var i = -1;
-
-				if (selectingComponents) {
-					if ((i = selected.indexOf(this)) >= 0) {
-						$(this).css({backgroundColor: "transparent"});
-						selected.splice(i, 1);
-					} else {
-						$(this).css({backgroundColor: "yellow"});
-						selected.push(this);
-					}
-				}
-
-				ev.stopPropagation();
-			})
+			.click(selectComponentForDeletion)
 			.appendTo(zone);
 
 		zone
 			.droppable("option", "disabled", true)
 			.css({zIndex: 2});
 			
-		updateSystemSpecs();
+		var circuitNumber = tile.attr("circuit");
+		
+		if (!circuitNumber) {
+			circuitNumber = 0;
+			
+			$(".circuit-panel .circuit-button").each(function(i, el) {
+				circuitNumber = Math.max(circuitNumber, parseInt($(el).attr("rel")));
+			});
+			
+			circuitNumber += 1;
+		} 
+		
+		joinCircuit(circuitNumber, tile);
  	},
  	over: function(e, ui) {
  		var target = $(this);
@@ -52,6 +56,46 @@ var tileZoneConfig = {
  		if (target.hasClass("bottom")) {
  			ui.helper.css({transform: "rotate(0deg)", left: "0px", top: "0px"});
  		}
+ 	}
+};
+
+var tileDropConfig = {
+ 	accept: "[rel=power]",
+ 	drop: function(e, ui) {
+		var tile = $(this);
+		var row = tile.parents(".tile-row");
+		var cell = tile.parents(".tile-slot");
+		var map = tilePosition(tile);
+		
+		var psClass = "";
+		var psSrc = "";
+
+		tile.find("img[rel=power]").remove();
+		$(".work-table .tile[circuit=" + tile.attr("circuit") + "] img[rel=power]").remove();
+			
+		if (map.above.length == 0) {
+			psClass = "power power-top power-down";
+			psSrc="assets/img/powersupply/corner-down.png";
+		} else if (map.fore.length == 0) {
+			psClass = "power power-left power-center";
+			psSrc="assets/img/powersupply/center-right.png";
+		} else if (map.below.length == 0) {
+			psClass = "power power-bottom power-up";
+			psSrc="assets/img/powersupply/corner-up.png";
+		} else if (map.aft.length == 0) {
+			psClass = "power power-right power-center";
+			psSrc="assets/img/powersupply/center-left.png";
+		} else {
+			return;
+		}
+
+		$("<img />")
+			.attr({ src: psSrc})
+			.attr({rel: "power"})
+			.css({ zIndex: 2 })
+			.addClass(psClass)
+			.click(selectComponentForDeletion)
+			.appendTo(tile);
  	}
 };
 
@@ -183,6 +227,7 @@ function prepareWorkTable() {
 	 			switch($(this).attr("rel")) {
 	 				case "tile" 	: component = "./assets/img/tile/illumitile_252x252.png"; break;
 	 				case "harness"	: component = "./assets/img/tile/harness_180x22.png"; break;
+	 				case "power"	: component = "./assets/img/powersupply/corner-down.png"; break;
 	 			}
 
 	 			var helper = $("<img />")
@@ -228,7 +273,8 @@ function prepareWorkTable() {
 				.appendTo(slot);
 
 				tile.children(".zone").droppable(tileZoneConfig);
-
+				tile.droppable(tileDropConfig);
+				
 				slot.droppable("option", "disabled", true);
 
 				updateSystemSpecs();
@@ -258,9 +304,37 @@ function removeComponents() {
 	if (selectingComponents) {
 		while (selected.length > 0) {
 			var component = $(selected.pop());
-	
+			var tile = component.hasClass("tile") ? component : component.parents(".tile");
+			var circuit = parseInt(tile.attr("circuit"));
+			
+			if (component.hasClass("tile")) {
+				var map = tilePosition(component);
+				
+				if (map.above.attr("circuit") == circuit) {
+					map.above
+						.find(".zone.bottom")
+						.droppable("option", "disabled", false)
+						.find("img").remove();
+				}
+				
+				if (map.aft.attr("circuit") == circuit) {
+					map.aft
+						.find(".zone.right")
+						.droppable("option", "disabled", false)
+						.find("img").remove();
+				}
+
+				component.parents(".tile-slot")
+					.removeClass("tile-circuit")
+					.css({borderColor: ""});
+			}
+
 			component.parent().droppable("option", "disabled", false);
 			component.remove();
+
+			if (circuit > 0) {
+				adjustCircuit(circuit);
+			}
 		}
 
 		$(".tile-row:not(:has(.tile))").remove();
@@ -420,7 +494,9 @@ function decompressWorkspace(b64) {
 
 	doc.html(lzstring.decompressFromBase64(b64));
 	prepareWorkTable();
-	$(".tile .zone").droppable(tileZoneConfig);
+	$(".tile")
+		.droppable(tileDropConfig)
+		.find(".zone").droppable(tileZoneConfig);	
 
 	$(".tile .zone img")
 		.click(function(ev) {
@@ -465,7 +541,7 @@ function createProject(next, err) {
 	Cookies.remove("ws");
 
     $.ajax({
-        url: "/project",
+        url: "/project/",
         method: "POST",
         
         headers: {
@@ -499,7 +575,7 @@ function loadProjects(next) {
 	console.log("loading projects");
 
     $.ajax({
-        url: "/project",
+        url: "/project/",
         method: "GET",
         
         headers: {
@@ -552,50 +628,41 @@ function updateSystemSpecs(circuitNumber) {
 	var selectedTemperature = $("[name=temperature]:checked").val() || "cool";
 	var specs = temperature[selectedTemperature];
 	var workTable = $(".work-table");
-	var tiles = workTable.find(".tile[circuit=" + circuitNumber + "]");
+	var tiles = workTable.find(".tile");
 	var harnessCount = tiles.find(".zone img").length;
-	var fields = $(".circuit-panel [rel=" + circuitNumber + "]");
+	var circuitTiles = workTable.find(".tile[circuit=" + circuitNumber + "]");
+	var circuitHarnessCount = circuitTiles.find(".zone img").length;
+	var fields = $(".specs");
+	var circuitFields = $(".circuit-panel [rel=" + circuitNumber + "]");
 	var components = $(".components");
+	var overallSet = false;
+	var circuitSet = false;
 
-	for (var i = 0, spec; spec = specs[i]; i++) {
-		if (spec.tiles == tiles.length && spec.harnesses <= harnessCount) {
-			//fields.find("[rel=voltage]").text(spec.voltage);
+	console.log("using tiles", tiles.length);
+	console.log("using harnesses", harnessCount);
+
+	for (var i = 0, spec; (spec = specs[i]) && (!overallSet || !circuitSet); i++) {
+		if (!overallSet && spec.tiles == tiles.length && spec.harnesses <= harnessCount) {
+			console.log("using", spec)
 			fields.find("[rel=current]").text(spec.current);
 			fields.find("[rel=power]").text(spec.power);
-			
-			break;
+			fields.find("[rel=voltage]").text(spec.voltage);
+			components.find("[rel=tileCount]").text(tiles.length);
+			components.find("[rel=harnessCount]").text(harnessCount);
+			overallSet = true;
+		}
+		
+		if (!circuitSet && spec.tiles == circuitTiles.length && spec.harnesses <= circuitHarnessCount) {
+			circuitFields.find("[rel=current]").text(spec.current);
+			circuitFields.find("[rel=power]").text(spec.power);
+			circuitSet = true;
 		}
 	}
-	
-	components.find("[rel=tileCount]").text(tiles.length);
-	components.find("[rel=harnessCount]").text(harnessCount);
-	
-	var tiles = $(".tile");
 	
 	tiles.each(function(index) {
 		$(this).attr("rel", index);	
 	});
 	
-	// $(".tile .zone img")
-	// 	.each(function(hix, el) {
-	// 		var connections = 0;
-	// 		var harness = $(el);
-
-	// 		harness.attr("rel", hix);
-			
-	// 		tiles.each(function(index, el) {
-	// 			var tile = $(el);
-				
-	// 			if (is_colliding(harness, tile)) {
-					
-	// 				connections++;
-	// 			}
-	// 		});
-	// 		console.log("connections for 0" + index + ": ", connections);
-	// 		if (connections === 2) {
-	// 			harness.css({ background: "green", })
-	// 		}
-	// 	})
 }
 
 function addTileRow(index) {
@@ -1016,28 +1083,206 @@ function testCircuit(number, enabled) {
 	testNeighbor(source);
 
 }
-function joinCircuit(number, key) {
-	if (key.length === 0) return;
+function joinCircuit(number, circuitKey) {
+	if (!circuitKey || circuitKey.length === 0 || circuitKey.attr("circuit-set")) return;
 	
-	var circuit = $(".work-table .tile[circuit=" + key.attr("circuit") + "]");
-	var row = key.parents(".tile-row");
-	var cell = key.parents(".tile-slot");
-	var x = parseInt(cell.attr("x"));
-	var y = parseInt(row.attr("y"));
+	var circuit = $(".work-table .tile[circuit=" + number + "]");
+	var circuitColor = randomColor();
+	
+	var go = function(key) {
+		if (!key || key.length === 0 || key.attr("circuit-set")) return;
+	
+		key.attr("circuit", number);
+		key.attr("circuit-set", "1");
+		
+		key.parents(".tile-slot")
+			.addClass("tile-circuit")
+			.css({borderColor: circuitColor});
+		
+		var row = key.parents(".tile-row");
+		var cell = key.parents(".tile-slot");
+		var x = parseInt(cell.attr("x"));
+		var y = parseInt(row.attr("y"));
+	
+		var fore = key.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x - 1) + "] .tile");
+		var aft = key.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x + 1) + "] .tile");
+		var above = $(".work-table .tile-row[y=" + (y - 1) + "]").find(".tile-slot[x=" + x + "] .tile");
+		var below = $(".work-table .tile-row[y=" + (y + 1) + "]").find(".tile-slot[x=" + x + "] .tile");
 
-	var fore = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x - 1) + "] .tile");
-	var aft = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x + 1) + "] .tile");
-	var above = circuit.parents(".tile-row[y=" + (y - 1) + "]").find(".tile-slot[x=" + x + "] .tile");
-	var below = circuit.parents(".tile-row[y=" + (y + 1) + "]").find(".tile-slot[x=" + x + "] .tile");
+		if (fore.find(".zone.right img").length > 0)  {
+			fore.attr("circuit", number);
+			go(fore);
+		}
+		
+		if (above.find(".zone.bottom img").length > 0)  {
+			above.attr("circuit", number);
+			go(above);
+		}
+		
+		if (key.find(".zone.bottom img").length > 0)  {
+			below.attr("circuit", number);
+			go(below);
+		}
+		
+		if (key.find(".zone.right img").length > 0)  {
+			aft.attr("circuit", number);
+			go(aft);
+		}
+	}
 	
-	if (fore.find(".zone.right img").length > 0) fore.attr("circuit", number);
-	if (above.find(".zone.bottom img").length > 0) above.attr("circuit", number);
-	if (key.find(".zone.bottom img").length > 0) fore.attr("circuit", number);
-	if (key.find(".zone.right img").length > 0) fore.attr("circuit", number);
+	if (circuit.length === 0) {
+		var circuitName = [
+			"None", 
+			"One", 
+			"Two", 
+			"Three", 
+			"Four", 
+			"Five", 
+			"Six", 
+			"Seven", 
+			"Eight", 
+			"Nine", 
+			"Ten", 
+			"Eleven", 
+			"Tweleve"
+		];
+		
+		circuit = circuitKey;
+
+		$(".circuit-panel .circuit-button[rel=" + number + "]").remove();
+	
+		$("<div />")
+			.addClass("circuit-button")
+			.attr("rel", number)
+			.append(
+				$("<div />")
+					.addClass("circuit-button-title")
+					.css({backgroundColor: circuitColor, borderColor: circuitColor})
+					.text("Circuit " + circuitName[number])
+			)
+			.append(
+				$("<div />")
+					.addClass("circuit-button-specs")
+					.append(
+						$("<div />")
+							.append($("<span />").text("Current "))
+							.append($("<span />").attr("rel", "current"))
+							.append($("<span />").text(" Amps"))
+					)
+					.append(
+						$("<div />")
+							.append($("<span />").text("Power "))
+							.append($("<span />").attr("rel", "power"))
+							.append($("<span />").text(" Watts"))
+					)
+			)
+			.click(function() {
+				var button = $(this);
+				var testing = !button.hasClass("circuit-button-test");
+				
+				button.toggleClass("circuit-button-test");
+				
+				testCircuit(number, testing);
+			})
+			.appendTo($(".circuit-panel"));
+	} else {
+		circuitColor = $(".circuit-panel .circuit-button[rel=" + number + "] .circuit-button-title").css("backgroundColor");
+	}
+
+	go(circuitKey);
+	
+	$(".work-table .tile[circuit=" + number + "]")
+	.removeAttr("circuit-set")
+	.find("img[rel=power]").each(function(i, el) {
+		if (i > 0) {
+			$(el).remove();
+		}
+	});
+	
+	cleanupCircuitPanel();
+	updateSystemSpecs(number);
+}
+
+function adjustCircuit(number) {
+	var circuit = $(".work-table .tile[circuit=" + number + "]");
+	var startRow = 999;
+	var startCol = 999;
+	var pass = 0;
+	var doAdjustment = false;
+
+	circuit
+		.removeAttr("circuit")
+		.parents(".tile-slot")
+			.removeClass("tile-circuit")
+			.css({borderColor: ""});
 			
-	joinCircuit(fore);
-	joinCircuit(aft);
-	joinCircuit(above);
-	joinCircuit(below);
+	$(".circuit-panel .circuit-button[rel=" + number + "]").remove();
+	
+	do {
+		doAdjustment = false;
+		startRow = 999;
+		startCol = 999;
+		
+		circuit.each(function(i, el) {
+			var tile = $(el);
 
+			if (!tile.attr("circuit")) {
+				startCol = Math.min(startCol, parseInt(tile.parents(".tile-slot").attr("x")));
+				startRow = Math.min(startRow, parseInt(tile.parents(".tile-row").attr("y")));
+				doAdjustment = true;
+			}
+		});
+
+		if (doAdjustment) {
+			console.log("adjusting: pass", pass);
+			console.log("starting at", startCol, startRow);
+			joinCircuit(number, $(".work-table .tile-row[y=" + startRow + "] .tile-slot[x=" + startCol + "] .tile"));
+			number = parseInt($(".circuit-panel .circuit-button:last").attr("rel")) + 1;
+		}
+		
+		pass++;
+	} while (doAdjustment && pass < 5);
+	
+	cleanupCircuitPanel();
+}
+
+function cleanupCircuitPanel() {
+	$(".circuit-panel .circuit-button").each(function(i, el) {
+		var button = $(el);
+		
+		if ($(".work-table .tile[circuit=" + button.attr("rel") + "]").length === 0) {
+			button.remove();
+		}
+	})
+}
+
+function selectComponentForDeletion(ev) {
+	var i = -1;
+
+	if (selectingComponents) {
+		if ((i = selected.indexOf(this)) >= 0) {
+			$(this).css({backgroundColor: "transparent"});
+			selected.splice(i, 1);
+		} else {
+			$(this).css({backgroundColor: "yellow"});
+			selected.push(this);
+		}
+	}
+
+	ev.stopPropagation();
+}
+
+function tilePosition(tile) {
+	var pos = {
+		x: parseInt(tile.parents(".tile-slot").attr("x")),
+		y: parseInt(tile.parents(".tile-row").attr("y")),
+	};
+	
+	return {
+		point: pos,
+		fore: $(".work-table .tile-row[y=" + pos.y  + "] .tile-slot[x=" + (pos.x - 1) + "] .tile"),
+		aft: $(".work-table .tile-row[y=" + pos.y  + "] .tile-slot[x=" + (pos.x + 1) + "] .tile"),
+		above: $(".work-table .tile-row[y=" + (pos.y - 1)  + "] .tile-slot[x=" + pos.x + "] .tile"),
+		below: $(".work-table .tile-row[y=" + (pos.y + 1)  + "] .tile-slot[x=" + pos.x + "] .tile"),
+	};
 }

@@ -1,14 +1,9 @@
 package main
 
 import (
-	"net/http"
-	"strings"
-
-	"github.com/codegangsta/negroni"
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
-
-	"cretin.co/forge/1.0/context"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"golang.org/x/crypto/acme/autocert"
 
 	"configurator/config"
 	"configurator/http"
@@ -17,35 +12,27 @@ import (
 func main() {
 	server := createServer()
 
-	context.Log(context.Trace, "Listening on %s...", server.Addr)
-	server.ListenAndServe()
+	//server.Logger.Fatal(server.StartAutoTLS(":" + config.Get("SECURE_PORT")))
+	server.Logger.Fatal(server.Start(":" + config.Get("PORT")))
 }
 
-func createServer() *http.Server {
-	r := mux.NewRouter().StrictSlash(false)
+func createServer() *echo.Echo {
+	e := echo.New()
 
-	r.HandleFunc("/auth", controllers.Auth).Methods("POST")
-	r.HandleFunc("/signup", controllers.CreateAccount).Methods("POST")
+	e.AutoTLSManager.Cache = autocert.DirCache("http/www/.cache")
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
 
-	pr := mux.NewRouter().PathPrefix("/project").Subrouter()
-	pr.HandleFunc("", controllers.GetProjects).Methods("GET")
-	pr.HandleFunc("", controllers.CreateProject).Methods("POST")
-	pr.HandleFunc("/{handle}", controllers.UpdateProject).Methods("PUT")
+	e.POST("/auth", controllers.Auth)
+	e.POST("/signup", controllers.CreateAccount)
 
-	n := negroni.New()
-	n.Use(negroni.NewStatic(http.Dir("http/www/")))
-	n.UseHandler(r)
+	e.Static("/", "http/www")
 
-	r.
-		PathPrefix("/project").
-		Methods("PUT", "POST", "GET").
-		Handler(negroni.New(negroni.HandlerFunc(controllers.AuthorizeClient), negroni.Wrap(pr)))
+	pr := e.Group("/project")
+	pr.GET("/", controllers.GetProjects)
+	pr.POST("/", controllers.CreateProject)
+	pr.PUT("/:handle", controllers.UpdateProject)
+	pr.Use(controllers.AuthorizeClient)
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   strings.Split(config.Get("CONFIGURATOR_ALLOWED_ORIGINS"), ","),
-		AllowedMethods:   strings.Split(config.Get("CONFIGURATOR_ALLOWED_METHODS"), ","),
-		AllowCredentials: true,
-	})
-
-	return &http.Server{Addr: ":" + config.Get("PORT"), Handler: c.Handler(n)}
+	return e
 }

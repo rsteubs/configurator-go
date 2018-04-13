@@ -192,6 +192,7 @@ header .circuit-panel .circuit-button .circuit-button-specs {
 
 .canvas .work-table .tile .power-right {
 	right: -445px;
+	top: 100px;
 }
 
 .tile .bottom img {
@@ -355,7 +356,7 @@ footer .specs {
     border-radius: 8px;
     padding: 10px;
     width: 600px;
-    top: 100px;
+    top: 200px;
     left: 350px;
     z-index: 5;
 }

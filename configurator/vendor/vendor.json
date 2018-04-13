@@ -36,17 +36,95 @@
 			"revision": "c0091a029979286890368b4c7b301261e448e242",
 			"revisionTime": "2018-01-20T07:58:19Z"
 		},
-                {
-                        "checksumSHA1": "sZ6sm36feCN1p2J7gpNMJUlpsD0=",
-                        "path": "github.com/natefinch/lumberjack",
-                        "revision": "aee4629129445bbdfb69aa565537dcfa16544311",
-                        "revisionTime": "2017-09-11T14:04:57Z"
-                },
+		{
+			"checksumSHA1": "5iqm7GXIAWdlSGO7ZGgFTrLZaVw=",
+			"path": "github.com/labstack/echo",
+			"revision": "37f1a470efa8abb7e89ad221cb4b1cc36f7047bb",
+			"revisionTime": "2018-04-03T15:04:28Z"
+		},
+		{
+			"checksumSHA1": "7O6lP1an2nUn1DiznUu6aXbW6oQ=",
+			"path": "github.com/labstack/echo/middleware",
+			"revision": "37f1a470efa8abb7e89ad221cb4b1cc36f7047bb",
+			"revisionTime": "2018-04-03T15:04:28Z"
+		},
+		{
+			"checksumSHA1": "wU6PVQ8WWtivzAsfEkTYJOjND3o=",
+			"path": "github.com/labstack/gommon/bytes",
+			"revision": "3bc2d333a4c30531c47051369043bcabd62ff4c0",
+			"revisionTime": "2018-03-16T17:49:44Z"
+		},
+		{
+			"checksumSHA1": "R6DzcBLEP0BONPpsyr+11N7xh5w=",
+			"path": "github.com/labstack/gommon/color",
+			"revision": "3bc2d333a4c30531c47051369043bcabd62ff4c0",
+			"revisionTime": "2018-03-16T17:49:44Z"
+		},
+		{
+			"checksumSHA1": "BUBgFOra7z3F8YQTUEnOgHHIe/0=",
+			"path": "github.com/labstack/gommon/log",
+			"revision": "3bc2d333a4c30531c47051369043bcabd62ff4c0",
+			"revisionTime": "2018-03-16T17:49:44Z"
+		},
+		{
+			"checksumSHA1": "iPlSnDjuur4cK1G/7mJM/7frIm4=",
+			"path": "github.com/labstack/gommon/random",
+			"revision": "3bc2d333a4c30531c47051369043bcabd62ff4c0",
+			"revisionTime": "2018-03-16T17:49:44Z"
+		},
+		{
+			"checksumSHA1": "SEnjvwVyfuU2xBaOfXfwPD5MZqk=",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "efa589957cd060542a26d2dd7832fd6a6c6c3ade",
+			"revisionTime": "2018-03-10T13:32:14Z"
+		},
+		{
+			"checksumSHA1": "w5RcOnfv5YDr3j2bd1YydkPiZx4=",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c",
+			"revisionTime": "2017-11-07T05:05:31Z"
+		},
+		{
+			"checksumSHA1": "sZ6sm36feCN1p2J7gpNMJUlpsD0=",
+			"path": "github.com/natefinch/lumberjack",
+			"revision": "aee4629129445bbdfb69aa565537dcfa16544311",
+			"revisionTime": "2017-09-11T14:04:57Z"
+		},
 		{
 			"checksumSHA1": "U8v4SPQEKgQf0STg/o5DkKqAkMw=",
 			"path": "github.com/rs/cors",
 			"revision": "feef513b9575b32f84bafa580aad89b011259019",
 			"revisionTime": "2018-01-23T07:30:48Z"
+		},
+		{
+			"checksumSHA1": "LTOa3BADhwvT0wFCknPueQALm8I=",
+			"path": "github.com/valyala/bytebufferpool",
+			"revision": "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7",
+			"revisionTime": "2016-08-17T18:16:52Z"
+		},
+		{
+			"checksumSHA1": "gtG8jeB0fcTmKZf+6Vbcoa6nfec=",
+			"path": "github.com/valyala/fasttemplate",
+			"revision": "dcecefd839c4193db0d35b88ec65b4c12d360ab0",
+			"revisionTime": "2017-02-24T21:24:29Z"
+		},
+		{
+			"checksumSHA1": "zHLlCNnnX/KNVue2tHr+FWxbszA=",
+			"path": "golang.org/x/crypto/acme",
+			"revision": "b2aa35443fbc700ab74c586ae79b81c171851023",
+			"revisionTime": "2018-04-03T08:00:15Z"
+		},
+		{
+			"checksumSHA1": "6NdRp9OYL38e71vEtcQtSkN/ZbA=",
+			"path": "golang.org/x/crypto/acme/autocert",
+			"revision": "b2aa35443fbc700ab74c586ae79b81c171851023",
+			"revisionTime": "2018-04-03T08:00:15Z"
+		},
+		{
+			"checksumSHA1": "Mwu8T+68sKdnkn0AWla8trKDOfI=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e",
+			"revisionTime": "2018-04-04T17:59:11Z"
 		},
 		{
 			"checksumSHA1": "LiyXfqOzaeQ8vgYZH3t2hUEdVTw=",
