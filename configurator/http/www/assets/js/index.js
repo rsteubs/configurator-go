@@ -1,8 +1,34 @@
 
-var selectingComponents = false;
+var selectingComponents = true;
 var selected = [];
 
 var workspaces = [];
+
+var WORK_MODE_SELECT = 10;
+var WORK_MODE_BROWSE = 20;
+
+var CIRCUIT_COLOR = [
+	"#3cb44b", //Green
+	"#ffe119", //Yellow
+	"#0082c8", //Blue
+	"#f58231", //Orange
+	"#911eb4", //Purple
+	"#46f0f0", //Cyan
+	"#f032e6", //Magenta
+	"#d2f53c", //Lime
+	"#fabebe", //Pink
+	"#008080", //Teal
+	"#e6beff", //Lavender
+	"#aa6e28", //Brown
+	"#fffac8", //Beige
+	"#800000", //Maroon
+	"#aaffc3", //Mint
+	"#808000", //Olive
+	"#ffd8b1", //Coral
+	"#000080", //Navy
+	"#e6194b", //Red
+	"#808080", //Grey	
+];
 
 var tileZoneConfig = {
  	accept: "[rel=harness]",
@@ -61,6 +87,12 @@ var tileZoneConfig = {
 
 var tileDropConfig = {
  	accept: "[rel=power]",
+ 	over: function(e, ui) {
+		$(this).append($("<div class='highlight'></div>"));
+ 	}, 	
+ 	out: function(e, ui) {
+		$(this).find(".highlight").remove();
+ 	},
  	drop: function(e, ui) {
 		var tile = $(this);
 		var row = tile.parents(".tile-row");
@@ -72,19 +104,20 @@ var tileDropConfig = {
 
 		tile.find("img[rel=power]").remove();
 		$(".work-table .tile[circuit=" + tile.attr("circuit") + "] img[rel=power]").remove();
+		$(this).find(".highlight").remove();
 			
 		if (map.above.length == 0) {
 			psClass = "power power-top power-down";
-			psSrc="assets/img/powersupply/corner-down.png";
+			psSrc="assets/img/powersupply/ps-down.png";
 		} else if (map.fore.length == 0) {
 			psClass = "power power-left power-center";
-			psSrc="assets/img/powersupply/center-right.png";
+			psSrc="assets/img/powersupply/ps-right.png";
 		} else if (map.below.length == 0) {
 			psClass = "power power-bottom power-up";
-			psSrc="assets/img/powersupply/corner-up.png";
+			psSrc="assets/img/powersupply/ps-up.png";
 		} else if (map.aft.length == 0) {
 			psClass = "power power-right power-center";
-			psSrc="assets/img/powersupply/center-left.png";
+			psSrc="assets/img/powersupply/ps-left.png";
 		} else {
 			return;
 		}
@@ -102,7 +135,8 @@ var tileDropConfig = {
 $( function() {
 	clearWorkTable();
 	prepareWorkTable();
-
+	addToCircuitPanel(0, "black");
+	
 	$("#footerHandle").on("click", function() {
 		var footer = $("footer");
 		var handle = $("#footerHandle");
@@ -176,13 +210,37 @@ $( function() {
 			var field = $(this);
 			var val = parseFloat(field.val());
 			
-			if (isNaN(val) || val < 4) {
+			if (!(val > 4)) {
 				val = 4;
 			}
 
 			field.val(val.toFixed(1));
 			
-			dimensionWorkTable();
+			var tileDimension = 4.0;
+			var width = parseFloat($("[name=work-table-width]").val());
+			var height = parseFloat($("[name=work-table-height]").val());
+			var workspaceWidth = Math.floor(width / tileDimension);
+			var workspaceHeight = Math.floor(height / tileDimension);
+
+			
+			dimensionWorkTable(workspaceWidth, workspaceHeight);
+		});
+
+	$("[name=tile-count-width], [name=tile-count-height]")
+		.change(function() {
+			var field = $(this);
+			var val = parseInt(field.val());
+			
+			if (!(val > 1)) {
+				val = 1;
+			}
+
+			field.val(val.toFixed(0));
+			
+			var workspaceWidth = parseFloat($("[name=tile-count-width]").val());
+			var workspaceHeight = parseFloat($("[name=tile-count-height]").val());
+			
+			dimensionWorkTable(workspaceWidth, workspaceHeight);
 		});
 		
 	$("input[type=radio][name=configuration]")
@@ -197,6 +255,50 @@ $( function() {
 		.click();
 
 });
+
+function setWorkMode(mode, ev) {
+	switch (mode) {
+		case WORK_MODE_BROWSE : {
+			selectingComponents = false;
+			
+			$(selected).each(function(i, el) {
+				var component = $(el);
+				
+				if (component.hasClass("tile")) {
+					component.find(".highlight").remove();
+				} else {
+					component.css("background", "transparent");
+				}
+			});
+			
+			selected = [];
+			
+			$(".work-table")
+				.css({cursor: "move"})
+				.draggable("option", "disabled", false);
+				
+			break;
+		}
+
+		case WORK_MODE_SELECT :
+		default : {
+			selectingComponents = true;
+			
+			$(".work-table")
+				.css({cursor: "pointer"})
+				.draggable("option", "disabled", true);
+			
+			break;
+		}		
+	}
+	
+	$(".main-toolbar .button-place").removeClass("button-active");
+	
+	$(ev.target)
+		.blur()
+		.parent()
+		.addClass("button-active");
+}
 
 function closeProject() {
 	clearWorkTable(); 
@@ -217,24 +319,35 @@ function prepareWorkTable() {
 	$(".drag-to-canvas")
 	 	.draggable({
 	 		containment: ".work-table",
+	 		tolerance: "pointer",
 	 		zIndex: $(this).attr("rel") == "harness" ? 2 : 0,
 	 		snap: $(this).attr("rel") == "harness" ? ".zone" : ".tile-slot",
 	 		snapMode: "inner",
-	 		//snapTolerance: 50,
-	 		helper: function() {
+	 		//cursorAt: { top: "50%", left: "50%" },
+            helper: function() {
 	 			var component = "";
+				var scale = parseFloat($(".work-table").attr("scale") || 1.0);
+				var width = 0;
 
 	 			switch($(this).attr("rel")) {
-	 				case "tile" 	: component = "./assets/img/tile/illumitile_252x252.png"; break;
-	 				case "harness"	: component = "./assets/img/tile/harness_180x22.png"; break;
+	 				case "tile" 	: component = "./assets/img/tile/illumitile_252x252.png"; width = 252 * scale; break;
+	 				case "harness"	: component = "./assets/img/tile/harness_180x22.png"; width = 180 * scale; break;
 	 				case "power"	: component = "./assets/img/powersupply/corner-down.png"; break;
 	 			}
 
 	 			var helper = $("<img />")
-	 				.attr({ src: component, rel: $(this).attr("rel") });
+	 				.attr({ src: component, rel: $(this).attr("rel") })
+	 				.css({transform: "scale(" + scale + ")"});
 
 	 			return helper;
 	 		},
+			start: function(event, ui) { 
+				var scale = parseFloat($(".work-table").attr("scale") || 1.0);
+			  $(this).draggable("option", "cursorAt", {
+			    left: Math.floor(this.clientWidth / 2) * scale,
+			    top: Math.floor(this.clientHeight / 2) * scale
+			  }); 
+			}	 		
 	 	});
 
 	 $(".tile-slot")
@@ -257,19 +370,7 @@ function prepareWorkTable() {
 				 	</div> \
 				')
 				.attr("src", ui.helper.attr("src"))
-				.click(function() {
-					var i = -1;
-
-					if (selectingComponents) {
-						if ((i = selected.indexOf(this)) >= 0) {
-							$(this).children(".highlight").remove();
-							selected.splice(i, 1);
-						} else {
-							$(this).append($("<div class='highlight'></div>"));
-							selected.push(this);
-						}
-					}
-				})
+				.click(selectComponentForDeletion)
 				.appendTo(slot);
 
 				tile.children(".zone").droppable(tileZoneConfig);
@@ -278,25 +379,21 @@ function prepareWorkTable() {
 				slot.droppable("option", "disabled", true);
 
 				updateSystemSpecs();
+	 		},
+	 		over: function(e, ui) {
+	 			$(ui)
+	 				.css({ backgroundColor: "yellow" });
+	 		},
+	 		out: function(e, ui) {
+	 			$(ui)
+	 				.css({ backgroundColor: "transparent" });
 	 		}
 	 	});
 	 	
 	 	workTable
 	 		.draggable({
-	 			//containment: "parent",
 	 			disabled: true,
-	 			//axis: "x",
 	 		});
-}
-
-function selectComponent(ev) {
-	selectingComponents = !selectingComponents;
-
-	if (selectingComponents) {
-		$(".work-table").css({cursor: "pointer"});
-	} else {
-		$(".work-table").css({cursor: "default"});
-	}
 }
 
 function removeComponents() {
@@ -317,8 +414,8 @@ function removeComponents() {
 						.find("img").remove();
 				}
 				
-				if (map.aft.attr("circuit") == circuit) {
-					map.aft
+				if (map.fore.attr("circuit") == circuit) {
+					map.fore
 						.find(".zone.right")
 						.droppable("option", "disabled", false)
 						.find("img").remove();
@@ -346,29 +443,12 @@ function removeComponents() {
 			});
 	}
 
-	selectComponent();
-}
-
-function panWorkspace(ev) {
-	var button = $(ev.target);
-	var panning = (button.attr("enabled") || "false") === "false";
-
-	if (panning) {
-		$(".work-table")
-			.css({cursor: "move"})
-			.draggable("option", "disabled", false);
-	} else {
-		$(".work-table")
-			.css({cursor: "default"})
-			.draggable("option", "disabled", true);
-	}
-	
-	button.attr("enabled", panning);
 }
 
 function startProject() {
 	closeProject();
 	createProject();
+	cleanupCircuitPanel();
 }
 
 function openProject() {
@@ -499,36 +579,10 @@ function decompressWorkspace(b64) {
 		.find(".zone").droppable(tileZoneConfig);	
 
 	$(".tile .zone img")
-		.click(function(ev) {
-			var i = -1;
-
-			if (selectingComponents) {
-				if ((i = selected.indexOf(this)) >= 0) {
-					$(this).css({backgroundColor: "transparent"});
-					selected.splice(i, 1);
-				} else {
-					$(this).css({backgroundColor: "yellow"});
-					selected.push(this);
-				}
-			}
-
-			ev.stopPropagation();
-		});
+		.click(selectComponentForDeletion);
 		
 	$(".tile")		
-		.click(function() {
-			var i = -1;
-
-			if (selectingComponents) {
-				if ((i = selected.indexOf(this)) >= 0) {
-					$(this).children(".highlight").remove();
-					selected.splice(i, 1);
-				} else {
-					$(this).append($("<div class='highlight'></div>"));
-					selected.push(this);
-				}
-			}
-		});
+		.click(selectComponentForDeletion);
 
 	
 	updateSystemSpecs();
@@ -638,9 +692,6 @@ function updateSystemSpecs(circuitNumber) {
 	var overallSet = false;
 	var circuitSet = false;
 
-	console.log("using tiles", tiles.length);
-	console.log("using harnesses", harnessCount);
-
 	for (var i = 0, spec; (spec = specs[i]) && (!overallSet || !circuitSet); i++) {
 		if (!overallSet && spec.tiles == tiles.length && spec.harnesses <= harnessCount) {
 			console.log("using", spec)
@@ -649,6 +700,12 @@ function updateSystemSpecs(circuitNumber) {
 			fields.find("[rel=voltage]").text(spec.voltage);
 			components.find("[rel=tileCount]").text(tiles.length);
 			components.find("[rel=harnessCount]").text(harnessCount);
+
+			$(".circuit-panel [rel=0]")
+				.find("[rel=current]").text(spec.current)
+				.parents(".circuit-button")
+				.find("[rel=power]").text(spec.power);
+			
 			overallSet = true;
 		}
 		
@@ -687,15 +744,20 @@ function addTileRow(index) {
 	return row;
 }
 
-function scaleCanvas(direction) {
+function scaleCanvas(direction, ev) {
 	var canvas = $(".work-table");
+	var button = $(ev.target);
 	var scale = parseFloat(canvas.attr("scale") || 1.0);
 	var step = 0.15;
-	var max = 5;
+	var max = 1.5;
 	
 	if (isNaN(scale)) {
 		scale = 1.0;
 	}
+	
+	button.parent().addClass("button-active");
+	setTimeout(function() { button.parent().removeClass("button-active"); }, 200);
+	button.blur();
 	
 	switch (direction) {
 		case "-": {
@@ -718,23 +780,21 @@ function scaleCanvas(direction) {
 		}
 	}
 	
+	var translateX = canvas.width() * scale * -0.5;
+	var translateY = canvas.height() * scale * -0.5;
+	
 	canvas.css("transform", "scale(" + scale + ")");
 	canvas.attr("scale", scale);
 }
 
-function dimensionWorkTable() {
-	var tileDimension = 4.0;
-	var width = parseFloat($("[name=work-table-width]").val());
-	var height = parseFloat($("[name=work-table-height]").val());
-	var workspaceWidth = Math.floor(width / tileDimension);
-	var workspaceHeight = Math.floor(height / tileDimension);
+function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 	var panningEnabled = !$(".work-table").draggable("option", "disabled");
 
-	if (workspaceHeight > workspaceWidth) {
-		$(".work-table").attr("orientation", "portrait");
-	} else {
-		$(".work-table").attr("orientation", "landscape");
-	}
+	// if (workspaceHeight > workspaceWidth) {
+	// 	$(".work-table").attr("orientation", "portrait");
+	// } else {
+	// 	$(".work-table").attr("orientation", "landscape");
+	// }
 	
 	$(".work-table")
 		.empty()
@@ -745,17 +805,27 @@ function dimensionWorkTable() {
 		})
 		.attr("scale", "1.0");
 
-	$(".circuit-panel").empty();
+	$(".circuit-panel .circuit-button:gt(1)").remove();
 	
 	for (var y = 0; y < workspaceHeight; y++) {
 		addTileRow(y);
 	}
 	
-	for (var i = 0, circuits = splitCircuit(workspaceWidth, workspaceHeight), circuit; circuit = circuits[i]; i++) {
-		createCircuit(circuit.number, circuit.startX, circuit.startY, circuit.width, circuit.height);
-	}
+	createCircuits(splitCircuit(workspaceWidth, workspaceHeight));
 
 	prepareWorkTable();
+
+	$(".work-table .tile")
+		.droppable(tileDropConfig)
+		.find(".zone").droppable(tileZoneConfig);	
+
+	$(".work-table .tile")
+		.has("img[rel=power]")
+		.droppable("option", "disabled", "true");
+		
+	$(".work-table .tile .zone")
+		.has("img")
+		.droppable("option", "disabled", "true");
 
 	if (panningEnabled) {
 		$(".work-table")
@@ -764,119 +834,274 @@ function dimensionWorkTable() {
 	}
 }
 
-function splitCircuit(maxWidth, maxHeight) {
-	if (maxWidth * maxHeight <= 20) {
-		return [{
-			number: 1,
-			startX: 0,
-			startY: 0,
-			width: maxWidth,
-			height: maxHeight,
-		}];
+function splitCircuit(width, height, offsetNumber, circuitOffset) {
+	offsetNumber = offsetNumber || 0;
+	circuitOffset = circuitOffset || 0;
+	
+		console.log("dimensioning", width, height, offsetNumber, circuitOffset)
+	if (width * height <= 20) {
+		if (width => height) {
+			return [{
+				number: 1 + offsetNumber,
+				startX: circuitOffset,
+				startY: 0,
+				width: width,
+				height: height,
+			}];
+		} else if (height > width) {
+			return [{
+				number: 1 + offsetNumber,
+				startX: 0,
+				startY: circuitOffset,
+				width: width,
+				height: height,
+			}];
+		}
 	}
 	
-	var width = 0;
-	var height = 0;
-	var startX = 0;
-	var startY = 0;
-	var number = 1;
 	var list = [];
 	
-	var circuitSize = 0;
-	
-	while (circuitSize < maxWidth * maxHeight) {
-		while (width < maxWidth && height < maxHeight && width * height < 20 && width * height + circuitSize < maxWidth * maxHeight) {
-			width += 1;
+	if (width > height && width > 10) {
+		var split = Math.floor(width / 2.0);
+		var c1 = splitCircuit(split, height);
+		var c2 = splitCircuit(width - split, height);
+		var startY = 0;
+		
+		var row = [];
+
+		for (var wI = 0; wI < c1.length; wI++) {
+			var x = c1[wI].startX;
+			var y = c1[wI].startY;
+
+			row[y] = (row[y] || 0) + c1[wI].width;
+		}
+
+		for (var i = 0; i < c2.length; i++) {
+			while (row[startY] + c2[i].width > width) {
+				startY += c1[0].height;
+			}
+
+			c2[i].startX = row[startY] || 0;
+			c2[i].startY = startY;
 			
-			if (width * height < 20 && width * height + circuitSize < maxWidth * maxHeight) {
-				height += 1;
+			row[startY] = (row[startY] || 0) + c2[i].width;
+		}
+
+		list = c1.concat(c2);
+
+		for (var i = 0; i < list.length; i++) {
+			list[i].number = i + 1;
+		}
+
+		console.log("circuit list", list);
+		
+		return list;
+	} else if (height > width && height > 10) {
+		var split = Math.floor(height / 2.0);
+		var c1 = splitCircuit(width, split);
+		var c2 = splitCircuit(width, height - split);
+		var startY = 0;
+		
+		var row = [];
+
+		for (var wI = 0; wI < c1.length; wI++) {
+			var x = c1[wI].startX;
+			var y = c1[wI].startY;
+
+			row[y] = (row[y] || 0) + c1[wI].width;
+		}
+
+		for (var i = 0; i < c2.length; i++) {
+			while (row[startY] + c2[i].width > width) {
+				startY += c1[0].height;
+			}
+
+			c2[i].startX = row[startY] || 0;
+			c2[i].startY = startY;
+			
+			row[startY] = (row[startY] || 0) + c2[i].width;
+		}
+
+		list = c1.concat(c2);
+		
+		for (var i = 0; i < list.length; i++) {
+			list[i].number = i + 1;
+		}			
+		
+		console.log("circuit list", list);
+		
+		return list;
+	}
+	
+	if (width >= height) {
+		if (width % 2 === 0 && width / 2 * height <= 20) {
+			list.push({
+				number: 1 + offsetNumber,
+				width: width / 2,
+				height: height,
+				startX: circuitOffset,
+				startY: 0,
+			});
+			
+			list.push({
+				number: 2 + offsetNumber,
+				width: width / 2,
+				height: height,
+				startX: circuitOffset + width / 2,
+				startY: 0,
+			});
+		} else {
+			var maxHeight = Math.floor(20.0 / width);
+			var circuitHeight = 0;
+			
+			for (var i = 0; i < Math.floor(height / maxHeight); i++) {
+				list.push({
+					number: i+1 + offsetNumber,
+					width: width,
+					height: maxHeight,
+					startX: circuitOffset,
+					startY: i * maxHeight,
+				});
+				
+				circuitHeight += maxHeight;
+			}
+			
+			if (circuitHeight < height) {
+				list.push({
+					number: list.length + 1 + offsetNumber,
+					width: width,
+					height: height - circuitHeight,
+					startX: circuitOffset,
+					startY: list.length * maxHeight,
+				});
+			}
+		} 
+	} else if (height > width) {
+		if (height % 2 === 0 && height / 2 * width <= 20) {
+			list.push({
+				number: 1 + offsetNumber,
+				width: width,
+				height: height / 2,
+				startX: 0,
+				startY: circuitOffset,
+			});
+			
+			list.push({
+				number: 2 + offsetNumber,
+				width: width,
+				height: height / 2,
+				startX: 0,
+				startY: circuitOffset + height / 2,
+			});
+		} else {
+			var maxWidth = Math.floor(20.0 / height);
+			var circuitWidth = 0;
+			
+			for (var i = 0; i < Math.floor(width / maxWidth); i++) {
+				list.push({
+					number: i+1 + offsetNumber,
+					width: maxWidth,
+					height: height,
+					startX: i * maxWidth,
+					startY: circuitOffset,
+				});
+				
+				circuitWidth += maxWidth;
+			}
+			
+			if (circuitWidth < width) {
+				list.push({
+					number: list.length + 1 + offsetNumber,
+					width: width - circuitWidth,
+					height: height,
+					startX: list.length * maxWidth,
+					startY: circuitOffset,
+				});
 			}
 		}
-		
-		list.push({
-			number: number,
-			width: width,
-			height: height,
-			startX: startX,
-			startY: startY,
-		});
-		
-		number += 1;
-		
-		if (startX + width < maxWidth) {
-			startX += width;
-		} else {
-			startX = 0;
-			startY += height;
-		}
-		
-		circuitSize += (width * height);
-		
-		height = width = 0;
-	}
+	} 
+	
+	console.log("circuit list", list);
 
 	return list;
 }
 
-function setDesignMode(mode) {
+function setDesignMode(el, mode) {
+	var opt = $(el);
+	
 	$(".work-table").attr("design-mode", mode);
+	$("footer .specs .setting-auto").hide();
+	
+	if (mode === "manual") {
+		$("footer .tools .overlay").remove();
+	} else {
+		$("footer .specs .setting-auto[rel=" + opt.attr("rel") + "]").show();
+		
+		if ($("footer .tools .overlay").length === 0) {
+			$("<div />")
+				.addClass("overlay")
+				.appendTo($("footer .tools"));
+		}
+	}
 }
 
-function createCircuit(number, startX, startY, width, height) {
-	var circuitColor = randomColor();
+function createCircuits(defs) {
+	var lastX = 0;
+	var lastY = 0;
+	
+	for (var i = 0, circuit; (circuit = defs[i]); i++) {
+		lastX = Math.max(lastX, circuit.startX + circuit.width);
+		lastY = Math.max(lastY, circuit.startY + circuit.height);
+	}
 
-	var circuitName = [
-		"None", 
-		"One", 
-		"Two", 
-		"Three", 
-		"Four", 
-		"Five", 
-		"Six", 
-		"Seven", 
-		"Eight", 
-		"Nine", 
-		"Ten", 
-		"Eleven", 
-		"Tweleve"
-	];
-
-	var placePowerSupply = function() {
+	var placePowerSupply = function(circuit) {
 		var selectedTile = { x: 0, y: 0 };
 		
-		if (startX === startY && startY === 0) {
-			if (height >= width) {
-				selectedTile = { x: 0, y: Math.floor(height / 2)};
+		if (circuit.startX === circuit.startY === 0) {
+			if (circuit.height >= circuit.width) {
+				selectedTile = { x: 0, y: Math.floor(circuit.height / 2)};
 			} else {
-				selectedTile = { y: 0, x: Math.floor(width / 2)};
+				selectedTile = { y: 0, x: Math.floor(circuit.width / 2)};
 			}
-		} else if (startY === 0) {
-			selectedTile = { x: startX + Math.floor(width / 2), y: 0};
-		} else if (startX === 0) {
-			selectedTile = { x: 0, y: startY + Math.floor(height / 2)};
+		} else if (circuit.startY === 0) {
+			selectedTile = { x: circuit.startX + Math.floor(circuit.width / 2), y: 0};
+		} else if (circuit.height + circuit.startY === lastY) {
+			selectedTile = { x: circuit.startX + Math.floor(circuit.width / 2), y: circuit.startY + circuit.height - 1 };
+		} else if (circuit.startX === 0) {
+			selectedTile = { x: 0, y: circuit.startY + Math.floor(circuit.height / 2)};
+		} else if (circuit.startX + circuit.width === lastX) {
+			selectedTile = { x: circuit.startX + circuit.width - 1, y: circuit.startY + Math.floor(circuit.height / 2) };
 		} else {
-			selectedTile = { x: startX + Math.floor(width / 2), y: startY + height - 1};
+			return;
 		}
+		
+		console.log("place ps", circuit, selectedTile)
 
-		var ps = $("<img />");
+		var ps = $("<img />").attr("rel", "power");
 		
 		if (selectedTile.x === 0) {
 			ps
 			.addClass("power power-left power-center")
-			.attr("src", "assets/img/powersupply/center-right.png");
+			.attr("src", "assets/img/powersupply/ps-right.png");
 		} else if (selectedTile.y === 0) {
 			ps
 			.addClass("power power-top power-down")
-			.attr("src", "assets/img/powersupply/corner-down.png");
-		} else if (width > height) {
+			.attr("src", "assets/img/powersupply/ps-down.png");
+		} else if (selectedTile.x === circuit.startX + circuit.width - 1) {
+			ps
+			.addClass("power power-right power-center")
+			.attr("src", "assets/img/powersupply/ps-left.png");
+		} else if (circuit.width > circuit.height) {
 			ps
 			.addClass("power power-bottom power-up")
-			.attr("src", "assets/img/powersupply/corner-up.png");
+			.attr("src", "assets/img/powersupply/ps-up.png");
 		} else {
 			ps
 			.addClass("power power-right power-center")
-			.attr("src", "assets/img/powersupply/center-left.png");
+			.attr("src", "assets/img/powersupply/ps-left.png");
 		}
+		
+		ps.click(selectComponentForDeletion);
 		
 		$(".tile-row[y=" + selectedTile.y + "] > .tile-slot[x=" + selectedTile.x + "] > .tile").append(ps);
 	};
@@ -887,21 +1112,7 @@ function createCircuit(number, startX, startY, width, height) {
 			return $("<img />")
 				.attr({ src: "./assets/img/tile/harness_180x22.png" })
 				.css({ zIndex: 2 })
-				.click(function(ev) {
-					var i = -1;
-	
-					if (selectingComponents) {
-						if ((i = selected.indexOf(this)) >= 0) {
-							$(this).css({backgroundColor: "transparent"});
-							selected.splice(i, 1);
-						} else {
-							$(this).css({backgroundColor: "yellow"});
-							selected.push(this);
-						}
-					}
-	
-					ev.stopPropagation();
-				});
+				.click(selectComponentForDeletion);
 	
 		};
 		
@@ -922,93 +1133,57 @@ function createCircuit(number, startX, startY, width, height) {
 		}
 	};
 
-	for (var y = 0; y < height; y++) {
-		var row = $(".work-table").find(".tile-row[y=" + (y + startY) + "]");
+	for (var i = 0, circuit; circuit = defs[i]; i++) {
+		var number = circuit.number;
+		var startX = circuit.startX;
+		var startY = circuit.startY;
+		var width = circuit.width;
+		var height = circuit.height;
+		
+		var circuitColor = CIRCUIT_COLOR[i];
 
-		for (var x = 0; x < width; x++) {
-			var slot = row.find(".tile-slot[x=" + (x + startX) + "]");
+		for (var y = 0; y < height; y++) {
+			var row = $(".work-table").find(".tile-row[y=" + (y + startY) + "]");
+	
+			for (var x = 0; x < width; x++) {
+				var slot = row.find(".tile-slot[x=" + (x + startX) + "]");
+				
+		 	 	var tile = $(' \
+		 	 		<div class="tile"> \
+				 		<div class="zone right"></div> \
+				 		<div class="zone bottom"></div> \
+				 	</div> \
+				')
+				.attr("src", "./assets/img/tile/illumitile_252x252.png")
+				.attr("circuit", number)
+				.click(selectComponentForDeletion)
+				.appendTo(slot);
+		
+				slot
+					.droppable("option", "disabled", true)
+					.addClass("tile-circuit")
+					.css({borderColor: circuitColor});
+			}
 			
-	 	 	var tile = $(' \
-	 	 		<div class="tile"> \
-			 		<div class="zone right"></div> \
-			 		<div class="zone bottom"></div> \
-			 	</div> \
-			')
-			.attr("src", "./assets/img/tile/illumitile_252x252.png")
-			.attr("circuit", number)
-			.click(function() {
-				var i = -1;
-	
-				if (selectingComponents) {
-					if ((i = selected.indexOf(this)) >= 0) {
-						$(this).children(".highlight").remove();
-						selected.splice(i, 1);
-					} else {
-						$(this).append($("<div class='highlight'></div>"));
-						selected.push(this);
-					}
-				}
-			})
-			.appendTo(slot);
-	
-			slot
-				.droppable("option", "disabled", true)
-				.addClass("tile-circuit")
-				.css({borderColor: circuitColor});
 		}
 		
-	}
-	
-	var rows= [];
-	var cells = [];
-	
-	for (var i = 0; i < height; i++) {
-		rows.push(startY + i);
-	}	
-	
-	for (var i = 0; i < width; i++) {
-		cells.push(startX + i);
-	}
-	
-	distributeHarnesses(rows, cells);
-	placePowerSupply();
-	
-	$("<div />")
-		.addClass("circuit-button")
-		.attr("rel", number)
-		.append(
-			$("<div />")
-				.addClass("circuit-button-title")
-				.css({backgroundColor: circuitColor, borderColor: circuitColor})
-				.text("Circuit " + circuitName[number])
-		)
-		.append(
-			$("<div />")
-				.addClass("circuit-button-specs")
-				.append(
-					$("<div />")
-						.append($("<span />").text("Current "))
-						.append($("<span />").attr("rel", "current"))
-						.append($("<span />").text(" Amps"))
-				)
-				.append(
-					$("<div />")
-						.append($("<span />").text("Power "))
-						.append($("<span />").attr("rel", "power"))
-						.append($("<span />").text(" Watts"))
-				)
-		)
-		.click(function() {
-			var button = $(this);
-			var testing = !button.hasClass("circuit-button-test");
-			
-			button.toggleClass("circuit-button-test");
-			
-			testCircuit(number, testing);
-		})
-		.appendTo($(".circuit-panel"));
+		var rows= [];
+		var cells = [];
 		
-	updateSystemSpecs(number);
+		for (var y = 0; y < height; y++) {
+			rows.push(startY + y);
+		}	
+		
+		for (var x = 0; x < width; x++) {
+			cells.push(startX + x);
+		}
+		
+		distributeHarnesses(rows, cells);
+		placePowerSupply(circuit);
+		addToCircuitPanel(number, circuitColor);
+		updateSystemSpecs(number);
+		
+	}
 	
 }
 
@@ -1028,66 +1203,58 @@ function testCircuit(number, enabled) {
 	var testNeighbor = function(key) {
 		if (key.length === 0) return;
 		
-		var row = key.parents(".tile-row");
-		var cell = key.parents(".tile-slot");
-		var x = parseInt(cell.attr("x"));
-		var y = parseInt(row.attr("y"));
+		var map = tilePosition(key);
 
-		var fore = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x - 1) + "] .tile");
-		var aft = circuit.parents(".tile-row[y=" + y + "]").find(".tile-slot[x=" + (x + 1) + "] .tile");
-		var above = circuit.parents(".tile-row[y=" + (y - 1) + "]").find(".tile-slot[x=" + x + "] .tile");
-		var below = circuit.parents(".tile-row[y=" + (y + 1) + "]").find(".tile-slot[x=" + x + "] .tile");
-		
 		key.attr("tested", "1");
 
 		if (key.hasClass("test-pass") ||
 			key.find(".power").length > 0 ||
-			(fore.hasClass("test-pass") && fore.find(".zone.right img").length > 0) ||
-			(above.hasClass("test-pass") && above.find(".zone.bottom img").length > 0) ||
-			(below.hasClass("test-pass") && key.find(".zone.bottom img").length > 0) ||
-			(aft.hasClass("test-pass") && key.find(".zone.right img").length > 0)) {
-				
+			(map.fore.attr("circuit") === key.attr("circuit") && map.fore.hasClass("test-pass") && map.fore.find(".zone.right img").length > 0) ||
+			(map.above.attr("circuit") === key.attr("circuit") && map.above.hasClass("test-pass") && map.above.find(".zone.bottom img").length > 0) ||
+			(map.aft.attr("circuit") === key.attr("circuit") && map.aft.hasClass("test-pass") && key.find(".zone.right img").length > 0) ||
+			(map.below.attr("circuit") === key.attr("circuit") && map.below.hasClass("test-pass") && key.find(".zone.bottom img").length > 0)) 
+		{
 			key.addClass("test-pass");
 			key.removeClass("test-fail");
 			
 			if (key.find(".zone.right img").length > 0) {
-				aft.addClass("test-pass");
-				aft.removeClass("test-fail");
+				map.aft.addClass("test-pass");
+				map.aft.removeClass("test-fail");
 			}
 
 			if (key.find(".zone.bottom img").length > 0) {
-				below.addClass("test-pass");
-				below.removeClass("test-fail");
+				map.below.addClass("test-pass");
+				map.below.removeClass("test-fail");
 			}
-		} 
-
-		if (fore.attr("tested") !== "1") {
-			testNeighbor(fore);
 		}
 
-		if (aft.attr("tested") !== "1") {
-			testNeighbor(aft);
+		if (map.fore.attr("circuit") === key.attr("circuit") && map.fore.attr("tested") !== "1") {
+			testNeighbor(map.fore);
 		}
 
-		if (above.attr("tested") !== "1") {
-			testNeighbor(above);
+		if (map.aft.attr("circuit") === key.attr("circuit") && map.aft.attr("tested") !== "1") {
+			testNeighbor(map.aft);
 		}
 
-		if (below.attr("tested") !== "1") {
-			testNeighbor(below);
+		if (map.above.attr("circuit") === key.attr("circuit") && map.above.attr("tested") !== "1") {
+			testNeighbor(map.above);
 		}
 
+		if (map.below.attr("circuit") === key.attr("circuit") && map.below.attr("tested") !== "1") {
+			testNeighbor(map.below);
+		}
 	};
-	
+
 	circuit.addClass("test-fail");
 	testNeighbor(source);
 
 }
+
 function joinCircuit(number, circuitKey) {
 	if (!circuitKey || circuitKey.length === 0 || circuitKey.attr("circuit-set")) return;
 	
 	var circuit = $(".work-table .tile[circuit=" + number + "]");
-	var circuitColor = randomColor();
+	var circuitColor = CIRCUIT_COLOR[number - 1];
 	
 	var go = function(key) {
 		if (!key || key.length === 0 || key.attr("circuit-set")) return;
@@ -1131,60 +1298,8 @@ function joinCircuit(number, circuitKey) {
 	}
 	
 	if (circuit.length === 0) {
-		var circuitName = [
-			"None", 
-			"One", 
-			"Two", 
-			"Three", 
-			"Four", 
-			"Five", 
-			"Six", 
-			"Seven", 
-			"Eight", 
-			"Nine", 
-			"Ten", 
-			"Eleven", 
-			"Tweleve"
-		];
-		
 		circuit = circuitKey;
-
-		$(".circuit-panel .circuit-button[rel=" + number + "]").remove();
-	
-		$("<div />")
-			.addClass("circuit-button")
-			.attr("rel", number)
-			.append(
-				$("<div />")
-					.addClass("circuit-button-title")
-					.css({backgroundColor: circuitColor, borderColor: circuitColor})
-					.text("Circuit " + circuitName[number])
-			)
-			.append(
-				$("<div />")
-					.addClass("circuit-button-specs")
-					.append(
-						$("<div />")
-							.append($("<span />").text("Current "))
-							.append($("<span />").attr("rel", "current"))
-							.append($("<span />").text(" Amps"))
-					)
-					.append(
-						$("<div />")
-							.append($("<span />").text("Power "))
-							.append($("<span />").attr("rel", "power"))
-							.append($("<span />").text(" Watts"))
-					)
-			)
-			.click(function() {
-				var button = $(this);
-				var testing = !button.hasClass("circuit-button-test");
-				
-				button.toggleClass("circuit-button-test");
-				
-				testCircuit(number, testing);
-			})
-			.appendTo($(".circuit-panel"));
+		addToCircuitPanel(number, circuitColor);
 	} else {
 		circuitColor = $(".circuit-panel .circuit-button[rel=" + number + "] .circuit-button-title").css("backgroundColor");
 	}
@@ -1247,7 +1362,7 @@ function adjustCircuit(number) {
 }
 
 function cleanupCircuitPanel() {
-	$(".circuit-panel .circuit-button").each(function(i, el) {
+	$(".circuit-panel .circuit-button:gt(0)").each(function(i, el) {
 		var button = $(el);
 		
 		if ($(".work-table .tile[circuit=" + button.attr("rel") + "]").length === 0) {
@@ -1258,13 +1373,22 @@ function cleanupCircuitPanel() {
 
 function selectComponentForDeletion(ev) {
 	var i = -1;
-
+	var el = $(this);
+	
 	if (selectingComponents) {
 		if ((i = selected.indexOf(this)) >= 0) {
-			$(this).css({backgroundColor: "transparent"});
+			el
+				.css({backgroundColor: "transparent"})
+				.find(".highlight").remove();
+				
 			selected.splice(i, 1);
 		} else {
-			$(this).css({backgroundColor: "yellow"});
+			if (el.hasClass("tile")) {
+				el.append($("<div />").addClass("highlight"));
+			} else {
+				el.css({backgroundColor: "yellow"});
+			}
+			
 			selected.push(this);
 		}
 	}
@@ -1285,4 +1409,89 @@ function tilePosition(tile) {
 		above: $(".work-table .tile-row[y=" + (pos.y - 1)  + "] .tile-slot[x=" + pos.x + "] .tile"),
 		below: $(".work-table .tile-row[y=" + (pos.y + 1)  + "] .tile-slot[x=" + pos.x + "] .tile"),
 	};
+}
+
+function addToCircuitPanel(number, circuitColor) {
+	var circuitName = [
+		"All", 
+		"One", 
+		"Two", 
+		"Three", 
+		"Four", 
+		"Five", 
+		"Six", 
+		"Seven", 
+		"Eight", 
+		"Nine", 
+		"Ten", 
+		"Eleven", 
+		"Tweleve"
+	];
+	
+	$(".circuit-panel .circuit-button[rel=" + number + "]").remove();
+	
+	var button = $("<div />")
+		.addClass("circuit-button")
+		.attr("rel", number)
+		.append(
+			$("<div />")
+				.addClass("circuit-button-title")
+				.css({backgroundColor: circuitColor, borderColor: circuitColor})
+				.text("Circuit " + circuitName[number])
+		)
+		.append(
+			$("<div />")
+				.addClass("circuit-button-specs")
+				.append(
+					$("<div />")
+						.append($("<span />").text("Current "))
+						.append($("<span />").attr("rel", "current"))
+						.append($("<span />").text(" Amps"))
+				)
+				.append(
+					$("<div />")
+						.append($("<span />").text("Power "))
+						.append($("<span />").attr("rel", "power"))
+						.append($("<span />").text(" Watts"))
+				)
+		)
+		.append(
+			$("<div />")
+				.addClass("circuit-test-button")
+				.text("Test")
+		)
+		.click(function() {
+			if (number === 0) return;
+			
+			var button = $(this);
+			var circuit = $(".work-table .tile[circuit=" + number + "]");
+			var testing = !button.hasClass("circuit-button-test");
+
+			button.toggleClass("circuit-button-test");
+			button.removeClass("test-fail");
+			button.removeClass("test-pass");
+			
+			testCircuit(number, testing);
+			
+			if (testing) {
+				if (circuit.hasClass("test-fail")) {
+					button.addClass("test-fail");
+				} else {
+					button.addClass("test-pass");
+				}
+			}
+		})
+		.appendTo($(".circuit-panel"));
+		
+	if (number === 0) {
+		button.click(function() {
+			$(".circuit-panel .circuit-button:not([rel=0])").each(function(i, el) {
+				var button = $(el);
+				
+				if (!button.hasClass("circuit-button-test")) {
+					button.click();
+				}
+			});
+		});
+	}
 }

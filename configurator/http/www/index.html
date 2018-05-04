@@ -16,25 +16,30 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
 		<link rel="stylesheet" type="text/css" href="./assets/css/index.css" />
+		<link rel="stylesheet" type="text/css" href="./assets/css/tooltip.css" />
 		<link rel="stylesheet" type="text/css" href="./assets/css/ionicons.css" />
 		<link rel="stylesheet" type="text/css" href="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.css" />
+		<link rel="stylesheet" type="text/css" href="./assets/dragula.min.css" />
 
 		<script src="./assets/js/jquery-3.2.1.js"></script>
 		<script src="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 		<script src="./assets/js/lzstring.js"></script>
 		<script src="./assets/js/js.cookie.js"></script>
-		<script src="./assets/js/randomcolor.js"></script>
 		<script src="./assets/js/temperature.js"></script>
 		<script src="./assets/js/index.js"></script>
 	</head>
 
 	<body>
+		<script src="./assets/js/dragula.min.css"></script>
+		
 		<header>
 
 			<div class="toolbar">
 				<button>Guide Me!</button>
 				<button>Help</button>
 				<button>Feedback</button>
+				
+				<div class="tooltip active">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce at purus interdum, facilisis libero vel, mollis tellus. Etiam at dui vehicula, venenatis neque ac, fermentum augue. In vel turpis a sapien vulputate rutrum sit amet ac mi. Aliquam tempus nisl et varius pellentesque. Phasellus et sapien eu diam pulvinar tristique. Vivamus venenatis vitae nunc ullamcorper pretium. Sed convallis fermentum commodo. Phasellus pretium leo ac convallis pellentesque. Aliquam magna arcu, ultricies nec ullamcorper sit amet, dapibus vitae ligula. Maecenas vitae finibus lectus, eu gravida lectus.<div class="arrow up"></div></div>
 			</div>
 
 
@@ -49,6 +54,8 @@
 				<option value="closeProject">Close</option>
 				<option value="print">Print</option>
 			</select>
+			
+			<div class="tooltip active">This is a tooltip <div class="arrow"></div></div>
 
 			<span class="title">IllumiTile Light Engine Configurator</span>
 			
@@ -77,11 +84,11 @@
 		</div>
 
 		<div class="main-toolbar">
-			<button onclick="selectComponent()" id="select" class="icon ion-arrow-left-c" style="transform: rotate(45deg);"></button>
-			<button onclick="panWorkspace(event)" id="move" class="icon ion-arrow-expand"></button>
-			<button onclick="scaleCanvas('+')" class="icon ion-plus-circled"></button>
-			<button onclick="scaleCanvas('-')" class="icon ion-minus-circled"></button>
-			<button id="undo" class="icon ion-reply"></button>
+			<div class="button-place button-active"><button onclick="setWorkMode(10, event)" id="select" class="icon ion-arrow-left-c button-rotate"></button></div>
+			<div class="button-place"><button onclick="setWorkMode(20, event)" id="move" class="icon ion-arrow-expand button-rotate" style="font-size:1.6em;"></button></div>
+			<div class="button-place"><button onclick="scaleCanvas('+', event)" class="icon ion-search icon-search icon-search-plus"></button></div>
+			<div class="button-place"><button onclick="scaleCanvas('-', event)" class="icon ion-search icon-search icon-search-minus"></button></div>
+			<div class="button-place"><button id="undo" class="icon ion-reply"></button></div>
 		</div>
 
 		<section class="canvas">
@@ -93,11 +100,16 @@
 			<button id="footerHandle" class="footer-handle icon ion-arrow-down-a"></button>
 
 			<div class="tools">
-				<div  class="tool-button drag-to-canvas" rel="tile"><image src="assets/img/tile/illumitile_32x32.png" /></div>
-				<div  class="tool-button drag-to-canvas" rel="harness"><image src="assets/img/tile/harness_90x11.png" /></div>
-				<div  class="tool-button drag-to-canvas" rel="power"><image src="assets/img/tile/power_120x36.png" /></div>
-				<button onclick="removeComponents()" class="tool-button icon ion-close" style="color: red"></button>
-				<button class="tool-button icon ion-gear-b" style="color: white"></button>
+				<div class="section">
+					<div class="overlay"></div>
+					<div  class="tool-button drag-to-canvas" rel="tile"><img src="assets/img/tile/illumitile_32x32.png" /><div class="helper"></div></div>
+					<div  class="tool-button drag-to-canvas" rel="harness"><img src="assets/img/tile/harness_90x11.png" /><div class="helper"></div></div>
+					<div  class="tool-button drag-to-canvas" rel="power"><img src="assets/img/tile/power_150x41.png" style="width:100px;" /><div class="helper"></div></div>
+					<button onclick="removeComponents()" class="tool-button icon ion-close" style="color: red"></button>
+				</div>
+				<div class="section">
+					<button class="tool-button icon ion-gear-b" style="color: white;font-size:1.75em;"></button>
+				</div>
 			</div>
 
 			<section>
@@ -109,11 +121,11 @@
 				</div>
 
 				<p class="title">Select the desired Configuration Mode (Instructions will appear for each type.)</p>
-				<div><label><input type="radio" onclick="setDesignMode('auto');" name="configuration" rel="auto" checked />Auto-Configuration for a Specified Illumination Area</label></div>
-				<div><label><input type="radio" onclick="setDesignMode('auto');" name="configuration" rel="auto-area" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
-				<div><label><input type="radio" onclick="setDesignMode('manual');" name="configuration" rel="manual" />Manual</label></div>
+				<div><label><input type="radio" onclick="setDesignMode(this, 'auto');" name="configuration" rel="auto-area" checked />Auto-Configuration for a Specified Illumination Area</label></div>
+				<div><label><input type="radio" onclick="setDesignMode(this, 'auto');" name="configuration" rel="auto-size" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
+				<div><label><input type="radio" onclick="setDesignMode(this, 'manual');" name="configuration" rel="manual" />Manual</label></div>
 
-				<div class="instructions" rel="auto">
+				<div class="instructions" rel="auto-area">
 					<p class="title">INSTRUCTIONS: Auto-Configuration for a Specified Illumination Area</p>
 					<p>1. Insert the desired dimensions into the Illumination Area fields.</p>
 					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
@@ -121,7 +133,7 @@
 					<p>4. Switch to Manual Configuration Mode if any modifications are desired.</p>
 				</div>
 				
-				<div class="instructions" rel="auto-area">
+				<div class="instructions" rel="auto-size">
 					<p class="title">INSTRUCTIONS: Auto-Configuration for an Illumination Area Adjust to Your Layout</p>
 					<p>1. Click and drag IllumiTiles onto the build area as your physical layout requires. IllumiSnap harnesses will automatically be inserted, and the Effective Illumination Area will adjust to your layout.</p>
 					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
@@ -140,13 +152,21 @@
 			<section class="specs">
 				<h1>System Specifications</h1>
 
-				<div class="setting">
+				<div class="setting setting-auto" rel="auto-area">
 					Area 
-					<input type="text" class="field" name="work-table-width" value="12.0" />
+					<input type="text" class="field" name="work-table-width" value="4.0" />
 					" X 
-					<input type="text" class="field" name="work-table-height" value="10.0" />
+					<input type="text" class="field" name="work-table-height" value="4.0" />
 					"
 				</div>
+
+				<div class="setting setting-auto" rel="auto-size">
+					Tiles
+					<input type="text" class="field" name="tile-count-width" value="1" /> 
+					X 
+					<input type="text" class="field" name="tile-count-height" value="1" />
+				</div>
+
 				<div class="setting">Voltage <span class="value" rel="voltage">0.0</span> DC</div>
 				<div class="setting">Current <span class="value" rel="current">0.0</span> Amps</div>
 				<div class="setting">Power <span class="value" rel="power">0.0</span> Watts</div>

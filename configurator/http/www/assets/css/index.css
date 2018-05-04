@@ -61,6 +61,7 @@ header .title {
 
 header .toolbar {
 	float: right;
+	margin-right: 20px;
 }
 
 header .circuit-panel {
@@ -83,6 +84,7 @@ header .circuit-panel .circuit-button {
 header .circuit-panel .circuit-button .circuit-button-title {
 	border: 1px solid;
 	border-radius: 4px;
+	color: white;
 	font-weight: bold;
 	text-align: center;
 	padding: 3px;
@@ -90,6 +92,7 @@ header .circuit-panel .circuit-button .circuit-button-title {
 }
 
 header .circuit-panel .circuit-button-test .circuit-button-title::after {
+	margin-left: 5px;
 	content: "💡";
 	color: yellow;
 }
@@ -98,11 +101,32 @@ header .circuit-panel .circuit-button .circuit-button-specs {
 	margin: 3px;
 }
 
+header .circuit-panel .circuit-button .circuit-test-button {
+    text-align: center;
+    background: green;
+    color: white;
+    font-weight: bold;
+    border: 1px solid white;
+    border-radius: 3px;
+    padding: 3px;
+}
+
+header .circuit-panel .test-pass {
+	background-color: yellow;	
+	color: black;
+}
+
+header .circuit-panel .test-fail {
+	background-color: red;	
+	color: black;
+}
+
+
 .canvas {
 	background: #3d3d3d;
 	display: block;
 	height: 100%;
-	margin-top: 190px;
+	margin-top: 210px;
 	overflow: auto;
 }
 
@@ -111,6 +135,7 @@ header .circuit-panel .circuit-button .circuit-button-specs {
 	min-width: 5600px;
 	padding-left: 100px;
 	overflow: visible;
+  	transform-origin: 30px 30px;
 }
 
 .canvas .work-table .component {
@@ -165,8 +190,8 @@ header .circuit-panel .circuit-button .circuit-button-specs {
 	z-index: 5;
 }
 
-.canvas .work-table .tile .power-top, .canvas .work-table .tile .power-top {
-	left: -349px;
+.canvas .work-table .tile .power-top {
+	left: 83px;
 }
 
 .canvas .work-table .tile .power-bottom {
@@ -174,25 +199,25 @@ header .circuit-panel .circuit-button .circuit-button-specs {
 }
 
 .canvas .work-table .tile .power-down {
-	top: -163px;
+	top: -732px;
 }
 
 .canvas .work-table .tile .power-up {
-	bottom: -163px;
-	left: -350px;
+	bottom: -732px;
+	left: 81px;
 }
 
 .canvas .work-table .tile .power-center {
-	top: -3px;	
+	top: 81px;	
 }
 
 .canvas .work-table .tile .power-left {
-	left: -445px;
+	left: -731px;
 }
 
 .canvas .work-table .tile .power-right {
-	right: -445px;
-	top: 100px;
+	right: -732px;
+	top: 83px;
 }
 
 .tile .bottom img {
@@ -214,23 +239,62 @@ header .circuit-panel .circuit-button .circuit-button-specs {
 	position: fixed;
 	top: 180px;
 	left: 20px;
-	padding: 10px;
-	border: 3px solid white;
+	border: 2px solid #8f8f8f;
 	border-radius: 8px;
 	text-align: center;
-	width: 32px;
+	width: 40px;
 	z-index: 10;
-	background: top left repeat-x url(../img/gradient.png);
+	background: #003a89;
+	padding: 5px 4px 5px 3px;
+}
+
+.main-toolbar .icon-search {
+	position: relative;
+}
+
+.main-toolbar .icon-search-plus:after {
+	position: absolute;
+	content: "+";
+	vertical-align: super;
+	font-size: 0.6em;
+	top: -1px;
+}
+
+.main-toolbar .icon-search-minus:after {
+	position: absolute;
+	content: "-";
+	vertical-align: super;
+	font-size: 0.6em;
+	top: -5px;
+}
+
+.main-toolbar .button-place {
+	display: inline-block;
+	margin: 8px 0px;
+	width: 33px;
+	height: 33px;
 }
 
 .main-toolbar button {
 	display: inline-block;
-	margin: 8px 0px;
 	font-size: 1.5em;
+	line-height: 1.4;
+	text-align: center;
 	color: white;
 	background-color: transparent;
 	border: 0px;
 	cursor: pointer;
+	padding: 0px;
+}
+
+.main-toolbar .button-rotate {
+	transform: rotate(45deg)
+}
+
+.main-toolbar .button-active {
+	background: #39ba01;
+	color: white;
+	border-radius: 5px;
 }
 
 .highlight {
@@ -240,6 +304,17 @@ header .circuit-panel .circuit-button .circuit-button-specs {
 	width: 100%;
 	height: 100%;
 	background-color: yellow;
+	opacity: 0.6;
+	z-index: 5;
+}
+
+.overlay {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: grey;
 	opacity: 0.6;
 	z-index: 5;
 }
@@ -272,22 +347,49 @@ footer .footer-handle {
 
 footer .tools {
 	position: absolute;
-	top: -70px;
-	padding: 10px;
-	border: 3px solid #fff;
+	top: -50px;
+	padding: 10px 0px;
+	border: 2px solid #8f8f8f;
 	border-radius: 8px;
-	background: top left repeat-x url(../img/gradient.png);
+	background-color: #003a89;
+}
+
+footer .tools .section:first-child {
+	border: 0px;
+}
+
+footer .tools .section {
+	display: inline-block;
+	margin-right: 10px;
+	padding-left: 10px;
+	border-left: 2px solid white;
 }
 
 footer .tools .tool-button {
 	display: inline-block;
-	padding: 5px;
+	height: 40px;
+	min-width: 32px;
+	padding: 0px 4px;
 	margin: 0px 5px;
 	vertical-align: middle;
 	font-size: 1.5em;
 	background-color: transparent;
 	border: 1px solid white;
 	border-radius: 8px;
+}
+
+footer .tools .tool-button img {
+	vertical-align: middle;	
+}
+
+footer .tools .tool-button .helper {
+	display: inline-block;
+	vertical-align: middle;
+	height: 100%;
+}
+
+footer .tools .button-disabled {
+	opacity: 0.6;
 }
 
 footer section {
@@ -308,6 +410,7 @@ footer section .title {
 footer section .instructions {
 	display: none;
 	margin-top: 20px;
+	max-width: 520px;
 }
 
 footer section p {
