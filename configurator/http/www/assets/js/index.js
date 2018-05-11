@@ -79,13 +79,8 @@ var tileDropConfig = {
 };
 
 $( function() {
-	$(".work-table").draggable({ disabled: true, });	
+	resetWorkTable();
 
-	initializeDrag();
-	clearWorkTable();
-	addToCircuitPanel(0, "black");
-	addTileRow(0);
-	
 	$("#footerHandle").on("click", function() {
 		var footer = $("footer");
 		var handle = $("#footerHandle");
@@ -250,14 +245,24 @@ function setWorkMode(mode, ev) {
 }
 
 function closeProject() {
-	clearWorkTable(); 
+	resetWorkTable(); 
 
 	Cookies.remove("ws");
 	Cookies.remove("_ws");
 }
 
-function clearWorkTable() {
-	$(".work-table").empty();
+function resetWorkTable() {
+	$(".work-table")
+		.empty()
+		.draggable({ disabled: true, })
+		.css({ transform: "scale(1.0)"})
+		.attr({ scale: "1.0" });
+
+	$(".circuit-panel .circuit-button").remove();
+
+	initializeDrag();
+	addToCircuitPanel(0, "black");
+	addTileRow(0);
 }
 
 function initializeDrag() {
@@ -273,8 +278,8 @@ function initializeDrag() {
 			var onto = $(target);
 
 			return (drop.parent().attr("rel") === "tile" && onto.hasClass("tile-slot") && onto.find(".tile").length === 0)
-				|| (drop.parent().attr("rel") === "harness" && onto.hasClass("zone") && onto.find("img").length === 0)
-				|| (drop.parent().attr("rel") === "power" && onto.hasClass("tile") && onto.find(".power").length === 0);
+				|| (drop.parent().attr("rel") === "harness" && onto.hasClass("zone"))
+				|| (drop.parent().attr("rel") === "power" && onto.hasClass("tile"));
 		},
 		
 		revertOnSpill: true,
@@ -301,7 +306,7 @@ function initializeDrag() {
 	.on("drop", function(el, target) {
 		var onto = $(target);
 		var drop = $(el);
-		
+
 		if (onto.hasClass("tile-slot")) {
 	       var row = $(target).parents(".tile-row");
 	       var y = parseInt(row.attr("y"));
@@ -453,7 +458,6 @@ function removeComponents() {
 function startProject() {
 	closeProject();
 	createProject();
-	cleanupCircuitPanel();
 }
 
 function openProject() {

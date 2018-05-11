@@ -150,8 +150,9 @@ header .circuit-panel .test-fail {
 	display: inline-block;
 	width: 252px;
 	height: 252px;
-	margin: 13px;
+	margin: 10px;
 	border: 1px solid red;
+	vertical-align: middle;
 }
 
 .canvas .work-table .tile-circuit {
@@ -173,16 +174,16 @@ header .circuit-panel .test-fail {
 
 .canvas .work-table .tile .right {
 	top: 113px;
-	right: -50px;
-	width: 125px;
+	right: -109px;
+	width: 185px;
 	height: 24px;
 	z-index: 4;
 }
 
 .canvas .work-table .tile .bottom {
-	bottom: 50px;
+	bottom: 0px;
 	width: 100%;
-	height: 24px;
+	height: 72px;
 }
 
 .canvas .work-table .tile .power {
@@ -224,7 +225,7 @@ header .circuit-panel .test-fail {
 	position: absolute;
 	transform: rotate(90deg);
 	left: 35px;
-	top: 78px;
+	top: 74px;
 }
 
 .canvas .work-table .test-pass {
