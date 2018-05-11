@@ -3,6 +3,7 @@ var selectingComponents = true;
 var selected = [];
 
 var workspaces = [];
+var drake;
 
 var WORK_MODE_SELECT = 10;
 var WORK_MODE_BROWSE = 20;
@@ -29,61 +30,6 @@ var CIRCUIT_COLOR = [
 	"#e6194b", //Red
 	"#808080", //Grey	
 ];
-
-var tileZoneConfig = {
- 	accept: "[rel=harness]",
- 	drop: function(e, ui) {
- 		var zone = $(this);
-		var tile = zone.parents(".tile");
-		var map = tilePosition(tile);
-
-		if ((zone.hasClass("bottom") && map.below.length === 0) || (zone.hasClass("right") && map.aft.length === 0)) {
-			return;
-		}
-		
-		zone.empty();
-
-		$("<img />")
-			.attr({ src: ui.helper.attr("src") })
-			.css({ zIndex: 2 })
-			.click(selectComponentForDeletion)
-			.appendTo(zone);
-
-		zone
-			.droppable("option", "disabled", true)
-			.css({zIndex: 2});
-			
-		var circuitNumber = tile.attr("circuit");
-		
-		if (!circuitNumber) {
-			circuitNumber = 0;
-			
-			$(".circuit-panel .circuit-button").each(function(i, el) {
-				circuitNumber = Math.max(circuitNumber, parseInt($(el).attr("rel")));
-			});
-			
-			circuitNumber += 1;
-		} 
-		
-		joinCircuit(circuitNumber, tile);
- 	},
- 	over: function(e, ui) {
- 		var target = $(this);
- 		if (target.hasClass("bottom")) {
- 			ui.helper.css({
- 				transform: "rotate(90deg)",
- 				left: (target.offset().left - 500) + "px",
- 				top: (target.offset().top + 1000) + "px",
- 			});
- 		}
- 	},
- 	out: function(e, ui) {
- 		var target = $(this);
- 		if (target.hasClass("bottom")) {
- 			ui.helper.css({transform: "rotate(0deg)", left: "0px", top: "0px"});
- 		}
- 	}
-};
 
 var tileDropConfig = {
  	accept: "[rel=power]",
@@ -133,9 +79,12 @@ var tileDropConfig = {
 };
 
 $( function() {
+	$(".work-table").draggable({ disabled: true, });	
+
+	initializeDrag();
 	clearWorkTable();
-	prepareWorkTable();
 	addToCircuitPanel(0, "black");
+	addTileRow(0);
 	
 	$("#footerHandle").on("click", function() {
 		var footer = $("footer");
@@ -302,98 +251,157 @@ function setWorkMode(mode, ev) {
 
 function closeProject() {
 	clearWorkTable(); 
-	prepareWorkTable();	
-	
+
 	Cookies.remove("ws");
 	Cookies.remove("_ws");
 }
 
 function clearWorkTable() {
 	$(".work-table").empty();
-	addTileRow(0);
 }
 
-function prepareWorkTable() {
-	var workTable = $(".work-table");
+function initializeDrag() {
+	if (drake) drake.destroy();
 	
-	$(".drag-to-canvas")
-	 	.draggable({
-	 		containment: ".work-table",
-	 		tolerance: "pointer",
-	 		zIndex: $(this).attr("rel") == "harness" ? 2 : 0,
-	 		snap: $(this).attr("rel") == "harness" ? ".zone" : ".tile-slot",
-	 		snapMode: "inner",
-	 		//cursorAt: { top: "50%", left: "50%" },
-            helper: function() {
-	 			var component = "";
-				var scale = parseFloat($(".work-table").attr("scale") || 1.0);
-				var width = 0;
+	drake = dragula($(".drag-to-canvas").get(), {
+		copy: function(el, source) {
+			return $(el).parent().hasClass("drag-to-canvas");
+		},
+		
+		accepts: function(el, target) {
+			var drop = $(el);
+			var onto = $(target);
 
-	 			switch($(this).attr("rel")) {
-	 				case "tile" 	: component = "./assets/img/tile/illumitile_252x252.png"; width = 252 * scale; break;
-	 				case "harness"	: component = "./assets/img/tile/harness_180x22.png"; width = 180 * scale; break;
-	 				case "power"	: component = "./assets/img/powersupply/corner-down.png"; break;
-	 			}
+			return (drop.parent().attr("rel") === "tile" && onto.hasClass("tile-slot") && onto.find(".tile").length === 0)
+				|| (drop.parent().attr("rel") === "harness" && onto.hasClass("zone") && onto.find("img").length === 0)
+				|| (drop.parent().attr("rel") === "power" && onto.hasClass("tile") && onto.find(".power").length === 0);
+		},
+		
+		revertOnSpill: true,
+	})
+	
+	.on("cloned", function(clone, original, type) {
+		var el = $(clone);
+    	var component = "";
+		var scale = parseFloat($(".work-table").attr("scale") || 1.0);
+		var width = "";
+		var type = $(original).parent().attr("rel");
+		
+		switch(type) {
+			case "tile"     : component = "./assets/img/tile/illumitile_252x252.png"; width = (252 * scale) + "px"; break;
+			case "harness"  : component = "./assets/img/tile/harness_180x22.png"; width = (180 * scale) + "px"; break;
+			case "power"    : component = "./assets/img/powersupply/corner-down.png"; width = (480 * scale) + "px"; break;
+		}
 
-	 			var helper = $("<img />")
-	 				.attr({ src: component, rel: $(this).attr("rel") })
-	 				.css({transform: "scale(" + scale + ")"});
+		el
+			.attr({ src: component, rel: type })
+			.css({ width: width, height: "", });
+	})
 
-	 			return helper;
-	 		},
-			start: function(event, ui) { 
-				var scale = parseFloat($(".work-table").attr("scale") || 1.0);
-			  $(this).draggable("option", "cursorAt", {
-			    left: Math.floor(this.clientWidth / 2) * scale,
-			    top: Math.floor(this.clientHeight / 2) * scale
-			  }); 
-			}	 		
-	 	});
-
-	 $(".tile-slot")
-	 	.droppable({
-	 		accept: "[rel=tile]",
-	 		drop: function(e, ui) {
-	 			var slot = $(this);
-	 			var row = slot.parent();
-	 			var nextIndex = parseInt(row.attr("y")) + 1;
-	 			var nextRow = $(".tile-row[y=" + nextIndex + "]");
-
-	 			if (nextRow.length === 0) {
-	 				addTileRow(nextIndex);
-	 			}
-
-	 		 	var tile = $(' \
-	 		 		<div class="tile"> \
-				 		<div class="zone right"></div> \
-				 		<div class="zone bottom"></div> \
-				 	</div> \
-				')
-				.attr("src", ui.helper.attr("src"))
+	.on("drop", function(el, target) {
+		var onto = $(target);
+		var drop = $(el);
+		
+		if (onto.hasClass("tile-slot")) {
+	       var row = $(target).parents(".tile-row");
+	       var y = parseInt(row.attr("y"));
+	       
+	    	if ($(".work-table .tile-row[y=" + (y + 1) + "]").length === 0) {
+				addTileRow(y+1);
+			}
+	
+			var tile = $("<div />")
+				.addClass("tile")
+				.attr({ rel: "tile" })
+				.css({ backgroundImage: $(el).attr("src") })
+				.append($("<div />").addClass("zone right"))
+				.append($("<div />").addClass("zone bottom"))
 				.click(selectComponentForDeletion)
-				.appendTo(slot);
-
-				tile.children(".zone").droppable(tileZoneConfig);
-				tile.droppable(tileDropConfig);
+				.appendTo(onto.empty());
 				
-				slot.droppable("option", "disabled", true);
+			drake.containers.push(tile.get(0));
+			drake.containers = drake.containers.concat(tile.find(".zone").get());
+			
+			var map = tilePosition(tile);
+			
+			map.fore.find(".power-right").remove();
+			map.above.find(".power-up").remove();
+			map.aft.find(".power-left").remove();
+		} else if (onto.hasClass("zone")) {
+			var tile = onto.parents(".tile");
+			var map = tilePosition(tile);
+			
+			if ((onto.hasClass("right") && map.aft.length === 0) || (onto.hasClass("bottom") && map.below.length === 0)) {
+				drake.cancel(true);
+				return;
+			}
+			
+			$("<img />")
+				.attr({ src: "./assets/img/tile/harness_180x22.png"})
+				.css({ zIndex: 4, })
+				.click(selectComponentForDeletion)
+				.appendTo(onto.empty());
+				
+			var tile = onto.parents(".tile");
+			var map = tilePosition(tile);
+			var circuit = tile.attr("circuit");
+			
+			if (!circuit) {
+				if (onto.hasClass("right")) {
+					circuit = map.aft.attr("circuit");
+				} else {
+					circuit = map.below.attr("circuit");
+				}
+			}
+			
+			if (!circuit) {
+				circuit = parseInt($(".circuit-panel .circuit-button").last().attr("rel") || 0) + 1;
+			} else {
+				circuit = parseInt(circuit);
+			}
+			
+			joinCircuit(circuit, tile);
+		} else if (onto.hasClass("tile")) {
+			var ps = $("<img />").attr("rel", "power");
+			var map = tilePosition(onto);
+			var circuit = onto.attr("circuit");
+			var perform = true;
 
-				updateSystemSpecs();
-	 		},
-	 		over: function(e, ui) {
-	 			$(ui)
-	 				.css({ backgroundColor: "yellow" });
-	 		},
-	 		out: function(e, ui) {
-	 			$(ui)
-	 				.css({ backgroundColor: "transparent" });
-	 		}
-	 	});
-	 	
-	 	workTable
-	 		.draggable({
-	 			disabled: true,
-	 		});
+			if (map.fore.length === 0) {
+				ps
+				.addClass("power power-left power-center")
+				.attr("src", "assets/img/powersupply/ps-right.png");
+			} else if (map.above.length === 0) {
+				ps
+				.addClass("power power-top power-down")
+				.attr("src", "assets/img/powersupply/ps-down.png");
+			} else if (map.aft.length === 0 && onto.find(".zone.right img").length === 0) {
+				ps
+				.addClass("power power-right power-center")
+				.attr("src", "assets/img/powersupply/ps-left.png");
+			} else if (map.below.length === 0 && onto.find(".zone.bottom img").length === 0) {
+				ps
+				.addClass("power power-bottom power-up")
+				.attr("src", "assets/img/powersupply/ps-up.png");
+			} else {
+				drake.cancel(true);
+				perform = false;
+			} 
+			
+			if (perform) {
+				if (circuit) {
+					$(".work-table .tile[circuit=" + circuit + "] .power").remove();
+				}
+				
+				drop.remove();
+				
+				ps
+				.appendTo(onto)
+				.click(selectComponentForDeletion);
+			}
+		}
+	});
+
 }
 
 function removeComponents() {
@@ -410,14 +418,12 @@ function removeComponents() {
 				if (map.above.attr("circuit") == circuit) {
 					map.above
 						.find(".zone.bottom")
-						.droppable("option", "disabled", false)
 						.find("img").remove();
 				}
 				
 				if (map.fore.attr("circuit") == circuit) {
 					map.fore
 						.find(".zone.right")
-						.droppable("option", "disabled", false)
 						.find("img").remove();
 				}
 
@@ -426,7 +432,6 @@ function removeComponents() {
 					.css({borderColor: ""});
 			}
 
-			component.parent().droppable("option", "disabled", false);
 			component.remove();
 
 			if (circuit > 0) {
@@ -573,10 +578,6 @@ function decompressWorkspace(b64) {
 	var doc = $(".work-table");
 
 	doc.html(lzstring.decompressFromBase64(b64));
-	prepareWorkTable();
-	$(".tile")
-		.droppable(tileDropConfig)
-		.find(".zone").droppable(tileZoneConfig);	
 
 	$(".tile .zone img")
 		.click(selectComponentForDeletion);
@@ -584,6 +585,9 @@ function decompressWorkspace(b64) {
 	$(".tile")		
 		.click(selectComponentForDeletion);
 
+	initializeDrag();
+	
+	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
 	
 	updateSystemSpecs();
 }
@@ -731,16 +735,16 @@ function addTileRow(index) {
 		.attr("y", index);
 
 	for (var i = 0; i < cols; i++) {
-		row.append($("<div />")
+		var slot = $("<div />")
 			.addClass("tile-slot")
-			.attr("x", i)
-		);
+			.attr("x", i);
+		
+		drake.containers.push(slot.get(0));
+		row.append(slot);
 	}
 
 	workTable.append(row);
 
-	prepareWorkTable();
-	
 	return row;
 }
 
@@ -790,12 +794,6 @@ function scaleCanvas(direction, ev) {
 function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 	var panningEnabled = !$(".work-table").draggable("option", "disabled");
 
-	// if (workspaceHeight > workspaceWidth) {
-	// 	$(".work-table").attr("orientation", "portrait");
-	// } else {
-	// 	$(".work-table").attr("orientation", "landscape");
-	// }
-	
 	$(".work-table")
 		.empty()
 		.css({
@@ -805,6 +803,8 @@ function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 		})
 		.attr("scale", "1.0");
 
+	initializeDrag();
+
 	$(".circuit-panel .circuit-button:gt(1)").remove();
 	
 	for (var y = 0; y < workspaceHeight; y++) {
@@ -813,20 +813,8 @@ function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 	
 	createCircuits(splitCircuit(workspaceWidth, workspaceHeight));
 
-	prepareWorkTable();
-
-	$(".work-table .tile")
-		.droppable(tileDropConfig)
-		.find(".zone").droppable(tileZoneConfig);	
-
-	$(".work-table .tile")
-		.has("img[rel=power]")
-		.droppable("option", "disabled", "true");
-		
-	$(".work-table .tile .zone")
-		.has("img")
-		.droppable("option", "disabled", "true");
-
+	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
+	
 	if (panningEnabled) {
 		$(".work-table")
 			.css({cursor: "move"})
@@ -1160,7 +1148,6 @@ function createCircuits(defs) {
 				.appendTo(slot);
 		
 				slot
-					.droppable("option", "disabled", true)
 					.addClass("tile-circuit")
 					.css({borderColor: circuitColor});
 			}
@@ -1182,7 +1169,6 @@ function createCircuits(defs) {
 		placePowerSupply(circuit);
 		addToCircuitPanel(number, circuitColor);
 		updateSystemSpecs(number);
-		
 	}
 	
 }

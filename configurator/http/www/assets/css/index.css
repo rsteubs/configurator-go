@@ -519,3 +519,7 @@ footer .specs {
 	font-size: 1.25em;
 	color: black;
 }
+
+img.gu-transit {
+	display: block;
+}
