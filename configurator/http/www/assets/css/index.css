@@ -133,9 +133,10 @@ header .circuit-panel .test-fail {
 .canvas .work-table {
 	min-height: 1000px;
 	min-width: 5600px;
-	padding-left: 100px;
+	padding: 50px 100px;
 	overflow: visible;
   	transform-origin: 30px 30px;
+  	border: 1px solid red;
 }
 
 .canvas .work-table .component {
@@ -150,15 +151,10 @@ header .circuit-panel .test-fail {
 	display: inline-block;
 	width: 252px;
 	height: 252px;
-	margin: 10px;
-	border: 1px solid red;
-	vertical-align: middle;
-}
-
-.canvas .work-table .tile-circuit {
-	border: 10px solid;
-	border-radius: 4px;
 	margin: 3px;
+	border: 10px solid transparent;
+	vertical-align: middle;
+	border-radius: 4px;
 }
 
 .canvas .work-table .tile {
@@ -523,4 +519,5 @@ footer .specs {
 
 img.gu-transit {
 	display: block;
+	visibility: hidden;
 }
