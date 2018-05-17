@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"cretin.co/forge/1.0/app"
-	"cretin.co/forge/1.0/context"
+	"cretin.co/forge/1.1/app"
+	"cretin.co/forge/1.1/context"
 
 	"configurator/dstore"
 )
@@ -32,8 +32,11 @@ func (err Error) Error() string {
 func invalidTokenError() Error { return Error{"User is not authenticated."} }
 func invalidUserError() Error  { return Error{"User does not exist or password is invalid."} }
 
-func Authenticate(username, pwd string) (User, error) {
-	if p, err := dstore.FetchProfile(username); err != nil {
+func Authenticate(username, pwd string, c *context.Context) (User, error) {
+	tx := c.Getf("authenticating - %s", username)
+
+	if p, err := dstore.FetchProfile(username, c); err != nil {
+		tx.Startf("fail - %v", err)
 		return User{}, err
 	} else {
 		runes := []rune(pwd)
@@ -45,18 +48,22 @@ func Authenticate(username, pwd string) (User, error) {
 		}
 
 		if string(h[:]) == p.Password {
-			u.genToken()
+			tx.Start("ok")
+
+			u.genToken(c)
 			return u, nil
 		} else {
+			tx.Start("fail - bad password")
+
 			return User{}, invalidUserError()
 		}
 	}
 }
 
-func Authorize(username, token string) (User, error) {
-	if p, err := dstore.FetchProfile(username); err != nil {
+func Authorize(username, token string, c *context.Context) (User, error) {
+	if p, err := dstore.FetchProfile(username, c); err != nil {
 		return User{}, err
-	} else if err := dstore.VerifyToken(p.Handle, token); err != nil {
+	} else if err := dstore.VerifyToken(p.Handle, token, c); err != nil {
 		if _, ok := err.(dstore.Error); ok {
 			return User{}, invalidTokenError()
 		} else {
@@ -67,15 +74,21 @@ func Authorize(username, token string) (User, error) {
 	}
 }
 
-func (u User) genToken() {
+func (u User) genToken(c *context.Context) {
 	t := app.NewHandle(tokenLength)
 	h := sha256.Sum256([]byte(t))
 	expires := time.Now().Add(tokenExpiresIn).UTC()
 
-	if err := dstore.WriteToken(u.Handle, string(h[:]), expires); err != nil {
+	tx := c.Current().Start("generate token")
+
+	if err := dstore.WriteToken(u.Handle, string(h[:]), expires, c); err != nil {
+		tx.Start("fail")
+
 		context.Logf(context.Error, "Error writing token to data store: %v", err)
 		return
 	}
+
+	tx.Start("ok")
 
 	u.Token = string(h[:])
 }

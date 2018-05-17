@@ -1,8 +1,9 @@
-package controllers
+package server
 
 type responseStats struct {
-	S int    `json:"status"`
-	M string `json:"statusMessage"`
+	S int     `json:"status"`
+	M string  `json:"statusMessage"`
+	T float64 `json:"responseTime"`
 }
 
 type responseDoc struct {
@@ -106,15 +107,5 @@ func httpStatus(i int) string {
 
 	default:
 		return ""
-	}
-}
-
-func jsonResponse(status int, message string, body interface{}) responseDoc {
-	stats := responseStats{status, message}
-
-	if body == nil {
-		return responseDoc{S: stats}
-	} else {
-		return responseDoc{stats, body}
 	}
 }

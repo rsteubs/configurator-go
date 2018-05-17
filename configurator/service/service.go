@@ -1,12 +1,12 @@
 package service
 
 import (
-	"cretin.co/forge/1.0/context"
 	"crypto/sha256"
 	"fmt"
 	"reflect"
 
-	"cretin.co/forge/1.0/app"
+	"cretin.co/forge/1.1/app"
+	"cretin.co/forge/1.1/context"
 
 	"configurator/dstore"
 )
@@ -24,7 +24,7 @@ type Project struct {
 
 func projectNotAvailableError() Error { return Error{"The project does not exist or is not available."} }
 
-func CreateProfile(username, pwd string) (string, error) {
+func CreateProfile(username, pwd string, c *context.Context) (string, error) {
 	salt := app.NewHandle(5)
 	runes := []rune(pwd)
 
@@ -34,26 +34,26 @@ func CreateProfile(username, pwd string) (string, error) {
 	context.Logf(context.Trace, "Raw password: %s", pwd)
 	context.Logf(context.Trace, "Salted password: %s", password)
 
-	return dstore.CreateProfile(username, string(h[:]), salt)
+	return dstore.CreateProfile(username, string(h[:]), salt, c)
 }
 
-func CreateProject(owner string) (string, error) {
-	return dstore.CreateProject(owner)
+func CreateProject(owner string, c *context.Context) (string, error) {
+	return dstore.CreateProject(owner, c)
 }
 
-func GetProjects(owner string) ([]Project, error) {
-	if h, err := dstore.FetchAllProjects(owner); err != nil {
+func GetProjects(owner string, c *context.Context) ([]Project, error) {
+	if h, err := dstore.FetchAllProjects(owner, c); err != nil {
 		return nil, err
 	} else {
 		list := make([]Project, len(h))
-		c := make(chan Project)
+		ch := make(chan Project)
 
 		fetch := func(h string) {
-			if p, err := RetrieveProject(owner, h); err != nil {
+			if p, err := RetrieveProject(owner, h, c); err != nil {
 				context.Logf(context.Warn, "Error retrieving project (%s): %v", h, err)
-				c <- Project{}
+				ch <- Project{}
 			} else {
-				c <- p
+				ch <- p
 			}
 		}
 
@@ -62,15 +62,15 @@ func GetProjects(owner string) ([]Project, error) {
 		}
 
 		for i, _ := range h {
-			list[i] = <-c
+			list[i] = <-ch
 		}
 
 		return list, nil
 	}
 }
 
-func RetrieveProject(owner string, project string) (Project, error) {
-	if d, err := dstore.FetchProject(owner, project); err != nil {
+func RetrieveProject(owner string, project string, c *context.Context) (Project, error) {
+	if d, err := dstore.FetchProject(owner, project, c); err != nil {
 		if _, ok := err.(dstore.Error); ok {
 			return Project{}, projectNotAvailableError()
 		} else {
@@ -92,7 +92,7 @@ func RetrieveProject(owner string, project string) (Project, error) {
 	}
 }
 
-func SaveProject(user string, p Project) error {
+func SaveProject(user string, p Project, c *context.Context) error {
 	d := dstore.Project{}
 
 	app.TranslateCustom(p, &d, func(name string, value reflect.Value) reflect.Value {
@@ -103,5 +103,5 @@ func SaveProject(user string, p Project) error {
 		return value
 	})
 
-	return dstore.UpdateProject(user, d)
+	return dstore.UpdateProject(user, d, c)
 }

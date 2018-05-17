@@ -31,53 +31,6 @@ var CIRCUIT_COLOR = [
 	"#808080", //Grey	
 ];
 
-var tileDropConfig = {
- 	accept: "[rel=power]",
- 	over: function(e, ui) {
-		$(this).append($("<div class='highlight'></div>"));
- 	}, 	
- 	out: function(e, ui) {
-		$(this).find(".highlight").remove();
- 	},
- 	drop: function(e, ui) {
-		var tile = $(this);
-		var row = tile.parents(".tile-row");
-		var cell = tile.parents(".tile-slot");
-		var map = tilePosition(tile);
-		
-		var psClass = "";
-		var psSrc = "";
-
-		tile.find("img[rel=power]").remove();
-		$(".work-table .tile[circuit=" + tile.attr("circuit") + "] img[rel=power]").remove();
-		$(this).find(".highlight").remove();
-			
-		if (map.above.length == 0) {
-			psClass = "power power-top power-down";
-			psSrc="assets/img/powersupply/ps-down.png";
-		} else if (map.fore.length == 0) {
-			psClass = "power power-left power-center";
-			psSrc="assets/img/powersupply/ps-right.png";
-		} else if (map.below.length == 0) {
-			psClass = "power power-bottom power-up";
-			psSrc="assets/img/powersupply/ps-up.png";
-		} else if (map.aft.length == 0) {
-			psClass = "power power-right power-center";
-			psSrc="assets/img/powersupply/ps-left.png";
-		} else {
-			return;
-		}
-
-		$("<img />")
-			.attr({ src: psSrc})
-			.attr({rel: "power"})
-			.css({ zIndex: 2 })
-			.addClass(psClass)
-			.click(selectComponentForDeletion)
-			.appendTo(tile);
- 	}
-};
-
 $( function() {
 	resetWorkTable();
 
@@ -198,6 +151,16 @@ $( function() {
 		.first()
 		.click();
 
+	if (window.localStorage) {
+		$(window)
+			.on("unload", function() {
+				window.localStorage.lastProject = compressWorkspace();
+			});
+			
+		if (window.localStorage.lastProject) {
+			decompressWorkspace(window.localStorage.lastProject);
+		}
+	}
 });
 
 function setWorkMode(mode, ev) {
@@ -583,10 +546,7 @@ function decompressWorkspace(b64) {
 
 	doc.html(lzstring.decompressFromBase64(b64));
 
-	$(".tile .zone img")
-		.click(selectComponentForDeletion);
-		
-	$(".tile")		
+	$(".tile, .tile .zone img, .tile .power")
 		.click(selectComponentForDeletion);
 
 	initializeDrag();
