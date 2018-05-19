@@ -18,6 +18,5 @@ func Start() {
 	pr.PUT("/:handle", NewEchoContext(UpdateProject, "Update Project"))
 	pr.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client"))
 
-	s.Logger.Fatal(s.StartAutoTLS(":" + app.Environment("SECURE_PORT")))
 	s.Logger.Fatal(s.Start(":" + app.Environment("PORT")))
 }
