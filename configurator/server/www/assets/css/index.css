@@ -53,10 +53,20 @@ header .title {
 	left: 0px;
 	right: 0px;
 	margin: 0px auto;
+	width: 420px;
+	overflow: hidden;
 	text-align: center;
 	font-weight: bold;
 	color: #fff;
 	z-index: -1;
+}
+
+header .title .sub-title {
+	display: block;
+	margin: 10px 0px;
+	font-size: 0.9em;
+	text-transform: capitalize;
+	white-space: nowrap;
 }
 
 header .toolbar {
@@ -136,7 +146,6 @@ header .circuit-panel .test-fail {
 	padding: 50px 100px;
 	overflow: visible;
   	transform-origin: 30px 30px;
-  	border: 1px solid red;
 }
 
 .canvas .work-table .component {

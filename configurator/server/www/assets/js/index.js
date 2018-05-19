@@ -222,6 +222,7 @@ function resetWorkTable() {
 		.attr({ scale: "1.0" });
 
 	$(".circuit-panel .circuit-button").remove();
+	$(".sub-title[rel=project-title]").text("");
 
 	initializeDrag();
 	addToCircuitPanel(0, "black");
@@ -510,9 +511,12 @@ function saveProject() {
 					}
 				);
 			}
+			
+			dialog.find("button[action=save]").unbind("click");
 		});
 
 		dialog.find("button[action=close]").click(function() {
+			dialog.find("button[action=save]").unbind("click");
 			dialog.hide();
 		});
 	} else {
@@ -622,6 +626,7 @@ function loadProjects(next) {
 
 								Cookies.set("ws", project.handle);
 								decompressWorkspace(project.content);
+								$(".sub-title[rel=project-title]").text(project.title);
 
 								$(".openProject").hide();
 							})
