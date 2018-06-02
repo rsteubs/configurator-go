@@ -31,6 +31,21 @@ var CIRCUIT_COLOR = [
 	"#808080", //Grey	
 ];
 
+var workingProject = {
+	temperature: "",
+	workMode: "",
+	areaWidth: "",
+	areaHeight: "",
+	tileWidth: "",
+	tileHeight: "",
+};
+
+var temperatureOptions = [];
+
+temperatureOptions["cool"] = "Cool (6000K CCT)";
+temperatureOptions["neutral"] = "Neutral (4500K CCT)";
+temperatureOptions["warm"] = "Warm (3000K CCT)";
+
 $( function() {
 	resetWorkTable();
 
@@ -43,7 +58,7 @@ $( function() {
 			footer.removeClass("closed");
 			handle.switchClass("ion-arrow-up-a", "ion-arrow-down-a");
 		} else {
-			footer.animate({bottom: footer.outerHeight() * -1 + 20}, 300, "easeInBack");
+			footer.animate({bottom: footer.outerHeight() * -1 + 35}, 300, "easeInBack");
 			footer.addClass("closed");
 			handle.switchClass("ion-arrow-down-a", "ion-arrow-up-a");
 		}
@@ -66,11 +81,6 @@ $( function() {
 		
 		menu.val("");
 	});
-
-	$("input[name=temperature]")
-		.change(function() {
-			updateSystemSpecs();				
-		});
 
 	var ws = null;
 	
@@ -112,15 +122,6 @@ $( function() {
 			}
 
 			field.val(val.toFixed(1));
-			
-			var tileDimension = 4.0;
-			var width = parseFloat($("[name=work-table-width]").val());
-			var height = parseFloat($("[name=work-table-height]").val());
-			var workspaceWidth = Math.floor(width / tileDimension);
-			var workspaceHeight = Math.floor(height / tileDimension);
-
-			
-			dimensionWorkTable(workspaceWidth, workspaceHeight);
 		});
 
 	$("[name=tile-count-width], [name=tile-count-height]")
@@ -133,33 +134,29 @@ $( function() {
 			}
 
 			field.val(val.toFixed(0));
-			
-			var workspaceWidth = parseFloat($("[name=tile-count-width]").val());
-			var workspaceHeight = parseFloat($("[name=tile-count-height]").val());
-			
-			dimensionWorkTable(workspaceWidth, workspaceHeight);
 		});
-		
-	$("input[type=radio][name=configuration]")
-		.click(function() {
-			var option = $(this);
-			var instruction = option.attr("rel");
-
-			$(".instructions").hide();
-			$(".instructions[rel=" + instruction + "]").show();
-		})
-		.first()
-		.click();
 
 	if (window.localStorage) {
 		$(window)
 			.on("unload", function() {
-				window.localStorage.lastProject = compressWorkspace();
+				window.localStorage.lastProject = JSON.stringify({ html: compressWorkspace(), project: workingProject });
 			});
 			
 		if (window.localStorage.lastProject) {
-			decompressWorkspace(window.localStorage.lastProject);
+			var p = JSON.parse(window.localStorage.lastProject);
+			
+			workingProject = p.project;
+			decompressWorkspace(p.html);
+			prepareWizard();
+		} else {
+			prepareWizard();
 		}
+	} else {
+		prepareWizard();
+	}
+	
+	if ($(".work-table .tile").length === 0) {
+		navigateWizard("temperature");
 	}
 });
 
@@ -421,7 +418,10 @@ function removeComponents() {
 
 function startProject() {
 	closeProject();
-	createProject();
+	createProject(function() {
+		prepareWizard();
+		navigateWizard("temperature");
+	});
 }
 
 function openProject() {
@@ -547,6 +547,7 @@ function compressWorkspace() {
 function decompressWorkspace(b64) {
 	var lzstring = window.LZString;
 	var doc = $(".work-table");
+	var circuits = [1];
 
 	doc.html(lzstring.decompressFromBase64(b64));
 
@@ -556,6 +557,19 @@ function decompressWorkspace(b64) {
 	initializeDrag();
 	
 	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
+	
+	$(".work-table .tile").each(function(i, el) {
+		var circuitNumber = $(el).attr("circuit");
+		
+		circuits[circuitNumber] = 1;
+	});
+
+	for (var i in circuits) {
+		if (i > 0) {
+			addToCircuitPanel(i, CIRCUIT_COLOR[i - 1]);
+			updateSystemSpecs(i)
+		}
+	}
 	
 	updateSystemSpecs();
 }
@@ -580,6 +594,13 @@ function createProject(next, err) {
         	
         	Cookies.set("ws", handle);
         	
+			workingProject.temperature = "";
+			workingProject.workMode = "";
+			workingProject.areaWidth = "";
+			workingProject.areaHeight = "";
+			workingProject.tileWidth = "";
+			workingProject.tileHeight = "";
+			
         	if (next) {
         		next(resp);
         	}
@@ -652,11 +673,12 @@ function loadProjects(next) {
 }
 
 function updateSystemSpecs(circuitNumber) {
-	var selectedTemperature = $("[name=temperature]:checked").val() || "cool";
+	var selectedTemperature = workingProject.temperature;
 	var specs = temperature[selectedTemperature];
 	var workTable = $(".work-table");
 	var tiles = workTable.find(".tile");
 	var harnessCount = tiles.find(".zone img").length;
+	var psCount = workTable.find("img.power").length;
 	var circuitTiles = workTable.find(".tile[circuit=" + circuitNumber + "]");
 	var circuitHarnessCount = circuitTiles.find(".zone img").length;
 	var fields = $(".specs");
@@ -664,28 +686,33 @@ function updateSystemSpecs(circuitNumber) {
 	var components = $(".components");
 	var overallSet = false;
 	var circuitSet = false;
+	
+	components.find("[rel=tileCount]").text(tiles.length);
+	components.find("[rel=harnessCount]").text(harnessCount);
+	components.find("[rel=powerCount]").text(psCount);
+	components.find("[rel=temperature]").text(temperatureOptions[selectedTemperature]);
 
-	for (var i = 0, spec; (spec = specs[i]) && (!overallSet || !circuitSet); i++) {
-		if (!overallSet && spec.tiles == tiles.length && spec.harnesses <= harnessCount) {
-			console.log("using", spec)
-			fields.find("[rel=current]").text(spec.current);
-			fields.find("[rel=power]").text(spec.power);
-			fields.find("[rel=voltage]").text(spec.voltage);
-			components.find("[rel=tileCount]").text(tiles.length);
-			components.find("[rel=harnessCount]").text(harnessCount);
-
-			$(".circuit-panel [rel=0]")
-				.find("[rel=current]").text(spec.current)
-				.parents(".circuit-button")
-				.find("[rel=power]").text(spec.power);
+	if (specs) {
+		for (var i = 0, spec; (spec = specs[i]) && (!overallSet || !circuitSet); i++) {
+			if (!overallSet && spec.tiles == tiles.length && spec.harnesses <= harnessCount) {
+				console.log("using", spec)
+				fields.find("[rel=current]").text(spec.current);
+				fields.find("[rel=power]").text(spec.power);
+				fields.find("[rel=voltage]").text(spec.voltage);
+	
+				$(".circuit-panel [rel=0]")
+					.find("[rel=current]").text(spec.current)
+					.parents(".circuit-button")
+					.find("[rel=power]").text(spec.power);
+				
+				overallSet = true;
+			}
 			
-			overallSet = true;
-		}
-		
-		if (!circuitSet && spec.tiles == circuitTiles.length && spec.harnesses <= circuitHarnessCount) {
-			circuitFields.find("[rel=current]").text(spec.current);
-			circuitFields.find("[rel=power]").text(spec.power);
-			circuitSet = true;
+			if (!circuitSet && spec.tiles == circuitTiles.length && spec.harnesses <= circuitHarnessCount) {
+				circuitFields.find("[rel=current]").text(spec.current);
+				circuitFields.find("[rel=power]").text(spec.power);
+				circuitSet = true;
+			}
 		}
 	}
 	
@@ -721,7 +748,7 @@ function scaleCanvas(direction, ev) {
 	var canvas = $(".work-table");
 	var button = $(ev.target);
 	var scale = parseFloat(canvas.attr("scale") || 1.0);
-	var step = 0.15;
+	var step = 0.10;
 	var max = 1.5;
 	
 	if (isNaN(scale)) {
@@ -1083,7 +1110,7 @@ function createCircuits(defs) {
 					tile.find(".bottom").append(harness());
 				}
 				
-				if (x < cells.length - 1) {
+				if (x < cells.length - 1 && (y === 0 || y === rows.length - 1)) {
 					tile.find(".right").append(harness());
 				}
 			}
@@ -1449,4 +1476,118 @@ function addToCircuitPanel(number, circuitColor) {
 			});
 		});
 	}
+}
+
+function navigateWizard(step) {
+	$(".wizard").hide()
+		.siblings("[rel=" + step + "]").show();
+}
+
+function setWizardWorkMode(mode) {
+	$(".wizard").find("[rel=auto-area],[rel=auto-size],[rel=manual]").hide();
+	
+	if (mode && mode.length > 0) {
+		$(".wizard").find("[rel=" + mode + "]").show();
+	}
+}
+
+function prepareWizard() {
+	$(".wizard[rel=temperature] input[name=temperature]").prop("checked", false);
+	$(".wizard[rel=work-mode] input[name=configuration]").prop("checked", false);
+
+	if (workingProject.temperature && workingProject.temperature.length > 0) {
+		$(".wizard[rel=temperature] input[name=temperature][value=" + workingProject.temperature + "]").prop("checked", true);
+	}
+	
+	if (workingProject.workMode && workingProject.workMode.length > 0) {
+		$(".wizard[rel=work-mode] input[name=configuration][value=" + workingProject.workMode + "]").prop("checked", true);
+	}
+
+	if (workingProject.workMode === "auto-area") {
+		$(".wizard[rel=auto-config] input[name=work-table-width]").val(workingProject.areaWidth);
+		$(".wizard[rel=auto-config] input[name=work-table-height]").val(workingProject.areaHeight);
+
+		if ($("footer .tools .overlay").length === 0) {
+			$("<div />")
+				.addClass("overlay")
+				.appendTo($("footer .tools"));
+		}
+	} else {
+		$(".wizard[rel=auto-config] input[name=work-table-width]").val("");
+		$(".wizard[rel=auto-config] input[name=work-table-height]").val("");
+	}
+	
+	if (workingProject.workMode === "auto-size") {
+		$(".wizard[rel=auto-config] input[name=tile-count-width]").val(workingProject.tileWidth);
+		$(".wizard[rel=auto-config] input[name=tile-count-height]").val(workingProject.tileHeight);
+		
+		if ($("footer .tools .overlay").length === 0) {
+			$("<div />")
+				.addClass("overlay")
+				.appendTo($("footer .tools"));
+		}
+	} else {
+		$(".wizard[rel=auto-config] input[name=tile-count-width]").val("");
+		$(".wizard[rel=auto-config] input[name=tile-count-height]").val("");
+	}
+
+	if (workingProject.workMode === "manual") {
+		$("footer .tools .overlay").remove();
+	}
+	
+	setWizardWorkMode(workingProject.workMode);
+}
+
+function saveWizard() {
+	workingProject.temperature = $(".wizard[rel=temperature] input[name=temperature]:checked").val();
+	workingProject.workMode = $(".wizard[rel=work-mode] input[name=configuration]:checked").val();
+	
+	if (workingProject.workMode === "auto-area") {
+		workingProject.areaWidth = $(".wizard[rel=auto-config] input[name=work-table-width]").val();
+		workingProject.areaHeight = $(".wizard[rel=auto-config] input[name=work-table-height]").val();
+
+		dimensionWorkTable(Math.floor(parseFloat(workingProject.areaWidth) / 4.0), Math.floor(parseFloat(workingProject.areaHeight) / 4.0));
+
+		if ($("footer .tools .overlay").length === 0) {
+			$("<div />")
+				.addClass("overlay")
+				.appendTo($("footer .tools"));
+		}
+	} else {
+		workingProject.areaWidth = "";
+		workingProject.areaHeight = "";
+	}
+	
+	if (workingProject.workMode === "auto-size") {
+		workingProject.tileWidth = $(".wizard[rel=auto-config] input[name=tile-count-width]").val();
+		workingProject.tileHeight = $(".wizard[rel=auto-config] input[name=tile-count-height]").val();
+		
+		dimensionWorkTable(parseFloat(workingProject.tileWidth), parseFloat(workingProject.tileHeight));
+
+		if ($("footer .tools .overlay").length === 0) {
+			$("<div />")
+				.addClass("overlay")
+				.appendTo($("footer .tools"));
+		}
+	} else {
+		workingProject.tileWidth = "";
+		workingProject.tileHeight = "";
+	}
+
+	if (workingProject.workMode === "manual") {
+		$("footer .tools .overlay").remove();
+	}
+
+	navigateWizard("_blank");
+}
+
+function exitWizard() {
+	navigateWizard("_blank");
+	
+	workingProject.temperature = "";
+	workingProject.workMode = "";
+	workingProject.areaWidth = "";
+	workingProject.areaHeight = "";
+	workingProject.tileWidth = "";
+	workingProject.tileHeight = "";	
 }

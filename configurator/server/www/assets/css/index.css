@@ -327,7 +327,7 @@ header .circuit-panel .test-fail {
 
 footer {
 	display: flex;
-	justify-content: space-evenly;
+	justify-content: space-between;
 	position: fixed;
 	bottom: 0px;
 	left: 0px;
@@ -335,7 +335,7 @@ footer {
 	background-color: #2002fe;
 	color: #fff;
 	font-size: 0.9em;
-	padding: 20px;
+	padding: 20px 0px;
 	z-index: 5;
 }
 
@@ -343,7 +343,7 @@ footer .footer-handle {
 	position: absolute;
 	display: inline-block;
 	top: -15px;
-	right: 50px;
+	right: 10px;
 	padding: 5px;
 	color: #fff;
 	background-color: #2002fe;
@@ -353,7 +353,9 @@ footer .footer-handle {
 
 footer .tools {
 	position: absolute;
-	top: -50px;
+	top: -30px;
+	left: 50%;
+	margin-left: -190px;
 	padding: 10px 0px;
 	border: 2px solid #8f8f8f;
 	border-radius: 8px;
@@ -425,6 +427,7 @@ footer section p {
 
 footer section .setting {
 	font-weight: bold;
+	color: white;
 	margin: 2px 0px;
 }
 
@@ -465,9 +468,9 @@ footer .specs {
     border-radius: 8px;
     padding: 10px;
     width: 600px;
-    top: 200px;
+    top: 220px;
     left: 350px;
-    z-index: 5;
+    z-index: 10;
 }
 
 .dialog label {
@@ -478,7 +481,7 @@ footer .specs {
     margin: 20px;
 }
 
-.dialog label input {
+.dialog label input[type=text] {
     display: block;
     font-weight: bold;
     font-size: 1.25em;
@@ -504,6 +507,53 @@ footer .specs {
     border: 1px solid white;
     padding: 5px;
     margin: 0px 20px;
+}
+
+.wizard {
+	padding: 0px;
+}
+
+.wizard .title {
+	background: gray;
+	color: white;
+	font-weight: bold;
+	font-size: 1.25em;
+	padding: 10px;
+}
+
+.wizard-field {
+	color: white;
+	font-size: 1.25em;
+	font-weight: bold;
+	margin: 20px;
+}
+
+.wizard-field .field {
+	background-color: #666;
+	padding: 3px;
+	border: 1px solid #fff;
+	margin: 5px;
+	color: white;
+	font-weight: bold;
+	font-size: 1.1em;
+	width: 	40px;
+	margin-right: -3px;
+	text-align: center;
+}
+
+.wizard p {
+	margin: 5px 10px;
+	color: white;
+	opacity: 0.8;
+	font-family: Arial;
+	font-size: 0.9em;
+}
+
+.wizard .buttons {
+	border-top: 1px inset black;
+	background: gray;
+	padding: 10px 0px;
+	margin-top: 10px;
 }
 
 .openProject .project-list {

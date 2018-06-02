@@ -95,6 +95,105 @@
 
 			<div class="work-table" design-mode="auto"></div>
 		</section>
+		
+		<div class="dialog wizard" rel="temperature">
+			<div class="title">Select a Color Temperature</div>
+			
+			<label><input type="radio" name="temperature" value="cool" />Cool (6000K CCT)</label>
+			<label><input type="radio" name="temperature" value="neutral" />Neutral (4500K CCT)</label>
+			<label><input type="radio" name="temperature" value="warm" />Warm (3000K CCT)</label>
+			
+			<p>
+				Selecting a color temperature will affect the color of light emitted from each circuit of IllumiTiles. The color 
+				temperature may also affect the power requirements of each circuit configured.
+			</p>
+			
+			<div class="buttons">
+				<button onclick="navigateWizard('work-mode')">Next</button>
+				<button rel="skip" onclick="exitWizard()">Skip</button>
+			</div>
+		</div>
+
+		<div class="dialog wizard" rel="work-mode">
+			<div class="title">Select a Project Configuration Mode</div>
+
+			<div><label><input type="radio" onclick="setWizardWorkMode('auto-area');" name="configuration" value="auto-area" />Auto-Configuration for a Specified Illumination Area</label></div>
+			<div><label><input type="radio" onclick="setWizardWorkMode('auto-size');" name="configuration" value="auto-size" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
+			<div><label><input type="radio" onclick="setWizardWorkMode('manual');" name="configuration" value="manual" />Manual</label></div>
+			
+			<p>
+				Select the mode in which you would like to work:
+			</p>
+			
+			<p rel="auto-area">
+				Defining a specified illumination area will auto-arrange a series of IllumiTiles into a two-dimensional grid that will fit 
+				into the area specified. The grid will be automatically configured into circuits with an adequate number of harnesses
+				and power supplies to operate the configuration.
+			</p>
+
+			<p rel="auto-size">
+				Defining an Illumitile arrangement will auto-arrange a series of IllumiTiles into a two-dimensional grid that fits into the
+				arrangement requested. The grid will be automatically configured into circuits with an adequate number of harnesses
+				and power supplies to operate the configuration.
+			</p>
+
+			<p rel="manual">
+				Using manual mode will allow you to arrange IllumiTiles, harnesses, and power supplies into one or more 
+				two-dimensional series of your choosing. You will have to apply adequate harnesses and power supplies to ensure
+				proper operation of your arrangement. Use the "Test" buttons to test individual circuits for completion. A passing test
+				means the circuit in question has an adequate number of harnesses and a power supply.
+			</p>
+			
+			<div class="buttons">
+				<button onclick="navigateWizard('temperature')">Prev</button>
+				<button rel="auto-area" onclick="navigateWizard('auto-config')">Next</button>
+				<button rel="auto-size" onclick="navigateWizard('auto-config')">Next</button>
+				<button rel="manual" onclick="saveWizard()">Done</button>
+				<button rel="skip" onclick="exitWizard()">Skip</button>
+			</div>
+		</div>
+
+		<div class="dialog wizard" rel="auto-config">
+			<div class="title">Auto-Configuration Settings</div>
+			
+			<div class="wizard-field" rel="auto-area">
+				Area 
+				<input type="text" class="field" name="work-table-width" value="4.0" />
+				" X 
+				<input type="text" class="field" name="work-table-height" value="4.0" />
+				"
+			</div>
+
+			<div class="wizard-field" rel="auto-size">
+				Tiles
+				<input type="text" class="field" name="tile-count-width" value="1" /> 
+				X 
+				<input type="text" class="field" name="tile-count-height" value="1" />
+			</div>
+			
+			<p rel="auto-area">
+				Enter the width and height in inches of an area you would like to cover in IllumiTiles. 
+				The Configurator will do its best to arrange IllumiTiles in such a way that the area specified is properly covered.
+				Individual circuits will be automatically created for you using adequate harnesses and power supplies.
+				Please note that the area specified must be no more than 80" W x 126" H for a portrait layout, 
+				or no more than 126" W x 80" H for a landscape layout.
+			</p>
+			
+			<p rel="auto-size">
+				Enter the number of IllumiTiles you will like to use in the width and height of your design. 
+				The Configurator will arrange IllumiTiles in such a way that the number of IllumiTiles specified 
+				for the width and height are used.
+				Individual circuits will be automatically created for you using adequate harnesses and power supplies.
+				Please note that the highest number of IllumiTiles specified in a configuration must not exceed 20 W x 32 H 
+				for a portrait layout, and must not exceed 32 W x 20 H for a landscape layout.
+			</p>
+			
+			<div class="buttons">
+				<button onclick="navigateWizard('work-mode')">Prev</button>
+				<button onclick="saveWizard()">Done</button>
+				<button rel="skip" onclick="exitWizard()">Skip</button>
+			</div>
+		</div>
 
 		<footer>
 			<button id="footerHandle" class="footer-handle icon ion-arrow-down-a"></button>
@@ -112,60 +211,8 @@
 				</div>
 			</div>
 
-			<section>
-				<div class="temperature">
-					<p class="title">Select IllumiTile Temperature: </p>
-					<label><input type="radio" name="temperature" value="cool" />Cool (6000K)</label>
-					<label><input type="radio" name="temperature" value="neutral" />Neutral (4500K)</label>
-					<label><input type="radio" name="temperature" value="warm" />Warm (3000K)</label>
-				</div>
-
-				<p class="title">Select the desired Configuration Mode (Instructions will appear for each type.)</p>
-				<div><label><input type="radio" onclick="setDesignMode(this, 'auto');" name="configuration" rel="auto-area" checked />Auto-Configuration for a Specified Illumination Area</label></div>
-				<div><label><input type="radio" onclick="setDesignMode(this, 'auto');" name="configuration" rel="auto-size" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
-				<div><label><input type="radio" onclick="setDesignMode(this, 'manual');" name="configuration" rel="manual" />Manual</label></div>
-
-				<div class="instructions" rel="auto-area">
-					<p class="title">INSTRUCTIONS: Auto-Configuration for a Specified Illumination Area</p>
-					<p>1. Insert the desired dimensions into the Illumination Area fields.</p>
-					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
-					<p>3. View the System Parameters and Components Required.</p>
-					<p>4. Switch to Manual Configuration Mode if any modifications are desired.</p>
-				</div>
-				
-				<div class="instructions" rel="auto-size">
-					<p class="title">INSTRUCTIONS: Auto-Configuration for an Illumination Area Adjust to Your Layout</p>
-					<p>1. Click and drag IllumiTiles onto the build area as your physical layout requires. IllumiSnap harnesses will automatically be inserted, and the Effective Illumination Area will adjust to your layout.</p>
-					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
-					<p>3. Observe System Statistics and Required Components as you layout your system.</p>
-				</div>
-				
-				<div class="instructions" rel="manual">
-					<p class="title">INSTRUCTIONS: Manual Configuration</p>
-					<p>1. Click and drag IllumiTiles and IllumiSnap Harnesses onto the build area as your physical layout requires.</p>
-					<p>2. Select a power supply Derate factor, if desired. (Default is 10%)</p>
-					<p>3. View System Statistics and Components Required as you layout your system.</p>
-				</div>
-				
-			</section>
-
 			<section class="specs">
 				<h1>System Specifications</h1>
-
-				<div class="setting setting-auto" rel="auto-area">
-					Area 
-					<input type="text" class="field" name="work-table-width" value="4.0" />
-					" X 
-					<input type="text" class="field" name="work-table-height" value="4.0" />
-					"
-				</div>
-
-				<div class="setting setting-auto" rel="auto-size">
-					Tiles
-					<input type="text" class="field" name="tile-count-width" value="1" /> 
-					X 
-					<input type="text" class="field" name="tile-count-height" value="1" />
-				</div>
 
 				<div class="setting">Voltage <span class="value" rel="voltage">0.0</span> DC</div>
 				<div class="setting">Current <span class="value" rel="current">0.0</span> Amps</div>
@@ -183,10 +230,15 @@
 			<section class="components">
 				<h1>System Components</h1>
 
+				<div class="setting">
+					<a href="#" onclick="navigateWizard('temperature')" class="setting">Change configuration...</a>
+				</div>				
+
+				<div class="setting">Color Temperature <span class="value" rel="temperature"></span></div>
 				<div class="setting">Minimum Power Supply Rating <span class="value">25</span> Watts</div>
 				<div class="setting">IllumiTile Light Engine Quantity <span class="value" rel="tileCount">0</span></div>
 				<div class="setting">IllumiSnap Harness D Quantity <span class="value" rel="harnessCount">0</span></div>
-				<div class="setting">IllumiSnap Power Harness Quantity <span class="value">1</span></div>
+				<div class="setting">IllumiSnap Power Harness Quantity <span class="value" rel="powerCount">0</span></div>
 				<div class="setting">Number of Power Supplies</div>
 			</section>
 		</footer>
