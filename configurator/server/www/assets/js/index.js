@@ -271,7 +271,7 @@ function initializeDrag() {
 		if (onto.hasClass("tile-slot")) {
 	       var row = $(target).parents(".tile-row");
 	       var y = parseInt(row.attr("y"));
-	       
+			
 	    	if ($(".work-table .tile-row[y=" + (y + 1) + "]").length === 0) {
 				addTileRow(y+1);
 			}
@@ -293,6 +293,8 @@ function initializeDrag() {
 			map.fore.find(".power-right").remove();
 			map.above.find(".power-up").remove();
 			map.aft.find(".power-left").remove();
+
+			projectHistory.record();
 		} else if (onto.hasClass("zone")) {
 			var tile = onto.parents(".tile");
 			var map = tilePosition(tile);
@@ -327,6 +329,8 @@ function initializeDrag() {
 			}
 			
 			joinCircuit(circuit, tile);
+			
+			projectHistory.record();
 		} else if (onto.hasClass("tile")) {
 			var ps = $("<img />").attr("rel", "power");
 			var map = tilePosition(onto);
@@ -364,6 +368,8 @@ function initializeDrag() {
 				ps
 				.appendTo(onto)
 				.click(selectComponentForDeletion);
+			
+				projectHistory.record();
 			}
 		}
 	});
@@ -579,6 +585,7 @@ function createProject(next, err) {
 	var user = Cookies.get("user");
 
 	Cookies.remove("ws");
+	projectHistory.clear();
 
     $.ajax({
         url: "/project/",
@@ -810,6 +817,8 @@ function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 	createCircuits(splitCircuit(workspaceWidth, workspaceHeight));
 
 	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
+	
+	projectHistory.record();
 	
 	if (panningEnabled) {
 		$(".work-table")
@@ -1591,3 +1600,67 @@ function exitWizard() {
 	workingProject.tileWidth = "";
 	workingProject.tileHeight = "";	
 }
+
+function navigateHistory(direction, e) {
+	var ws = undefined;
+	
+	switch (direction) {
+		case "+" : ws = projectHistory.forward(); break;
+		case "-" : ws = projectHistory.back(); break;
+	}
+	
+	if (ws) {
+		decompressWorkspace(ws);
+		cleanupCircuitPanel();
+	}
+}
+
+var projectHistory = {
+	steps: [],
+	step: -1,
+	
+	record: function() {
+		var ws = compressWorkspace();
+		
+		if (this.step < this.steps.length - 1) {
+			this.steps = this.steps.splice(0, this.step + 1);
+		}
+		
+		this.steps.push(ws);
+		this.step = this.steps.length - 1;
+
+		console.log("project history - steps", this.steps.length);
+		console.log("project history - current step", this.step);
+		
+		return this.step;
+	},
+	
+	back: function() {
+		if (this.step > 0) {
+			this.step--;
+		} else {
+			return undefined;
+		}
+		
+		console.log("project history - reverse to", this.step);
+		
+		return this.steps[this.step];
+	},
+	
+	forward: function() {
+		if (this.step < this.steps.length - 1) {
+			this.step++;
+		} else {
+			return undefined;
+		}
+		
+		console.log("project history - forward to", this.step);
+		
+		return this.steps[this.step];
+	},
+	
+	clear: function() {
+		this.steps = [];
+		this.step = -1;
+	},
+};

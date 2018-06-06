@@ -88,7 +88,8 @@
 			<div class="button-place"><button onclick="setWorkMode(20, event)" id="move" class="icon ion-arrow-expand button-rotate" style="font-size:1.6em;"></button></div>
 			<div class="button-place"><button onclick="scaleCanvas('+', event)" class="icon ion-search icon-search icon-search-plus"></button></div>
 			<div class="button-place"><button onclick="scaleCanvas('-', event)" class="icon ion-search icon-search icon-search-minus"></button></div>
-			<div class="button-place"><button id="undo" class="icon ion-reply"></button></div>
+			<div class="button-place"><button onclick="navigateHistory('-', event)" class="icon ion-reply"></button></div>
+			<div class="button-place"><button onclick="navigateHistory('+', event)" class="icon ion-forward"></button></div>
 		</div>
 
 		<section class="canvas">
@@ -110,31 +111,31 @@
 			
 			<div class="buttons">
 				<button onclick="navigateWizard('work-mode')">Next</button>
-				<button rel="skip" onclick="exitWizard()">Skip</button>
+				<button rel="skip" onclick="exitWizard()">Exit</button>
 			</div>
 		</div>
 
 		<div class="dialog wizard" rel="work-mode">
 			<div class="title">Select a Project Configuration Mode</div>
-
-			<div><label><input type="radio" onclick="setWizardWorkMode('auto-area');" name="configuration" value="auto-area" />Auto-Configuration for a Specified Illumination Area</label></div>
-			<div><label><input type="radio" onclick="setWizardWorkMode('auto-size');" name="configuration" value="auto-size" />Auto-Configuration for an Illumination Area that Adjusts to Your Layout</label></div>
-			<div><label><input type="radio" onclick="setWizardWorkMode('manual');" name="configuration" value="manual" />Manual</label></div>
 			
 			<p>
 				Select the mode in which you would like to work:
 			</p>
+
+			<div><label><input type="radio" onclick="setWizardWorkMode('auto-area');" name="configuration" value="auto-area" />Auto-Configuration for a Specified Illumination Area</label></div>
+			<div><label><input type="radio" onclick="setWizardWorkMode('auto-size');" name="configuration" value="auto-size" />Auto-Configuration for a Specified Count of IllumiTiles</label></div>
+			<div><label><input type="radio" onclick="setWizardWorkMode('manual');" name="configuration" value="manual" />Manual</label></div>
 			
 			<p rel="auto-area">
-				Defining a specified illumination area will auto-arrange a series of IllumiTiles into a two-dimensional grid that will fit 
-				into the area specified. The grid will be automatically configured into circuits with an adequate number of harnesses
-				and power supplies to operate the configuration.
+				Use "Auto-Configuration for a Specified Illumination Area" to define an illumination area that will be filled with
+				Illumitiles. The configured area will be automtically arranged into circuits with an adequate arrangement of harnesses 
+				and power supplies. Each circuit will be given a distinct color to help it stand out.
 			</p>
 
 			<p rel="auto-size">
-				Defining an Illumitile arrangement will auto-arrange a series of IllumiTiles into a two-dimensional grid that fits into the
-				arrangement requested. The grid will be automatically configured into circuits with an adequate number of harnesses
-				and power supplies to operate the configuration.
+				Use "Auto-Configuration for a Specified Count of IllumiTiles" to define an arrangement by count
+				using a number of IllumiTiles wide by high. The configured area will be automtically arranged into circuits with an adequate arrangement of harnesses 
+				and power supplies. Each circuit will be given a distinct color to help it stand out.
 			</p>
 
 			<p rel="manual">
@@ -143,13 +144,26 @@
 				proper operation of your arrangement. Use the "Test" buttons to test individual circuits for completion. A passing test
 				means the circuit in question has an adequate number of harnesses and a power supply.
 			</p>
+				
+			<p rel="manual">
+				Use "Manual" to arrange IllumiTiles, harnesses, and power supplies to your own specifications. Arrange IllumiTiles 
+				by dragging them from the work bench onto the work table into the slots. Add harnesses between neighboring
+				IllumiTiles to create circuits. Individualized circuits will be given distinct colors to help distinguish them. Add one
+				power supply per circuit to complete the configuration.
+			</p>
+				
+			<p rel="manual">
+				Use the "Circuit Test" buttons (either by clicking "Circuit All" or individual circuit buttons) to verify your 
+				configuration. Successful tests will result in a glow around each IllumiTile in the circuit. If any of the IllumiTiles in 
+				a circuit fail to glow, check to ensure that each IllumiTile is properly harnessed and the circuit has a power supply.
+			</p>
 			
 			<div class="buttons">
 				<button onclick="navigateWizard('temperature')">Prev</button>
 				<button rel="auto-area" onclick="navigateWizard('auto-config')">Next</button>
 				<button rel="auto-size" onclick="navigateWizard('auto-config')">Next</button>
 				<button rel="manual" onclick="saveWizard()">Done</button>
-				<button rel="skip" onclick="exitWizard()">Skip</button>
+				<button rel="skip" onclick="exitWizard()">Exit</button>
 			</div>
 		</div>
 
@@ -191,7 +205,7 @@
 			<div class="buttons">
 				<button onclick="navigateWizard('work-mode')">Prev</button>
 				<button onclick="saveWizard()">Done</button>
-				<button rel="skip" onclick="exitWizard()">Skip</button>
+				<button rel="skip" onclick="exitWizard()">Exit</button>
 			</div>
 		</div>
 
@@ -239,7 +253,7 @@
 				<div class="setting">IllumiTile Light Engine Quantity <span class="value" rel="tileCount">0</span></div>
 				<div class="setting">IllumiSnap Harness D Quantity <span class="value" rel="harnessCount">0</span></div>
 				<div class="setting">IllumiSnap Power Harness Quantity <span class="value" rel="powerCount">0</span></div>
-				<div class="setting">Number of Power Supplies</div>
+				<div class="setting">Number of Power Supplies <span class="value" rel="powerCount">0</span></div>
 			</section>
 		</footer>
 	</body>
