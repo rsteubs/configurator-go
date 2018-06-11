@@ -3,7 +3,6 @@ var selectingComponents = true;
 var selected = [];
 
 var workspaces = [];
-var drake;
 
 var WORK_MODE_SELECT = 10;
 var WORK_MODE_BROWSE = 20;
@@ -154,10 +153,10 @@ $( function() {
 	} else {
 		prepareWizard();
 	}
-	
-	if ($(".work-table .tile").length === 0) {
-		navigateWizard("temperature");
-	}
+
+	setTimeout(function() {
+		downloadProject();
+	}, 500);
 });
 
 function setWorkMode(mode, ev) {
@@ -221,159 +220,8 @@ function resetWorkTable() {
 	$(".circuit-panel .circuit-button").remove();
 	$(".sub-title[rel=project-title]").text("");
 
-	initializeDrag();
 	addToCircuitPanel(0, "black");
 	addTileRow(0);
-}
-
-function initializeDrag() {
-	if (drake) drake.destroy();
-	
-	drake = dragula($(".drag-to-canvas").get(), {
-		copy: function(el, source) {
-			return $(el).parent().hasClass("drag-to-canvas");
-		},
-		
-		accepts: function(el, target) {
-			var drop = $(el);
-			var onto = $(target);
-
-			return (drop.parent().attr("rel") === "tile" && onto.hasClass("tile-slot") && onto.find(".tile").length === 0)
-				|| (drop.parent().attr("rel") === "harness" && onto.hasClass("zone"))
-				|| (drop.parent().attr("rel") === "power" && onto.hasClass("tile"));
-		},
-		
-		revertOnSpill: true,
-	})
-	
-	.on("cloned", function(clone, original, type) {
-		var el = $(clone);
-    	var component = "";
-		var scale = parseFloat($(".work-table").attr("scale") || 1.0);
-		var width = "";
-		var type = $(original).parent().attr("rel");
-		
-		switch(type) {
-			case "tile"     : component = "./assets/img/tile/illumitile_252x252.png"; width = (252 * scale) + "px"; break;
-			case "harness"  : component = "./assets/img/tile/harness_180x22.png"; width = (180 * scale) + "px"; break;
-			case "power"    : component = "./assets/img/powersupply/corner-down.png"; width = (480 * scale) + "px"; break;
-		}
-
-		el
-			.attr({ src: component, rel: type })
-			.css({ width: width, height: "", });
-	})
-
-	.on("drop", function(el, target) {
-		var onto = $(target);
-		var drop = $(el);
-
-		if (onto.hasClass("tile-slot")) {
-	       var row = $(target).parents(".tile-row");
-	       var y = parseInt(row.attr("y"));
-			
-	    	if ($(".work-table .tile-row[y=" + (y + 1) + "]").length === 0) {
-				addTileRow(y+1);
-			}
-	
-			var tile = $("<div />")
-				.addClass("tile")
-				.attr({ rel: "tile" })
-				.css({ backgroundImage: $(el).attr("src") })
-				.append($("<div />").addClass("zone right"))
-				.append($("<div />").addClass("zone bottom"))
-				.click(selectComponentForDeletion)
-				.appendTo(onto.empty());
-				
-			drake.containers.push(tile.get(0));
-			drake.containers = drake.containers.concat(tile.find(".zone").get());
-			
-			var map = tilePosition(tile);
-			
-			map.fore.find(".power-right").remove();
-			map.above.find(".power-up").remove();
-			map.aft.find(".power-left").remove();
-
-			projectHistory.record();
-		} else if (onto.hasClass("zone")) {
-			var tile = onto.parents(".tile");
-			var map = tilePosition(tile);
-			
-			if ((onto.hasClass("right") && map.aft.length === 0) || (onto.hasClass("bottom") && map.below.length === 0)) {
-				drake.cancel(true);
-				return;
-			}
-			
-			$("<img />")
-				.attr({ src: "./assets/img/tile/harness_180x22.png"})
-				.css({ zIndex: 4, })
-				.click(selectComponentForDeletion)
-				.appendTo(onto.empty());
-				
-			var tile = onto.parents(".tile");
-			var map = tilePosition(tile);
-			var circuit = tile.attr("circuit");
-			
-			if (!circuit) {
-				if (onto.hasClass("right")) {
-					circuit = map.aft.attr("circuit");
-				} else {
-					circuit = map.below.attr("circuit");
-				}
-			}
-			
-			if (!circuit) {
-				circuit = parseInt($(".circuit-panel .circuit-button").last().attr("rel") || 0) + 1;
-			} else {
-				circuit = parseInt(circuit);
-			}
-			
-			joinCircuit(circuit, tile);
-			
-			projectHistory.record();
-		} else if (onto.hasClass("tile")) {
-			var ps = $("<img />").attr("rel", "power");
-			var map = tilePosition(onto);
-			var circuit = onto.attr("circuit");
-			var perform = true;
-
-			if (map.fore.length === 0) {
-				ps
-				.addClass("power power-left power-center")
-				.attr("src", "assets/img/powersupply/ps-right.png");
-			} else if (map.above.length === 0) {
-				ps
-				.addClass("power power-top power-down")
-				.attr("src", "assets/img/powersupply/ps-down.png");
-			} else if (map.aft.length === 0 && onto.find(".zone.right img").length === 0) {
-				ps
-				.addClass("power power-right power-center")
-				.attr("src", "assets/img/powersupply/ps-left.png");
-			} else if (map.below.length === 0 && onto.find(".zone.bottom img").length === 0) {
-				ps
-				.addClass("power power-bottom power-up")
-				.attr("src", "assets/img/powersupply/ps-up.png");
-			} else {
-				drake.cancel(true);
-				perform = false;
-			} 
-			
-			if (perform) {
-				if (circuit) {
-					$(".work-table .tile[circuit=" + circuit + "] .power").remove();
-				}
-				
-				drop.remove();
-				
-				ps
-				.appendTo(onto)
-				.click(selectComponentForDeletion);
-			
-				projectHistory.record();
-			}
-		}
-	});
-
 }
 
 function removeComponents() {
@@ -447,6 +295,19 @@ function openProject() {
 		Cookies.set("_open", 1);
 		window.location = "/account.html";
 	}
+}
+
+function downloadProject() {
+	html2canvas(document.body, {
+		backgroundColor: "#3f3f3f"
+	})
+		.then(function(canvas) {
+			canvas.toBlob(function(blob) {
+				var url = window.URL.createObjectURL(blob);
+
+				window.location = url;
+			});
+		});		
 }
 
 function saveProject() {
@@ -535,11 +396,11 @@ function saveProject() {
 }
 
 function exportProject() {
-	window.open("print.html", "_blank");
+	
 }
 
 function printProject() {
-	window.open("print.html", "_blank");
+	
 }
 
 function compressWorkspace() {
@@ -560,10 +421,7 @@ function decompressWorkspace(b64) {
 	$(".tile, .tile .zone img, .tile .power")
 		.click(selectComponentForDeletion);
 
-	initializeDrag();
-	
-	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
-	
+
 	$(".work-table .tile").each(function(i, el) {
 		var circuitNumber = $(el).attr("circuit");
 		
@@ -578,48 +436,6 @@ function decompressWorkspace(b64) {
 	}
 	
 	updateSystemSpecs();
-}
-
-function createProject(next, err) {
-	var token = Cookies.get("auth");
-	var user = Cookies.get("user");
-
-	Cookies.remove("ws");
-	projectHistory.clear();
-
-    $.ajax({
-        url: "/project/",
-        method: "POST",
-        
-        headers: {
-        	"Authorization": token,
-        	"x-configurator-user": user,
-        },
-
-        success: function(resp) {
-        	var handle = resp.data.handle;
-        	
-        	Cookies.set("ws", handle);
-        	
-			workingProject.temperature = "";
-			workingProject.workMode = "";
-			workingProject.areaWidth = "";
-			workingProject.areaHeight = "";
-			workingProject.tileWidth = "";
-			workingProject.tileHeight = "";
-			
-        	if (next) {
-        		next(resp);
-        	}
-        }
-    })
-    .fail(function(resp) {
-    	console.warn("error creating project", resp);
-    	
-    	if (err) {
-    		err(resp);
-    	}
-    });
 }
 
 function loadProjects(next) {
@@ -742,7 +558,6 @@ function addTileRow(index) {
 			.addClass("tile-slot")
 			.attr("x", i);
 		
-		drake.containers.push(slot.get(0));
 		row.append(slot);
 	}
 
@@ -792,39 +607,6 @@ function scaleCanvas(direction, ev) {
 	
 	canvas.css("transform", "scale(" + scale + ")");
 	canvas.attr("scale", scale);
-}
-
-function dimensionWorkTable(workspaceWidth, workspaceHeight) {
-	var panningEnabled = !$(".work-table").draggable("option", "disabled");
-
-	$(".work-table")
-		.empty()
-		.css({
-			transform: "scale(1.0)",
-			top: "0px",
-			left: "0px",
-		})
-		.attr("scale", "1.0");
-
-	initializeDrag();
-
-	$(".circuit-panel .circuit-button:gt(1)").remove();
-	
-	for (var y = 0; y < workspaceHeight; y++) {
-		addTileRow(y);
-	}
-	
-	createCircuits(splitCircuit(workspaceWidth, workspaceHeight));
-
-	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
-	
-	projectHistory.record();
-	
-	if (panningEnabled) {
-		$(".work-table")
-			.css({cursor: "move"})
-			.draggable("option", "disabled", false);
-	}
 }
 
 function splitCircuit(width, height, offsetNumber, circuitOffset) {
@@ -1547,120 +1329,3 @@ function prepareWizard() {
 	setWizardWorkMode(workingProject.workMode);
 }
 
-function saveWizard() {
-	workingProject.temperature = $(".wizard[rel=temperature] input[name=temperature]:checked").val();
-	workingProject.workMode = $(".wizard[rel=work-mode] input[name=configuration]:checked").val();
-	
-	if (workingProject.workMode === "auto-area") {
-		workingProject.areaWidth = $(".wizard[rel=auto-config] input[name=work-table-width]").val();
-		workingProject.areaHeight = $(".wizard[rel=auto-config] input[name=work-table-height]").val();
-
-		dimensionWorkTable(Math.floor(parseFloat(workingProject.areaWidth) / 4.0), Math.floor(parseFloat(workingProject.areaHeight) / 4.0));
-
-		if ($("footer .tools .overlay").length === 0) {
-			$("<div />")
-				.addClass("overlay")
-				.appendTo($("footer .tools"));
-		}
-	} else {
-		workingProject.areaWidth = "";
-		workingProject.areaHeight = "";
-	}
-	
-	if (workingProject.workMode === "auto-size") {
-		workingProject.tileWidth = $(".wizard[rel=auto-config] input[name=tile-count-width]").val();
-		workingProject.tileHeight = $(".wizard[rel=auto-config] input[name=tile-count-height]").val();
-		
-		dimensionWorkTable(parseFloat(workingProject.tileWidth), parseFloat(workingProject.tileHeight));
-
-		if ($("footer .tools .overlay").length === 0) {
-			$("<div />")
-				.addClass("overlay")
-				.appendTo($("footer .tools"));
-		}
-	} else {
-		workingProject.tileWidth = "";
-		workingProject.tileHeight = "";
-	}
-
-	if (workingProject.workMode === "manual") {
-		$("footer .tools .overlay").remove();
-	}
-
-	navigateWizard("_blank");
-}
-
-function exitWizard() {
-	navigateWizard("_blank");
-	
-	workingProject.temperature = "";
-	workingProject.workMode = "";
-	workingProject.areaWidth = "";
-	workingProject.areaHeight = "";
-	workingProject.tileWidth = "";
-	workingProject.tileHeight = "";	
-}
-
-function navigateHistory(direction, e) {
-	var ws = undefined;
-	
-	switch (direction) {
-		case "+" : ws = projectHistory.forward(); break;
-		case "-" : ws = projectHistory.back(); break;
-	}
-	
-	if (ws) {
-		decompressWorkspace(ws);
-		cleanupCircuitPanel();
-	}
-}
-
-var projectHistory = {
-	steps: [],
-	step: -1,
-	
-	record: function() {
-		var ws = compressWorkspace();
-		
-		if (this.step < this.steps.length - 1) {
-			this.steps = this.steps.splice(0, this.step + 1);
-		}
-		
-		this.steps.push(ws);
-		this.step = this.steps.length - 1;
-
-		console.log("project history - steps", this.steps.length);
-		console.log("project history - current step", this.step);
-		
-		return this.step;
-	},
-	
-	back: function() {
-		if (this.step > 0) {
-			this.step--;
-		} else {
-			return undefined;
-		}
-		
-		console.log("project history - reverse to", this.step);
-		
-		return this.steps[this.step];
-	},
-	
-	forward: function() {
-		if (this.step < this.steps.length - 1) {
-			this.step++;
-		} else {
-			return undefined;
-		}
-		
-		console.log("project history - forward to", this.step);
-		
-		return this.steps[this.step];
-	},
-	
-	clear: function() {
-		this.steps = [];
-		this.step = -1;
-	},
-};

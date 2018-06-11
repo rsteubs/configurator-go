@@ -1,0 +1,235 @@
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 300;
+  src: local("Roboto Light"), local("Roboto-Light"), url("../fonts/roboto-light.woff2") format("woff2"), url("../fonts/roboto-light.woff") format("woff"), url("../fonts/roboto-light.ttf") format("truetype"); }
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Roboto"), local("Roboto-Regular"), url("../fonts/roboto-regular.woff2") format("woff2"), url("../fonts/roboto-regular.woff") format("woff"), url("../fonts/roboto-regular.ttf") format("truetype"); }
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 500;
+  src: local("Roboto Medium"), local("Roboto-Medium"), url("../fonts/roboto-medium.woff2") format("woff2"), url("../fonts/roboto-medium.woff") format("woff"), url("../fonts/roboto-medium.ttf") format("truetype"); }
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 700;
+  src: local("Roboto Bold"), local("Roboto-Bold"), url("../fonts/roboto-bold.woff2") format("woff2"), url("../fonts/roboto-bold.woff") format("woff"), url("../fonts/roboto-bold.ttf") format("truetype"); }
+
+body {
+	font-family: Roboto, arial;
+	min-width: 1200px;
+	min-height: 800px;
+	background-color: #3f3f3f;
+}
+
+.circuit-panel {
+	text-align: center;
+}
+
+.circuit-panel .circuit-button {
+    display:  inline-block;
+    width: 300px;
+    border: 3px solid white;
+    border-radius: 10px;
+    font-size: 0.75em;
+    color: white;
+    margin: 5px 10px;
+}
+
+.circuit-panel .circuit-button .circuit-button-title {
+	border: 1px solid;
+	border-radius: 4px;
+	color: white;
+	font-weight: bold;
+	text-align: center;
+	padding: 3px;
+	bottom: 3px;
+}
+
+.circuit-panel .circuit-button-test .circuit-button-title::after {
+	margin-left: 5px;
+	content: "💡";
+	color: yellow;
+}
+
+.circuit-panel .circuit-button .circuit-button-specs {
+	margin: 3px;
+}
+
+.circuit-panel .circuit-button .circuit-test-button {
+	display: none;
+}
+
+.canvas {
+	display: block;
+	background: #474747;
+	width: 6500px;
+}
+
+.canvas .work-table {
+	min-height: 1000px;
+	min-width: 5600px;
+	margin: 500px;
+	padding: 50px 100px;
+	overflow: visible;
+  	transform-origin: 30px 30px;
+}
+
+.canvas .work-table .component {
+	position: absolute;
+}
+
+.canvas .work-table .tile-row {
+	white-space: nowrap;
+}
+
+.canvas .work-table .tile-slot {
+	display: inline-block;
+	width: 252px;
+	height: 252px;
+	margin: 3px;
+	border: 10px solid #4c4c4c;
+	vertical-align: middle;
+	border-radius: 4px;
+}
+
+.canvas .work-table .tile {
+	position: relative;
+	width: 252px;
+	height: 252px;
+	background-image: url(../img/tile/illumitile_252x252.png);
+}
+
+.canvas .work-table .tile .zone {
+	position: absolute;
+}
+
+.canvas .work-table .tile .right {
+	top: 113px;
+	right: -109px;
+	width: 185px;
+	height: 24px;
+	z-index: 4;
+}
+
+.canvas .work-table .tile .bottom {
+	bottom: 0px;
+	width: 100%;
+	height: 72px;
+}
+
+.canvas .work-table .tile .power {
+	position: absolute;
+	z-index: 5;
+}
+
+.canvas .work-table .tile .power-top {
+	left: 83px;
+}
+
+.canvas .work-table .tile .power-bottom {
+	bottom: -163px;
+}
+
+.canvas .work-table .tile .power-down {
+	top: -732px;
+}
+
+.canvas .work-table .tile .power-up {
+	bottom: -732px;
+	left: 81px;
+}
+
+.canvas .work-table .tile .power-center {
+	top: 81px;	
+}
+
+.canvas .work-table .tile .power-left {
+	left: -731px;
+}
+
+.canvas .work-table .tile .power-right {
+	right: -732px;
+	top: 83px;
+}
+
+.tile .bottom img {
+	position: absolute;
+	transform: rotate(90deg);
+	left: 35px;
+	top: 74px;
+}
+
+.canvas .work-table .test-pass {
+	border: 3px solid yellow;
+}
+
+.canvas .work-table .test-fail {
+	opacity: 0.6;
+}
+
+.highlight {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: yellow;
+	opacity: 0.6;
+	z-index: 5;
+}
+
+.overlay {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: grey;
+	opacity: 0.6;
+	z-index: 5;
+}
+
+.specs, .components {
+	margin: 50px 150px;
+}
+
+.specs table, .components table {
+	border: 1px solid black;
+}
+
+.specs th, .components th {
+	text-align: left;
+	padding: 5px;
+}
+
+.specs td, .components td {
+	padding: 5px;
+}
+
+.specs th, .components th {
+	font-weight: bold;
+	color: white;
+}
+
+.specs .value, .components .value {
+	color: yellow;
+}
+
+.specs table {
+	font-size: 1.5em;
+	color: white;
+}
+
+h1 {
+	font-size: 1.25em;
+	text-transform: uppercase;
+	color: yellow;
+}
