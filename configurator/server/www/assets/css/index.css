@@ -558,7 +558,7 @@ footer .specs {
 	padding: 0px;
 }
 
-.wizard .title {
+.dialog .title {
 	background: #3f3f3f;
 	color: white;
 	font-weight: bold;
@@ -587,7 +587,7 @@ footer .specs {
 	text-align: center;
 }
 
-.wizard p {
+.wizard p, .mobile-block p {
 	margin: 5px 10px;
 	color: white;
 	opacity: 0.8;
@@ -595,7 +595,7 @@ footer .specs {
 	font-size: 0.9em;
 }
 
-.wizard .buttons {
+.dialog .buttons {
 	border-top: 1px inset black;
 	background: #3f3f3f;
 	padding: 10px 0px;
@@ -629,9 +629,8 @@ img.gu-transit {
 
 .mobile-block {
 	width: 90%;
-	top: 10px;
-	left: 10px;
-	z-index: 12;
+	top: 20px;
+	left: 2px;
 }
 
 .mobile-block .logo {
@@ -652,12 +651,22 @@ img.gu-transit {
 
 
 @media screen and (min-width: 320px) {
+	body {
+		width: 480px;
+		overflow-x: hidden;
+	}
+	
 	header, .canvas, .main-toolbar, footer  {
 		display: none;
 	}
 	
+	.dialog {
+		visibility: hidden;
+	}
+	
 	.mobile-block {
 		display: block;
+		visibility: visible;
 	}
 }
 
@@ -668,6 +677,10 @@ img.gu-transit {
 	
 	footer {
 		display: flex;
+	}
+	
+	.dialog {
+		visibility: visible;
 	}
 	
 	.mobile-block {
