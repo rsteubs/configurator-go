@@ -697,7 +697,7 @@ function updateSystemSpecs(circuitNumber) {
 	components.find("[rel=tileCount]").text(tiles.length);
 	components.find("[rel=harnessCount]").text(harnessCount);
 	components.find("[rel=powerCount]").text(psCount);
-	components.find("[rel=temperature]").text(temperatureOptions[selectedTemperature]);
+	$(".specs").find("[rel=temperature]").text(temperatureOptions[selectedTemperature]);
 
 	if (specs) {
 		for (var i = 0, spec; (spec = specs[i]) && (!overallSet || !circuitSet); i++) {
@@ -1181,41 +1181,52 @@ function createCircuits(defs) {
 function testCircuit(number, enabled) {
 	if (!enabled) {
 		$(".tile[circuit=" + number + "]")
-			.removeClass("test-pass")
-			.removeClass("test-fail")
-			.removeAttr("tested");
-			
+			.removeAttr("tested")
+			.siblings(".test-pass, .test-fail")
+			.remove();
+
 		return;
 	}
 	
 	var circuit = $(".work-table .tile[circuit=" + number + "]");
 	var source = circuit.find(".power").parent(".tile");
+	
+	var checkForPower = function(tile, circuit) {
+		return tile.attr("circuit") === circuit && tile.siblings(".test-pass").length > 0;
+	};
+	
+	var passTile = function(tile) {
+		tile
+			.parents(".tile-slot")
+			.append($("<div />").addClass("test-pass").addClass("tile-temperature-" + workingProject.temperature))
+			.find(".test-fail, .test-pass:gt(0)")
+			.remove();
+	}
 
 	var testNeighbor = function(key) {
 		if (key.length === 0) return;
 		
 		var map = tilePosition(key);
+		var keyCircuit = key.attr("circuit");
 
 		key.attr("tested", "1");
 
-		if (key.hasClass("test-pass") ||
+		if (checkForPower(key, keyCircuit) ||
 			key.find(".power").length > 0 ||
-			(map.fore.attr("circuit") === key.attr("circuit") && map.fore.hasClass("test-pass") && map.fore.find(".zone.right img").length > 0) ||
-			(map.above.attr("circuit") === key.attr("circuit") && map.above.hasClass("test-pass") && map.above.find(".zone.bottom img").length > 0) ||
-			(map.aft.attr("circuit") === key.attr("circuit") && map.aft.hasClass("test-pass") && key.find(".zone.right img").length > 0) ||
-			(map.below.attr("circuit") === key.attr("circuit") && map.below.hasClass("test-pass") && key.find(".zone.bottom img").length > 0)) 
+			(checkForPower(map.fore, keyCircuit) && map.fore.find(".zone.right img").length > 0) ||
+			(checkForPower(map.above, keyCircuit) && map.above.find(".zone.bottom img").length > 0) ||
+			(checkForPower(map.aft, keyCircuit) && key.find(".zone.right img").length > 0) ||
+			(checkForPower(map.below, keyCircuit) && key.find(".zone.bottom img").length > 0)) 
 		{
-			key.addClass("test-pass");
-			key.removeClass("test-fail");
-			
+
+			passTile(key);
+
 			if (key.find(".zone.right img").length > 0) {
-				map.aft.addClass("test-pass");
-				map.aft.removeClass("test-fail");
+				passTile(map.aft);
 			}
 
 			if (key.find(".zone.bottom img").length > 0) {
-				map.below.addClass("test-pass");
-				map.below.removeClass("test-fail");
+				passTile(map.below);
 			}
 		}
 
@@ -1236,9 +1247,9 @@ function testCircuit(number, enabled) {
 		}
 	};
 
-	circuit.addClass("test-fail");
+	circuit.parents(".tile-slot").append($("<div />").addClass("test-fail"));
+	
 	testNeighbor(source);
-
 }
 
 function joinCircuit(number, circuitKey) {

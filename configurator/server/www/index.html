@@ -35,9 +35,7 @@
 		<header>
 
 			<div class="toolbar">
-				<button>Guide Me!</button>
-				<button>Help</button>
-				<button>Feedback</button>
+				<button class="button-main">Help / Feedback</button>
 			</div>
 
 
@@ -83,6 +81,23 @@
 			<button action="close">Cancel</button>
 		</div>
 
+		<div class="dialog wizard mobile-block">
+			<div class="title">This Site Does Not Support Mobile Screens</div>
+			
+			<img class="logo" src="./assets/img/logo.png" />
+			
+			<p>
+				The Configurator tool is designed to be used on a desktop with a high resolution.
+				Many features of the Configurator may be missing or may not work correctly using this current device.
+				Please use a desktop computer instead at its highest resolution settings to acheive the best experience
+				using the Configurator.
+			</p>
+			
+			<p>
+				Thank you.
+			</p>
+		</div> 
+
 		<div class="main-toolbar">
 			<div class="button-place button-active"><button onclick="setWorkMode(10, event)" id="select" class="icon ion-arrow-left-c button-rotate"></button></div>
 			<div class="button-place"><button onclick="setWorkMode(20, event)" id="move" class="icon ion-arrow-expand button-rotate" style="font-size:1.6em;"></button></div>
@@ -110,8 +125,8 @@
 			</p>
 			
 			<div class="buttons">
-				<button onclick="navigateWizard('work-mode')">Next</button>
-				<button rel="skip" onclick="exitWizard()">Exit</button>
+				<button class="button-main" onclick="navigateWizard('work-mode')">Next</button>
+				<button class="button-secondary" rel="skip" onclick="exitWizard()">Exit</button>
 			</div>
 		</div>
 
@@ -159,11 +174,11 @@
 			</p>
 			
 			<div class="buttons">
-				<button onclick="navigateWizard('temperature')">Prev</button>
-				<button rel="auto-area" onclick="navigateWizard('auto-config')">Next</button>
-				<button rel="auto-size" onclick="navigateWizard('auto-config')">Next</button>
-				<button rel="manual" onclick="saveWizard()">Done</button>
-				<button rel="skip" onclick="exitWizard()">Exit</button>
+				<button class="button-secondary" onclick="navigateWizard('temperature')">Prev</button>
+				<button class="button-main" rel="auto-area" onclick="navigateWizard('auto-config')">Next</button>
+				<button class="button-main" rel="auto-size" onclick="navigateWizard('auto-config')">Next</button>
+				<button class="button-main" rel="manual" onclick="saveWizard()">Done</button>
+				<button class="button-secondary" rel="skip" onclick="exitWizard()">Exit</button>
 			</div>
 		</div>
 
@@ -203,9 +218,9 @@
 			</p>
 			
 			<div class="buttons">
-				<button onclick="navigateWizard('work-mode')">Prev</button>
-				<button onclick="saveWizard()">Done</button>
-				<button rel="skip" onclick="exitWizard()">Exit</button>
+				<button class="button-secondary" onclick="navigateWizard('work-mode')">Prev</button>
+				<button class="button-main" onclick="saveWizard()">Done</button>
+				<button class="button-secondary" rel="skip" onclick="exitWizard()">Exit</button>
 			</div>
 		</div>
 
@@ -228,6 +243,7 @@
 			<section class="specs">
 				<h1>System Specifications</h1>
 
+				<div class="setting" onclick="navigateWizard('temperature')">Color Temperature <span class="value" rel="temperature"></span></div>
 				<div class="setting">Voltage <span class="value" rel="voltage">0.0</span> DC</div>
 				<div class="setting">Current <span class="value" rel="current">0.0</span> Amps</div>
 				<div class="setting">Power <span class="value" rel="power">0.0</span> Watts</div>
@@ -241,14 +257,17 @@
 				</div>
 			</section>
 
+			<section class="specs">
+				<h1>Configuration</h1>
+
+				<div class="setting">Work Mode <span class="value" onclick="navigateWizard('work-mode')" style="text-decoration: underline; cursor: pointer;" rel="work-mode">Auto (Tile Number)</span><button onclick="navigateWizard('work-mode')" class="icon ion-android-arrow-dropdown-circle" /></div>
+				<div class="setting">Color Temperature <span class="value"  onclick="navigateWizard('temperature')" style="text-decoration: underline; cursor: pointer;" rel="temperature">Neutral (4500K CCT)</span><button onclick="navigateWizard('temperature')" class="icon ion-android-arrow-dropdown-circle" /></div>
+				<div class="setting" style="text-decoration: underline; cursor: pointer;" onclick="navigateWizard('temperature')">Change configuration...</div>
+			</section>
+
 			<section class="components">
 				<h1>System Components</h1>
 
-				<div class="setting">
-					<a href="javascript:void(0)" onclick="navigateWizard('temperature')" class="setting">Change configuration...</a>
-				</div>				
-
-				<div class="setting">Color Temperature <span class="value" rel="temperature"></span></div>
 				<div class="setting">Minimum Power Supply Rating <span class="value">25</span> Watts</div>
 				<div class="setting">IllumiTile Light Engine Quantity <span class="value" rel="tileCount">0</span></div>
 				<div class="setting">IllumiSnap Harness D Quantity <span class="value" rel="harnessCount">0</span></div>

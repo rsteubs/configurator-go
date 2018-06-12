@@ -1,3 +1,14 @@
+/*
+	!!! COLOR GUIDE !!!
+	
+	major-component-color: #35459c
+	major-component-border: #999
+	sub-component-color: #442e8f
+	text-highlight: #fff
+	text-value: #999		
+	menu-color: #84449a
+*/
+
 @font-face {
   font-family: "Roboto";
   font-style: normal;
@@ -71,7 +82,7 @@ header .title .sub-title {
 
 header .toolbar {
 	float: right;
-	margin-right: 20px;
+	margin: 30px;
 }
 
 header .circuit-panel {
@@ -137,7 +148,7 @@ header .circuit-panel .test-fail {
 	display: block;
 	height: 100%;
 	margin-top: 210px;
-	overflow: auto;
+	overflow: hidden;
 }
 
 .canvas .work-table {
@@ -158,6 +169,7 @@ header .circuit-panel .test-fail {
 
 .canvas .work-table .tile-slot {
 	display: inline-block;
+	position: relative;
 	width: 252px;
 	height: 252px;
 	margin: 3px;
@@ -234,7 +246,24 @@ header .circuit-panel .test-fail {
 }
 
 .canvas .work-table .test-pass {
-	border: 3px solid yellow;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	z-index: 4;
+}
+
+.canvas .work-table .tile-temperature-neutral {
+	background: url(/assets/img/glow/neutral.png) center no-repeat;	
+}
+
+.canvas .work-table .tile-temperature-cool {
+	background: url(/assets/img/glow/cool.png) center no-repeat;	
+}
+
+.canvas .work-table .tile-temperature-warm {
+	background: url(/assets/img/glow/warm.png) center no-repeat;	
 }
 
 .canvas .work-table .test-fail {
@@ -245,12 +274,12 @@ header .circuit-panel .test-fail {
 	position: fixed;
 	top: 180px;
 	left: 20px;
-	border: 2px solid #8f8f8f;
+	border: 2px solid #999;
 	border-radius: 8px;
 	text-align: center;
 	width: 40px;
 	z-index: 10;
-	background: #003a89;
+	background: #442e8f;
 	padding: 5px 4px 5px 3px;
 }
 
@@ -298,7 +327,7 @@ header .circuit-panel .test-fail {
 }
 
 .main-toolbar .button-active {
-	background: #39ba01;
+	background: #84449a;
 	color: white;
 	border-radius: 5px;
 }
@@ -332,7 +361,7 @@ footer {
 	bottom: 0px;
 	left: 0px;
 	width: 100%;
-	background-color: #2002fe;
+	background-color: #35459c;
 	color: #fff;
 	font-size: 0.9em;
 	padding: 20px 0px;
@@ -346,7 +375,7 @@ footer .footer-handle {
 	right: 10px;
 	padding: 5px;
 	color: #fff;
-	background-color: #2002fe;
+	background-color: #35459c;
 	border: 3px solid grey;
 	border-radius: 5px;
 }
@@ -357,9 +386,9 @@ footer .tools {
 	left: 50%;
 	margin-left: -190px;
 	padding: 10px 0px;
-	border: 2px solid #8f8f8f;
+	border: 2px solid #999;
 	border-radius: 8px;
-	background-color: #003a89;
+	background-color: #442e8f;
 }
 
 footer .tools .section:first-child {
@@ -412,7 +441,6 @@ footer section h1 {
 
 footer section .title {
 	font-weight: bold;
-	color: yellow;
 }
 
 footer section .instructions {
@@ -426,30 +454,39 @@ footer section p {
 }
 
 footer section .setting {
-	font-weight: bold;
 	color: white;
+	font-weight: bold;
 	margin: 2px 0px;
 }
 
-footer section .field {
-	background-color: #666;
-	padding: 3px;
-	border: 1px solid #fff;
-	margin: 5px;
-	color: white;
-	font-weight: bold;
-	width: 	40px;
-	margin-right: -3px;
-	text-align: center;
-}
-
 footer section .value {
-	color: yellow;
+	color: #fff;
+	font-weight: normal;
 }
 
-footer section select {
-	background-color: lightblue;
-	color: yellow;
+select {
+	background-color: #84449a;
+	color: #fff;
+}
+
+.button-main {
+	background-color: #84449a;
+	color: #fff;
+	border: 2px solid #999;
+	border-radius: 8px;
+	font-size: 1.1em;
+	padding: 3px;
+	cursor: pointer;
+}
+
+.button-secondary {
+	background-color: grey;
+	color: #fff;
+	border: 2px solid #999;
+	border-radius: 8px;
+	font-size: 1.1em;
+	padding: 3px;
+	cursor: pointer;
 }
 
 footer .temperature {
@@ -457,14 +494,24 @@ footer .temperature {
 }
 
 footer .specs {
-	font-size: 1.5em;
+	font-size: 1.25em;
+}
+
+.specs .setting button {
+	color: white;
+	background: transparent;
+	border: 0px;
+	margin-left: 10px;
+	vertical-align: middle;
+	font-size: 1.2em;
 }
 
 .dialog {
 	display: none;
 	position: absolute;
-	background: blue;
-    border: 10px solid white;
+	background: #35459c;
+    border: 6px solid white;
+    box-shadow: 0 0 12px black;
     border-radius: 8px;
     padding: 10px;
     width: 600px;
@@ -475,8 +522,7 @@ footer .specs {
 
 .dialog label {
     display: block;
-    font-size: 1.25em;
-    font-weight: bold;
+    font-size: 1em;
     color: white;
     margin: 20px;
 }
@@ -500,13 +546,12 @@ footer .specs {
 }
 
 .dialog button {
-    background: gray;
-    color: yellow;
-    font-weight: bold;
     font-size: 1.5em;
-    border: 1px solid white;
-    padding: 5px;
     margin: 0px 20px;
+}
+
+.dialog .button-main {
+    font-weight: bold;
 }
 
 .wizard {
@@ -514,11 +559,12 @@ footer .specs {
 }
 
 .wizard .title {
-	background: gray;
+	background: #3f3f3f;
 	color: white;
 	font-weight: bold;
 	font-size: 1.25em;
 	padding: 10px;
+	border-bottom: 1px inset black;
 }
 
 .wizard-field {
@@ -551,7 +597,7 @@ footer .specs {
 
 .wizard .buttons {
 	border-top: 1px inset black;
-	background: gray;
+	background: #3f3f3f;
 	padding: 10px 0px;
 	margin-top: 10px;
 }
@@ -579,4 +625,52 @@ footer .specs {
 img.gu-transit {
 	display: block;
 	visibility: hidden;
+}
+
+.mobile-block {
+	width: 90%;
+	top: 10px;
+	left: 10px;
+	z-index: 12;
+}
+
+.mobile-block .logo {
+	width: 100%;
+}
+
+.mobile-block .title {
+	text-align: center;
+}
+
+.mobile-block p {
+	text-align: left;
+	position: relative;
+	width: 80%;
+	margin: 50px auto;
+	font-size: 1.25em;
+}
+
+
+@media screen and (min-width: 320px) {
+	header, .canvas, .main-toolbar, footer  {
+		display: none;
+	}
+	
+	.mobile-block {
+		display: block;
+	}
+}
+
+@media screen and (min-width: 1200px) {
+	header, .canvas, .main-toolbar  {
+		display: block;
+	}
+	
+	footer {
+		display: flex;
+	}
+	
+	.mobile-block {
+		display: none;
+	}
 }
