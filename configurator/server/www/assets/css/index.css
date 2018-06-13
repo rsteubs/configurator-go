@@ -52,8 +52,7 @@ header {
 }
 
 header .logo {
-	width: 320px;
-	margin-right: 10px;
+	margin: 40px 10px;
 	vertical-align: middle;
 }
 
@@ -86,7 +85,7 @@ header .toolbar {
 }
 
 header .circuit-panel {
-	margin: 0px 110px;
+	margin: 0px 90px;
 	white-space: nowrap;
 	overflow-x: auto;
 	padding-bottom: 8px;
@@ -245,12 +244,13 @@ header .circuit-panel .test-fail {
 	top: 74px;
 }
 
-.canvas .work-table .test-pass {
+.canvas .work-table .test-pass, .canvas .work-table .test-fail {
 	width: 100%;
 	height: 100%;
 	position: absolute;
-	top: 0px;
-	left: 0px;
+	padding: 26px;
+	top: -26px;
+	left: -26px;
 	z-index: 4;
 }
 
@@ -267,7 +267,7 @@ header .circuit-panel .test-fail {
 }
 
 .canvas .work-table .test-fail {
-	opacity: 0.6;
+	background: url(/assets/img/glow/fail.png) center no-repeat;	
 }
 
 .main-toolbar {
@@ -469,24 +469,18 @@ select {
 	color: #fff;
 }
 
-.button-main {
+.button-main, .button-secondary {
 	background-color: #84449a;
 	color: #fff;
 	border: 2px solid #999;
 	border-radius: 8px;
 	font-size: 1.1em;
-	padding: 3px;
+	padding: 5px;
 	cursor: pointer;
 }
 
 .button-secondary {
 	background-color: grey;
-	color: #fff;
-	border: 2px solid #999;
-	border-radius: 8px;
-	font-size: 1.1em;
-	padding: 3px;
-	cursor: pointer;
 }
 
 footer .temperature {
@@ -546,7 +540,6 @@ footer .specs {
 }
 
 .dialog button {
-    font-size: 1.5em;
     margin: 0px 20px;
 }
 
@@ -628,9 +621,10 @@ img.gu-transit {
 }
 
 .mobile-block {
-	width: 90%;
-	top: 20px;
-	left: 2px;
+	position: relative;
+	top: 0px;
+	left: 0px;
+	width: auto;
 }
 
 .mobile-block .logo {
@@ -652,8 +646,7 @@ img.gu-transit {
 
 @media screen and (min-width: 320px) {
 	body {
-		width: 480px;
-		overflow-x: hidden;
+		min-width: 0px;
 	}
 	
 	header, .canvas, .main-toolbar, footer  {
@@ -672,8 +665,7 @@ img.gu-transit {
 
 @media screen and (min-width: 1200px) {
 	body {
-		width: auto;
-		overflow-x: visible;
+		min-width: 1200px;
 	}
 	
 	header, .canvas, .main-toolbar  {
