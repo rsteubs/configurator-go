@@ -8,6 +8,8 @@ var drake;
 var WORK_MODE_SELECT = 10;
 var WORK_MODE_BROWSE = 20;
 
+var INITIAL_SCALE = 0.3;
+
 var CIRCUIT_COLOR = [
 	"#3cb44b", //Green
 	"#ffe119", //Yellow
@@ -58,7 +60,7 @@ $( function() {
 			footer.removeClass("closed");
 			handle.switchClass("ion-arrow-up-a", "ion-arrow-down-a");
 		} else {
-			footer.animate({bottom: footer.outerHeight() * -1 + 35}, 300, "easeInBack");
+			footer.animate({bottom: (footer.outerHeight() + 23) * -1}, 300, "easeInBack");
 			footer.addClass("closed");
 			handle.switchClass("ion-arrow-down-a", "ion-arrow-up-a");
 		}
@@ -158,9 +160,75 @@ $( function() {
 	if ($(".work-table .tile").length === 0) {
 		navigateWizard("temperature");
 	}
+
+	setWorkMode(WORK_MODE_BROWSE);
+
+	
+	$(".button-help").click(function() {
+		$(".help")
+			.attr("showing", 0)
+			.css({display: "none"});
+			
+		var button = $(this);
+		var help = $(this)
+			.parent()
+			.find(".help");
+			
+		if (help.attr("showing") === "1") {
+			help
+				.css({display: "none"})
+				.attr("showing", "0");
+		} else {
+			var bottom = (button.offset().top - button.parents(".specs").offset().top + 40) + "px";
+			var left = (button.offset().left - (help.width() / 2)) + "px";
+
+			help
+				.css({display: "inline-block", bottom: bottom})
+				.attr("showing", "1");
+			
+			// var adjust = function() {
+	
+			// 	help.css({});
+			// }
+
+			// adjust();
+			
+			// setTimeout(function() {
+			// 	adjust();
+			// }, 300);			
+		}
+	});
+	
+	$(".help")
+		.click(function() {
+			$(this)
+				.css({display: "none"});
+		});
 });
 
-function setWorkMode(mode, ev) {
+function toggleDeleteMode(ev) {
+	var button = $(ev.target);
+	
+	if (parseInt(button.attr("mode")) === WORK_MODE_SELECT) {
+		setWorkMode(WORK_MODE_BROWSE);
+
+		button	
+			.attr("mode", WORK_MODE_BROWSE)
+			.blur()
+			.parent()
+			.removeClass("button-active");
+	} else {
+		setWorkMode(WORK_MODE_SELECT);
+
+		button	
+			.attr("mode", WORK_MODE_SELECT)
+			.blur()
+			.parent()
+			.addClass("button-active");
+	}
+}
+
+function setWorkMode(mode) {
 	switch (mode) {
 		case WORK_MODE_BROWSE : {
 			selectingComponents = false;
@@ -178,9 +246,18 @@ function setWorkMode(mode, ev) {
 			selected = [];
 			
 			$(".work-table")
-				.css({cursor: "move"})
+				.css({cursor: "-webkit-grab"})
 				.draggable("option", "disabled", false);
 				
+			$(".canvas")
+				.get()[0].addEventListener("wheel", function(e) {
+					if (e.deltaY < 0) {
+						scaleCanvas("+");
+					} else if (e.deltaY > 0) {
+						scaleCanvas("-");
+					} 
+				});
+
 			break;
 		}
 
@@ -195,13 +272,6 @@ function setWorkMode(mode, ev) {
 			break;
 		}		
 	}
-	
-	$(".main-toolbar .button-place").removeClass("button-active");
-	
-	$(ev.target)
-		.blur()
-		.parent()
-		.addClass("button-active");
 }
 
 function closeProject() {
@@ -215,8 +285,8 @@ function resetWorkTable() {
 	$(".work-table")
 		.empty()
 		.draggable({ disabled: true, })
-		.css({ transform: "scale(1.0)"})
-		.attr({ scale: "1.0" });
+		.css({ transform: "scale(" + INITIAL_SCALE + ")"})
+		.attr({ scale: INITIAL_SCALE });
 
 	$(".circuit-panel .circuit-button").remove();
 	$(".sub-title[rel=project-title]").text("");
@@ -409,6 +479,8 @@ function removeComponents() {
 			if (circuit > 0) {
 				adjustCircuit(circuit);
 			}
+			
+			projectHistory.record();
 		}
 
 		$(".tile-row:not(:has(.tile))").remove();
@@ -627,6 +699,34 @@ function loadProjects(next) {
 	var user = Cookies.get("user");
 
 	console.log("loading projects");
+	
+	var projPanel = function() {
+		return $("<div />")
+			.addClass("action-panel")
+			.append($("<button />").text("Open").addClass("open"))
+			.append($("<button />").addClass("icon ion-edit"))
+			.append($("<button />").addClass("icon ion-close"))
+			.append($("<button />").addClass("icon ion-ios-copy"))
+	};
+	
+	var projInfo = function(project) {
+		return $("<div />")
+			.addClass("project-info")
+			.append(
+				$("<label />")
+					.text(project.title)
+			)
+			.append(
+				$("<p />").text(project.description)
+			)
+			.click(function() { 
+				Cookies.set("ws", project.handle);
+				decompressWorkspace(project.content);
+				$(".sub-title[rel=project-title]").text(project.title);
+
+				$(".openProject").hide();
+			});
+	};
 
     $.ajax({
         url: "/project/",
@@ -641,29 +741,17 @@ function loadProjects(next) {
 			var projectList = $(".project-list");
 
 			for (var i = 0, project; project = resp.data[i]; i++) {
-				var content = project.content;
-				
 				$("<div />")
-					.append(
-						$("<a />")
-							.text(project.title)
-							.attr("href", "javascript:void(0)")
-							.attr("rel", i)
-							.click(function() { 
-								var project = resp.data[$(this).attr("rel")];
-
-								Cookies.set("ws", project.handle);
-								decompressWorkspace(project.content);
-								$(".sub-title[rel=project-title]").text(project.title);
-
-								$(".openProject").hide();
-							})
-					)
-					.append(
-						$("<span />")
-							.text(project.description)
-					)
+					.addClass("project-item")
+					.append(projPanel())
+					.append(projInfo(project))
 					.appendTo(projectList);
+			}
+			
+			if (resp.data.length > 3) {
+				$(".openProject").find(".button-navigation").show();
+			} else {
+				$(".openProject").find(".button-navigation").hide();
 			}
 
 			if (next) {
@@ -753,7 +841,6 @@ function addTileRow(index) {
 
 function scaleCanvas(direction, ev) {
 	var canvas = $(".work-table");
-	var button = $(ev.target);
 	var scale = parseFloat(canvas.attr("scale") || 1.0);
 	var step = 0.10;
 	var max = 1.5;
@@ -762,9 +849,13 @@ function scaleCanvas(direction, ev) {
 		scale = 1.0;
 	}
 	
-	button.parent().addClass("button-active");
-	setTimeout(function() { button.parent().removeClass("button-active"); }, 200);
-	button.blur();
+	if (ev) {
+		var button = $(ev.target);
+
+		button.parent().addClass("button-active");
+		setTimeout(function() { button.parent().removeClass("button-active"); }, 200);
+		button.blur();
+	}
 	
 	switch (direction) {
 		case "-": {
@@ -786,10 +877,7 @@ function scaleCanvas(direction, ev) {
 			}
 		}
 	}
-	
-	var translateX = canvas.width() * scale * -0.5;
-	var translateY = canvas.height() * scale * -0.5;
-	
+
 	canvas.css("transform", "scale(" + scale + ")");
 	canvas.attr("scale", scale);
 }
@@ -800,11 +888,11 @@ function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 	$(".work-table")
 		.empty()
 		.css({
-			transform: "scale(1.0)",
+			transform: "scale(" + INITIAL_SCALE + ")",
 			top: "0px",
 			left: "0px",
 		})
-		.attr("scale", "1.0");
+		.attr("scale", INITIAL_SCALE);
 
 	initializeDrag();
 
@@ -1376,7 +1464,7 @@ function cleanupCircuitPanel() {
 function selectComponentForDeletion(ev) {
 	var i = -1;
 	var el = $(this);
-	
+
 	if (selectingComponents) {
 		if ((i = selected.indexOf(this)) >= 0) {
 			el
@@ -1392,6 +1480,8 @@ function selectComponentForDeletion(ev) {
 			}
 			
 			selected.push(this);
+			
+			removeComponents();
 		}
 	}
 

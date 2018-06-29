@@ -50,6 +50,7 @@
 				<option value="closeProject">Close</option>
 				<option value="print">Print</option>
 			</select>
+			
 
 			<div class="title">
 				IllumiTile Light Engine Configurator
@@ -61,6 +62,7 @@
 		</header>
 
 		<div class="dialog saveProject">
+			<div class="title">Save Your Project</div>
 			<label>
 				Title
 				<input name="projectTitle" />
@@ -71,14 +73,22 @@
 				<textarea name="projectDescription" rows="5" cols="40"></textarea>
 			</label>
 			
-			<button action="save">Save</button>
-			<button action="close">Cancel</button>
+			<div class="buttons">
+				<button class="button-main" action="save">Save</button>
+				<button class="button-secondary" action="close">Exit</button>
+			</div>
 		</div>
 		
 		<div class="dialog openProject">
+			<div class="title">My Projects</div>
 			<div class="project-list"></div>
 			
-			<button action="close">Cancel</button>
+			<button class="icon ion-arrow-up-b button-navigation"></button>
+			<button class="icon ion-arrow-down-b button-navigation"></button>
+			
+			<div class="buttons">
+				<button class="button-secondary" action="close">Exit</button>
+			</div>
 		</div>
 
 		<div class="dialog mobile-block">
@@ -99,16 +109,14 @@
 		</div> 
 
 		<div class="main-toolbar">
-			<div class="button-place button-active"><button onclick="setWorkMode(10, event)" id="select" class="icon ion-arrow-left-c button-rotate"></button></div>
-			<div class="button-place"><button onclick="setWorkMode(20, event)" id="move" class="icon ion-arrow-expand button-rotate" style="font-size:1.6em;"></button></div>
 			<div class="button-place"><button onclick="scaleCanvas('+', event)" class="icon ion-search icon-search icon-search-plus"></button></div>
 			<div class="button-place"><button onclick="scaleCanvas('-', event)" class="icon ion-search icon-search icon-search-minus"></button></div>
 			<div class="button-place"><button onclick="navigateHistory('-', event)" class="icon ion-reply"></button></div>
 			<div class="button-place"><button onclick="navigateHistory('+', event)" class="icon ion-forward"></button></div>
+			<div class="button-place"><button onclick="toggleDeleteMode(event)" class="icon ion-ios-trash"></button></div>
 		</div>
 
 		<section class="canvas">
-
 			<div class="work-table" design-mode="auto"></div>
 		</section>
 		
@@ -225,6 +233,7 @@
 		</div>
 
 		<footer>
+			<div class="shadow"></div>
 			<button id="footerHandle" class="footer-handle icon ion-arrow-down-a"></button>
 
 			<div class="tools">
@@ -259,8 +268,30 @@
 			<section class="specs">
 				<h1>Configuration</h1>
 
-				<div class="setting">Work Mode <span class="value" onclick="navigateWizard('work-mode')" style="text-decoration: underline; cursor: pointer;" rel="work-mode">Auto (Tile Number)</span><button onclick="navigateWizard('work-mode')" class="icon ion-android-arrow-dropdown-circle" /></div>
-				<div class="setting">Color Temperature <span class="value"  onclick="navigateWizard('temperature')" style="text-decoration: underline; cursor: pointer;" rel="temperature">Neutral (4500K CCT)</span><button onclick="navigateWizard('temperature')" class="icon ion-android-arrow-dropdown-circle" /></div>
+				<div class="setting">
+					Work Mode 
+					<span class="value" onclick="navigateWizard('work-mode')" style="text-decoration: underline; cursor: pointer;" rel="work-mode">Auto (Tile Number)</span>
+					<button onclick="navigateWizard('work-mode')" class="icon ion-android-arrow-dropdown-circle" />
+					<button class="button-help icon ion-help-circled"></button>
+					
+					<div class="tooltip help">
+						<div class="arrow"></div>						
+						This Derate feature allows you to change the calculated margin for power variances that occur due to temperature shifts. A Derating factor is specified because a power supply should not be operated at its rated power/current thresh-old. Doing so leaves no margin for any variances. A 10% derate margin works for most common applications where the IllumiTile arrays and power supplies have ample cooling, and the power supplies are of high quality. If the LED system is to be placed in a room/environment where the temperature may vary greatly, then a derating factor of 20% is appropriate, otherwise 10% for most applications is acceptable.
+					</div>
+				</div>
+
+				<div class="setting">
+					Color Temperature 
+					<span class="value"  onclick="navigateWizard('temperature')" style="text-decoration: underline; cursor: pointer;" rel="temperature">Neutral (4500K CCT)</span>
+					<button onclick="navigateWizard('temperature')" class="icon ion-android-arrow-dropdown-circle" />
+					<button class="button-help icon ion-help-circled"></button>
+					
+					<div class="tooltip help">
+						<div class="arrow"></div>						
+						This Derate feature allows you to change the calculated margin for power variances that occur due to temperature shifts. A Derating factor is specified because a power supply should not be operated at its rated power/current thresh-old. Doing so leaves no margin for any variances. A 10% derate margin works for most common applications where the IllumiTile arrays and power supplies have ample cooling, and the power supplies are of high quality. If the LED system is to be placed in a room/environment where the temperature may vary greatly, then a derating factor of 20% is appropriate, otherwise 10% for most applications is acceptable.
+					</div>
+				</div>
+
 				<div class="setting" style="text-decoration: underline; cursor: pointer;" onclick="navigateWizard('temperature')">Change configuration...</div>
 			</section>
 

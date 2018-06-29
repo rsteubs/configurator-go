@@ -37,7 +37,8 @@ body {
 	font-family: Roboto, arial;
 	min-width: 1200px;
 	min-height: 800px;
-	background-color: #3f3f3f;
+	background-color: #8d0aea;
+	overflow: hidden;
 }
 
 header {
@@ -143,7 +144,6 @@ header .circuit-panel .test-fail {
 
 
 .canvas {
-	background: #474747;
 	display: block;
 	height: 100%;
 	margin-top: 210px;
@@ -272,7 +272,7 @@ header .circuit-panel .test-fail {
 
 .main-toolbar {
 	position: fixed;
-	top: 180px;
+	top: 265px;
 	left: 20px;
 	border: 2px solid #999;
 	border-radius: 8px;
@@ -312,6 +312,8 @@ header .circuit-panel .test-fail {
 
 .main-toolbar button {
 	display: inline-block;
+	height: 100%;
+	vertical-align: middle;
 	font-size: 1.5em;
 	line-height: 1.4;
 	text-align: center;
@@ -361,18 +363,27 @@ footer {
 	bottom: 0px;
 	left: 0px;
 	width: 100%;
-	background-color: #35459c;
+	background: #2a41a0;
 	color: #fff;
 	font-size: 0.9em;
-	padding: 20px 0px;
+	padding: 0px 20px;
 	z-index: 5;
+}
+
+footer .shadow {
+    position: absolute;
+    width: 100%;
+    height: 92px;
+    top: -92px;
+    left: 0px;
+    background: linear-gradient(0deg, rgba(42,65,160,1) 0%, rgba(42,65,160,1) 0%, rgba(42,65,160,0) 100%);
 }
 
 footer .footer-handle {
 	position: absolute;
 	display: inline-block;
-	top: -15px;
-	right: 10px;
+	top: -64px;
+	right: 50px;
 	padding: 5px;
 	color: #fff;
 	background-color: #35459c;
@@ -382,7 +393,7 @@ footer .footer-handle {
 
 footer .tools {
 	position: absolute;
-	top: -30px;
+	top: -90px;
 	left: 50%;
 	margin-left: -190px;
 	padding: 10px 0px;
@@ -436,7 +447,8 @@ footer section {
 footer section h1 {
 	font-size: 1.25em;
 	text-transform: uppercase;
-	color: yellow;
+	color: white;
+	margin: 0px;
 }
 
 footer section .title {
@@ -472,11 +484,9 @@ select {
 .button-main, .button-secondary {
 	background-color: #84449a;
 	color: #fff;
-	border: 2px solid #999;
-	border-radius: 8px;
-	font-size: 1.1em;
-	padding: 5px;
+	border: 1px solid transparent;
 	cursor: pointer;
+	font-size: 1em;
 }
 
 .button-secondary {
@@ -488,6 +498,7 @@ footer .temperature {
 }
 
 footer .specs {
+	position: relative;
 	font-size: 1.25em;
 }
 
@@ -503,11 +514,10 @@ footer .specs {
 .dialog {
 	display: none;
 	position: absolute;
-	background: #35459c;
-    border: 6px solid white;
+	background: #642265;
     box-shadow: 0 0 12px black;
+    border: 6px solid white;
     border-radius: 8px;
-    padding: 10px;
     width: 600px;
     top: 220px;
     left: 350px;
@@ -518,7 +528,8 @@ footer .specs {
     display: block;
     font-size: 1em;
     color: white;
-    margin: 20px;
+    margin: 20px 40px;
+    font-weight: 300;
 }
 
 .dialog label input[type=text] {
@@ -531,20 +542,17 @@ footer .specs {
 
 .dialog label textarea {
     display: block;
-    font-weight: bold;
     font-size: 1.2em;
-    border: 1px solid white;
     border: 1px solid white;
     border-radius: 8px;
     margin-top: 5px;
 }
 
 .dialog button {
-    margin: 0px 20px;
-}
-
-.dialog .button-main {
-    font-weight: bold;
+    margin: 0px 10px;
+    padding: 0px 30px;
+    border: 1px solid transparent;
+    border-radius: 2px;
 }
 
 .wizard {
@@ -552,11 +560,11 @@ footer .specs {
 }
 
 .dialog .title {
-	background: #3f3f3f;
+	background: #35459c;
 	color: white;
-	font-weight: bold;
 	font-size: 1.25em;
-	padding: 10px;
+	padding: 20px 0px 20px 40px;
+	margin-bottom: 20px;
 	border-bottom: 1px inset black;
 }
 
@@ -581,38 +589,137 @@ footer .specs {
 }
 
 .wizard p, .mobile-block p {
-	margin: 5px 10px;
+	margin: 5px 40px;
 	color: white;
 	opacity: 0.8;
 	font-family: Arial;
-	font-size: 0.9em;
+	font-size: 1em;
+}
+
+.dialog p {
+	margin: 5px 40px;
+	color: white;
+	opacity: 0.8;
+	font-family: Arial;
+	font-size: 1em;
 }
 
 .dialog .buttons {
 	border-top: 1px inset black;
-	background: #3f3f3f;
-	padding: 10px 0px;
-	margin-top: 10px;
+	background: #35459c;
+	padding: 30px;
+	margin-top: 20px;
+}
+
+.openProject {
+	overflow: hidden;
 }
 
 .openProject .project-list {
-	padding: 10px;
-	margin: 20px;
-	font-weight: normal;
-	background-color: white;
-	max-height: 200px;
+	margin-top: 28px;
+	margin-bottom: 23px;
+	color: white;
+	height: 210px;
 	overflow-y: auto;
+	width: 103%;
 }
 
-.openProject .project-list div {
-	margin: 5px 0px;
+.openProject .project-item {
+	position: relative;
+	background: #7b2b7f;
+	margin: 9px 0px;
+	padding: 5px 0px;
 }
 
-.openProject .project-list a {
+.openProject .project-item:hover {
+	background: #84449a;	
+}
+
+.openProject .project-item:first-child {
+	margin: 0px;
+}
+
+.openProject .project-item .project-info {
+	cursor: pointer;
+}
+
+.openProject .project-item label, .openProject .project-item p {
+	max-width: calc(60% - 20px);	
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.openProject .project-item label {
+	margin: 0px 40px;
+	font-weight: normal;
+	cursor: inherit;
+}
+
+.openProject .project-item p {
+	font-size: 0.75em;
+	opacity: 1;
+}
+
+.openProject .project-item .action-panel {
 	display: block;
-	font-weight: bold;
-	font-size: 1.25em;
-	color: black;
+	position: absolute;
+	top: 12px;
+	right: 10px;
+}
+
+.openProject .project-item .action-panel button {
+	display: inline-block;
+	width: 26px;
+	height: 26px;
+	padding: 0px;
+	color: white;
+	background: transparent;
+	border: 1px solid white;
+	border-radius: 14px;
+	font-size: 1em;
+	cursor: pointer;
+	vertical-align: middle;
+}
+
+.openProject .project-item .action-panel .open {
+    width: auto;
+    height: auto;
+    padding: 5px;
+    border-radius: 6px;
+    font-size: 0.8em;
+}
+
+.openProject .button-navigation {
+    position: absolute;
+    color: white;
+    background: transparent;
+    border: 1px solid white;
+    border-radius: 6px;
+    right: 33px;
+}
+
+.openProject .ion-arrow-up-b {
+    top: 74px;
+}
+
+.openProject .ion-arrow-down-b {
+    bottom: 84px;
+}
+
+.saveProject label {
+	padding-left: 5px;
+}
+
+.saveProject input, .saveProject textarea {
+	display: block;
+    background: #7b2b7f;
+    color: white;
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-left:  -5px;
 }
 
 img.gu-transit {
