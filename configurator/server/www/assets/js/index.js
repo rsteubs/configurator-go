@@ -251,6 +251,7 @@ function setWorkMode(mode) {
 				
 			$(".canvas")
 				.get()[0].addEventListener("wheel", function(e) {
+					console.log("wheel detected", e.deltaY);
 					if (e.deltaY < 0) {
 						scaleCanvas("+");
 					} else if (e.deltaY > 0) {
@@ -326,7 +327,7 @@ function initializeDrag() {
 		switch(type) {
 			case "tile"     : component = "./assets/img/tile/illumitile_252x252.png"; width = (252 * scale) + "px"; break;
 			case "harness"  : component = "./assets/img/tile/harness_180x22.png"; width = (180 * scale) + "px"; break;
-			case "power"    : component = "./assets/img/powersupply/corner-down.png"; width = (480 * scale) + "px"; break;
+			case "power"    : component = "./assets/img/powersupply/ps-left.png"; width = (480 * scale) + "px"; break;
 		}
 
 		el
@@ -1527,6 +1528,10 @@ function addToCircuitPanel(number, circuitColor) {
 		.attr("rel", number)
 		.append(
 			$("<div />")
+				.addClass("drop-shadow")
+		)
+		.append(
+			$("<div />")
 				.addClass("circuit-button-title")
 				.css({backgroundColor: circuitColor, borderColor: circuitColor})
 				.text("Circuit " + circuitName[number])
@@ -1550,7 +1555,8 @@ function addToCircuitPanel(number, circuitColor) {
 		.append(
 			$("<div />")
 				.addClass("circuit-test-button")
-				.text("Test")
+				.append($("<div />").addClass("drop-shadow"))
+				.append($("<button />").addClass("button-secondary").text("Test"))
 		)
 		.click(function() {
 			if (number === 0) return;
@@ -1577,13 +1583,13 @@ function addToCircuitPanel(number, circuitColor) {
 		
 	if (number === 0) {
 		button.click(function() {
-			$(".circuit-panel .circuit-button:not([rel=0])").each(function(i, el) {
-				var button = $(el);
-				
-				if (!button.hasClass("circuit-button-test")) {
-					button.click();
-				}
-			});
+			var buttons = $(".circuit-panel .circuit-button:not([rel=0])");
+
+			if (buttons.filter(".circuit-button-test").length === buttons.length) {
+				buttons.click();				
+			} else {
+				buttons.filter(":not(.circuit-button-test)").click();
+			}
 		});
 	}
 }

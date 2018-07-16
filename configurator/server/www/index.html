@@ -35,7 +35,7 @@
 		<header>
 
 			<div class="toolbar">
-				<button class="button-main">Help / Feedback</button>
+				<button class="conf-button button-main"><div class="drop-shadow"></div>Help / Feedback</button>
 			</div>
 
 
@@ -62,32 +62,40 @@
 		</header>
 
 		<div class="dialog saveProject">
-			<div class="title">Save Your Project</div>
-			<label>
-				Title
-				<input name="projectTitle" />
-			</label>
+			<div class="drop-shadow"></div>
 			
-			<label>
-				Description
-				<textarea name="projectDescription" rows="5" cols="40"></textarea>
-			</label>
-			
-			<div class="buttons">
-				<button class="button-main" action="save">Save</button>
-				<button class="button-secondary" action="close">Exit</button>
+			<div class="content-body">
+				<div class="title">Save Your Project</div>
+				<label>
+					Title
+					<input name="projectTitle" />
+				</label>
+				
+				<label>
+					Description
+					<textarea name="projectDescription" rows="5" cols="40"></textarea>
+				</label>
+				
+				<div class="buttons">
+					<button class="button-main" action="save">Save</button>
+					<button class="button-secondary" action="close">Exit</button>
+				</div>
 			</div>
 		</div>
 		
 		<div class="dialog openProject">
-			<div class="title">My Projects</div>
-			<div class="project-list"></div>
+			<div class="drop-shadow"></div>
 			
-			<button class="icon ion-arrow-up-b button-navigation"></button>
-			<button class="icon ion-arrow-down-b button-navigation"></button>
-			
-			<div class="buttons">
-				<button class="button-secondary" action="close">Exit</button>
+			<div class="content-body">
+				<div class="title">My Projects</div>
+				<div class="project-list"></div>
+				
+				<button class="icon ion-arrow-up-b button-navigation"></button>
+				<button class="icon ion-arrow-down-b button-navigation"></button>
+				
+				<div class="buttons">
+					<button class="button-secondary" action="close">Exit</button>
+				</div>
 			</div>
 		</div>
 
@@ -109,11 +117,15 @@
 		</div> 
 
 		<div class="main-toolbar">
-			<div class="button-place"><button onclick="scaleCanvas('+', event)" class="icon ion-search icon-search icon-search-plus"></button></div>
-			<div class="button-place"><button onclick="scaleCanvas('-', event)" class="icon ion-search icon-search icon-search-minus"></button></div>
-			<div class="button-place"><button onclick="navigateHistory('-', event)" class="icon ion-reply"></button></div>
-			<div class="button-place"><button onclick="navigateHistory('+', event)" class="icon ion-forward"></button></div>
-			<div class="button-place"><button onclick="toggleDeleteMode(event)" class="icon ion-ios-trash"></button></div>
+			<div class="drop-shadow"></div>
+			
+			<div class="content-body">
+				<div class="button-place"><button onclick="scaleCanvas('+', event)" class="icon ion-search icon-search icon-search-plus"></button></div>
+				<div class="button-place"><button onclick="scaleCanvas('-', event)" class="icon ion-search icon-search icon-search-minus"></button></div>
+				<div class="button-place"><button onclick="navigateHistory('-', event)" class="icon ion-reply"></button></div>
+				<div class="button-place"><button onclick="navigateHistory('+', event)" class="icon ion-forward"></button></div>
+				<div class="button-place"><button onclick="toggleDeleteMode(event)" class="icon ion-ios-trash"></button></div>
+			</div>
 		</div>
 
 		<section class="canvas">
@@ -121,131 +133,147 @@
 		</section>
 		
 		<div class="dialog wizard" rel="temperature">
-			<div class="title">Select a Color Temperature</div>
+			<div class="drop-shadow"></div>
 			
-			<label><input type="radio" name="temperature" value="cool" />Cool (6000K CCT)</label>
-			<label><input type="radio" name="temperature" value="neutral" />Neutral (4500K CCT)</label>
-			<label><input type="radio" name="temperature" value="warm" />Warm (3000K CCT)</label>
-			
-			<p>
-				Selecting a color temperature will affect the color of light emitted from each circuit of IllumiTiles. The color 
-				temperature may also affect the power requirements of each circuit configured.
-			</p>
-			
-			<div class="buttons">
-				<button class="button-main" onclick="navigateWizard('work-mode')">Next</button>
-				<button class="button-secondary" rel="skip" onclick="exitWizard()">Exit</button>
+			<div class="content-body">
+				<div class="title">Select a Color Temperature</div>
+				
+				<label><input type="radio" name="temperature" value="cool" />Cool (6000K CCT)</label>
+				<label><input type="radio" name="temperature" value="neutral" />Neutral (4500K CCT)</label>
+				<label><input type="radio" name="temperature" value="warm" />Warm (3000K CCT)</label>
+				
+				<p>
+					Selecting a color temperature will affect the color of light emitted from each circuit of IllumiTiles. The color 
+					temperature may also affect the power requirements of each circuit configured.
+				</p>
+				
+				<div class="buttons">
+					<div class="conf-button" onclick="navigateWizard('work-mode')"><div class="drop-shadow"></div><button class="button-main">Next</button></div>
+					<div class="conf-button" rel="skip" onclick="exitWizard()"><div class="drop-shadow"></div><button class="button-secondary">Exit</button></div>
+				</div>
 			</div>
 		</div>
 
 		<div class="dialog wizard" rel="work-mode">
-			<div class="title">Select a Project Configuration Mode</div>
+			<div class="drop-shadow"></div>
 			
-			<p>
-				Select the mode in which you would like to work:
-			</p>
-
-			<div><label><input type="radio" onclick="setWizardWorkMode('auto-area');" name="configuration" value="auto-area" />Auto-Configuration for a Specified Illumination Area</label></div>
-			<div><label><input type="radio" onclick="setWizardWorkMode('auto-size');" name="configuration" value="auto-size" />Auto-Configuration for a Specified Count of IllumiTiles</label></div>
-			<div><label><input type="radio" onclick="setWizardWorkMode('manual');" name="configuration" value="manual" />Manual</label></div>
-			
-			<p rel="auto-area">
-				Use "Auto-Configuration for a Specified Illumination Area" to define an illumination area that will be filled with
-				Illumitiles. The configured area will be automtically arranged into circuits with an adequate arrangement of harnesses 
-				and power supplies. Each circuit will be given a distinct color to help it stand out.
-			</p>
-
-			<p rel="auto-size">
-				Use "Auto-Configuration for a Specified Count of IllumiTiles" to define an arrangement by count
-				using a number of IllumiTiles wide by high. The configured area will be automtically arranged into circuits with an adequate arrangement of harnesses 
-				and power supplies. Each circuit will be given a distinct color to help it stand out.
-			</p>
-
-			<p rel="manual">
-				Using manual mode will allow you to arrange IllumiTiles, harnesses, and power supplies into one or more 
-				two-dimensional series of your choosing. You will have to apply adequate harnesses and power supplies to ensure
-				proper operation of your arrangement. Use the "Test" buttons to test individual circuits for completion. A passing test
-				means the circuit in question has an adequate number of harnesses and a power supply.
-			</p>
+			<div class="content-body">
+				<div class="title">Select a Project Configuration Mode</div>
 				
-			<p rel="manual">
-				Use "Manual" to arrange IllumiTiles, harnesses, and power supplies to your own specifications. Arrange IllumiTiles 
-				by dragging them from the work bench onto the work table into the slots. Add harnesses between neighboring
-				IllumiTiles to create circuits. Individualized circuits will be given distinct colors to help distinguish them. Add one
-				power supply per circuit to complete the configuration.
-			</p>
+				<p>
+					Select the mode in which you would like to work:
+				</p>
+	
+				<div><label><input type="radio" onclick="setWizardWorkMode('auto-area');" name="configuration" value="auto-area" />Auto-Configuration for a Specified Illumination Area</label></div>
+				<div><label><input type="radio" onclick="setWizardWorkMode('auto-size');" name="configuration" value="auto-size" />Auto-Configuration for a Specified Count of IllumiTiles</label></div>
+				<div><label><input type="radio" onclick="setWizardWorkMode('manual');" name="configuration" value="manual" />Manual</label></div>
 				
-			<p rel="manual">
-				Use the "Circuit Test" buttons (either by clicking "Circuit All" or individual circuit buttons) to verify your 
-				configuration. Successful tests will result in a glow around each IllumiTile in the circuit. If any of the IllumiTiles in 
-				a circuit fail to glow, check to ensure that each IllumiTile is properly harnessed and the circuit has a power supply.
-			</p>
-			
-			<div class="buttons">
-				<button class="button-secondary" onclick="navigateWizard('temperature')">Prev</button>
-				<button class="button-main" rel="auto-area" onclick="navigateWizard('auto-config')">Next</button>
-				<button class="button-main" rel="auto-size" onclick="navigateWizard('auto-config')">Next</button>
-				<button class="button-main" rel="manual" onclick="saveWizard()">Done</button>
-				<button class="button-secondary" rel="skip" onclick="exitWizard()">Exit</button>
+				<p rel="auto-area">
+					Use "Auto-Configuration for a Specified Illumination Area" to define an illumination area that will be filled with
+					Illumitiles. The configured area will be automtically arranged into circuits with an adequate arrangement of harnesses 
+					and power supplies. Each circuit will be given a distinct color to help it stand out.
+				</p>
+	
+				<p rel="auto-size">
+					Use "Auto-Configuration for a Specified Count of IllumiTiles" to define an arrangement by count
+					using a number of IllumiTiles wide by high. The configured area will be automtically arranged into circuits with an adequate arrangement of harnesses 
+					and power supplies. Each circuit will be given a distinct color to help it stand out.
+				</p>
+	
+				<p rel="manual">
+					Using manual mode will allow you to arrange IllumiTiles, harnesses, and power supplies into one or more 
+					two-dimensional series of your choosing. You will have to apply adequate harnesses and power supplies to ensure
+					proper operation of your arrangement. Use the "Test" buttons to test individual circuits for completion. A passing test
+					means the circuit in question has an adequate number of harnesses and a power supply.
+				</p>
+					
+				<p rel="manual">
+					Use "Manual" to arrange IllumiTiles, harnesses, and power supplies to your own specifications. Arrange IllumiTiles 
+					by dragging them from the work bench onto the work table into the slots. Add harnesses between neighboring
+					IllumiTiles to create circuits. Individualized circuits will be given distinct colors to help distinguish them. Add one
+					power supply per circuit to complete the configuration.
+				</p>
+					
+				<p rel="manual">
+					Use the "Circuit Test" buttons (either by clicking "Circuit All" or individual circuit buttons) to verify your 
+					configuration. Successful tests will result in a glow around each IllumiTile in the circuit. If any of the IllumiTiles in 
+					a circuit fail to glow, check to ensure that each IllumiTile is properly harnessed and the circuit has a power supply.
+				</p>
+				
+				<div class="buttons">
+					<div onclick="navigateWizard('temperature')" class="conf-button"><div class="drop-shadow"></div><button class="button-secondary">Prev</button></div>
+					<div onclick="navigateWizard('auto-config')" class="conf-button" rel="auto-area"><div class="drop-shadow"></div><button class="button-main">Next</button></div>
+					<div onclick="navigateWizard('auto-config')" class="conf-button" rel="auto-size"><div class="drop-shadow"></div><button class="button-main">Next</button></div>
+					<div onclick="saveWizard()" class="conf-button" rel="manual"><div class="drop-shadow"></div><button class="button-main">Done</button></div>
+					<div onclick="exitWizard()" class="conf-button" rel="skip"><div class="drop-shadow"></div><button class="button-secondary">Exit</button></div>
+				</div>
 			</div>
 		</div>
 
 		<div class="dialog wizard" rel="auto-config">
-			<div class="title">Auto-Configuration Settings</div>
+			<div class="drop-shadow"></div>
 			
-			<div class="wizard-field" rel="auto-area">
-				Area 
-				<input type="text" class="field" name="work-table-width" value="4.0" />
-				" X 
-				<input type="text" class="field" name="work-table-height" value="4.0" />
-				"
-			</div>
-
-			<div class="wizard-field" rel="auto-size">
-				Tiles
-				<input type="text" class="field" name="tile-count-width" value="1" /> 
-				X 
-				<input type="text" class="field" name="tile-count-height" value="1" />
-			</div>
-			
-			<p rel="auto-area">
-				Enter the width and height in inches of an area you would like to cover in IllumiTiles. 
-				The Configurator will do its best to arrange IllumiTiles in such a way that the area specified is properly covered.
-				Individual circuits will be automatically created for you using adequate harnesses and power supplies.
-				Please note that the area specified must be no more than 80" W x 126" H for a portrait layout, 
-				or no more than 126" W x 80" H for a landscape layout.
-			</p>
-			
-			<p rel="auto-size">
-				Enter the number of IllumiTiles you will like to use in the width and height of your design. 
-				The Configurator will arrange IllumiTiles in such a way that the number of IllumiTiles specified 
-				for the width and height are used.
-				Individual circuits will be automatically created for you using adequate harnesses and power supplies.
-				Please note that the highest number of IllumiTiles specified in a configuration must not exceed 20 W x 32 H 
-				for a portrait layout, and must not exceed 32 W x 20 H for a landscape layout.
-			</p>
-			
-			<div class="buttons">
-				<button class="button-secondary" onclick="navigateWizard('work-mode')">Prev</button>
-				<button class="button-main" onclick="saveWizard()">Done</button>
-				<button class="button-secondary" rel="skip" onclick="exitWizard()">Exit</button>
+			<div class="content-body">
+				<div class="title">Auto-Configuration Settings</div>
+				
+				<div class="wizard-field" rel="auto-area">
+					Area 
+					<input type="text" class="field" name="work-table-width" value="4.0" />
+					" X 
+					<input type="text" class="field" name="work-table-height" value="4.0" />
+					"
+				</div>
+	
+				<div class="wizard-field" rel="auto-size">
+					Tiles
+					<input type="text" class="field" name="tile-count-width" value="1" /> 
+					X 
+					<input type="text" class="field" name="tile-count-height" value="1" />
+				</div>
+				
+				<p rel="auto-area">
+					Enter the width and height in inches of an area you would like to cover in IllumiTiles. 
+					The Configurator will do its best to arrange IllumiTiles in such a way that the area specified is properly covered.
+					Individual circuits will be automatically created for you using adequate harnesses and power supplies.
+					Please note that the area specified must be no more than 80" W x 126" H for a portrait layout, 
+					or no more than 126" W x 80" H for a landscape layout.
+				</p>
+				
+				<p rel="auto-size">
+					Enter the number of IllumiTiles you will like to use in the width and height of your design. 
+					The Configurator will arrange IllumiTiles in such a way that the number of IllumiTiles specified 
+					for the width and height are used.
+					Individual circuits will be automatically created for you using adequate harnesses and power supplies.
+					Please note that the highest number of IllumiTiles specified in a configuration must not exceed 20 W x 32 H 
+					for a portrait layout, and must not exceed 32 W x 20 H for a landscape layout.
+				</p>
+				
+				<div class="buttons">
+					<div onclick="navigateWizard('work-mode')" class="conf-button"><div class="drop-shadow"></div><button class="button-secondary">Prev</button></div>
+					<div onclick="saveWizard()" class="conf-button"><div class="drop-shadow"></div><button class="button-main">Done</button></div>
+					<div onclick="exitWizard()" class="conf-button"><div class="drop-shadow"></div><button class="button-secondary" rel="skip">Exit</button></div>
+				</div>
 			</div>
 		</div>
 
 		<footer>
-			<div class="shadow"></div>
+			<div class="alpha"></div>
 			<button id="footerHandle" class="footer-handle icon ion-arrow-down-a"></button>
 
 			<div class="tools">
-				<div class="section">
-					<div class="overlay"></div>
-					<div  class="tool-button drag-to-canvas" rel="tile"><img src="assets/img/tile/illumitile_32x32.png" /><div class="helper"></div></div>
-					<div  class="tool-button drag-to-canvas" rel="harness"><img src="assets/img/tile/harness_90x11.png" /><div class="helper"></div></div>
-					<div  class="tool-button drag-to-canvas" rel="power"><img src="assets/img/tile/power_150x41.png" style="width:100px;" /><div class="helper"></div></div>
-					<button onclick="removeComponents()" class="tool-button icon ion-close" style="color: red"></button>
-				</div>
-				<div class="section">
-					<button class="tool-button icon ion-gear-b" style="color: white;font-size:1.75em;"></button>
+				<div class="drop-shadow"></div>
+				
+				<div class="content-body">
+					<div class="section">
+						<div class="overlay"></div>
+						<div  class="tool-button drag-to-canvas" rel="tile"><img src="assets/img/tile/illumitile_32x32.png" /><div class="helper"></div></div>
+						<div  class="tool-button drag-to-canvas" rel="harness"><img src="assets/img/tile/harness_90x11.png" /><div class="helper"></div></div>
+						<div  class="tool-button drag-to-canvas" rel="power"><img src="assets/img/tile/power_150x41.png" style="width:100px;" /><div class="helper"></div></div>
+						<button onclick="removeComponents()" class="tool-button icon ion-close" style="color: red"></button>
+					</div>
+					<div class="section">
+						<button class="tool-button icon ion-gear-b" style="color: white;font-size:1.75em;"></button>
+					</div>
 				</div>
 			</div>
 
