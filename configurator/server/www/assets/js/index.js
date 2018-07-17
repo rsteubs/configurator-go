@@ -1317,11 +1317,17 @@ function testCircuit(number, enabled) {
 	};
 	
 	var passTile = function(tile) {
+		var retest = tile.attr("tested") === "1" && tile.siblings(".test-fail").length > 0;
+		
 		tile
 			.parents(".tile-slot")
 			.append($("<div />").addClass("test-pass").addClass("tile-temperature-" + workingProject.temperature))
 			.find(".test-fail, .test-pass:gt(0)")
 			.remove();
+			
+		if (retest) {
+			testNeighbor(tile);
+		}
 	}
 
 	var testNeighbor = function(key) {
@@ -1342,6 +1348,14 @@ function testCircuit(number, enabled) {
 
 			passTile(key);
 
+			if (map.fore.find(".zone.right img").length > 0) {
+				passTile(map.fore);
+			}
+
+			if (map.above.find(".zone.bottom img").length > 0) {
+				passTile(map.above);
+			}
+
 			if (key.find(".zone.right img").length > 0) {
 				passTile(map.aft);
 			}
@@ -1352,25 +1366,25 @@ function testCircuit(number, enabled) {
 		}
 
 		if (map.fore.attr("circuit") === key.attr("circuit") && map.fore.attr("tested") !== "1") {
-			testNeighbor(map.fore);
+			testNeighbor(map.fore); 
 		}
 
 		if (map.aft.attr("circuit") === key.attr("circuit") && map.aft.attr("tested") !== "1") {
-			testNeighbor(map.aft);
+			testNeighbor(map.aft); 
 		}
 
 		if (map.above.attr("circuit") === key.attr("circuit") && map.above.attr("tested") !== "1") {
-			testNeighbor(map.above);
+			testNeighbor(map.above); 
 		}
 
 		if (map.below.attr("circuit") === key.attr("circuit") && map.below.attr("tested") !== "1") {
-			testNeighbor(map.below);
+			testNeighbor(map.below); 
 		}
 	};
 
 	circuit.parents(".tile-slot").append($("<div />").addClass("test-fail"));
 	
-	testNeighbor(source);
+	testNeighbor(source); 
 }
 
 function joinCircuit(number, circuitKey) {
