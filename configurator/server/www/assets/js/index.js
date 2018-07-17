@@ -440,6 +440,7 @@ function initializeDrag() {
 				.appendTo(onto)
 				.click(selectComponentForDeletion);
 			
+				buildComponentList();
 				projectHistory.record();
 			}
 		}
@@ -651,6 +652,7 @@ function decompressWorkspace(b64) {
 	}
 	
 	updateSystemSpecs();
+	buildComponentList();
 }
 
 function createProject(next, err) {
@@ -818,6 +820,35 @@ function updateSystemSpecs(circuitNumber) {
 	
 }
 
+function buildComponentList() {
+	var workTable = $(".work-table");
+	var tiles = workTable.find(".tile");
+	var harnessCount = tiles.find(".zone img").length;
+	var psCount = workTable.find("img.power").length;
+	var list = [];
+	var tbody = [];
+
+	list.push({ name: "IllumiTile Light Engine", count: tiles.length });
+	list.push({ name: "IllumiSnap Harness D", count: harnessCount });
+	list.push({ name: "IllumiSnap Power Harness", count: psCount });
+	list.push({ name: "Power Supply - Min. Power Rating 25W", count: psCount });
+	
+	for (var i = 0, item; item = list[i]; i++) {
+		if (item.count > 0) {
+			tbody.push(
+				$("<tr />")
+					.append($("<td />").text(item.name))
+					.append($("<td />").text(item.count))
+					.append($("<td />").append($("<button />").addClass("button-help icon ion-help")))
+				);
+		}
+	}
+	
+	$(".components .item-table tbody")
+		.empty()
+		.append(tbody);
+}
+
 function addTileRow(index) {
 	var workTable = $(".work-table");
 	var orientation = workTable.attr("orientation");
@@ -904,7 +935,8 @@ function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 	}
 	
 	createCircuits(splitCircuit(workspaceWidth, workspaceHeight));
-
+	buildComponentList();
+	
 	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
 	
 	projectHistory.record();

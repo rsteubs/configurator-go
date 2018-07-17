@@ -15,8 +15,8 @@
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-		<link rel="stylesheet" type="text/css" href="./assets/css/index.css?v=1528923876493" />
-		<link rel="stylesheet" type="text/css" href="./assets/css/tooltip.css?v=1528923876493" />
+		<link rel="stylesheet" type="text/css" href="./assets/css/index.css?v=1531795536051" />
+		<link rel="stylesheet" type="text/css" href="./assets/css/tooltip.css?v=1531795536051" />
 		<link rel="stylesheet" type="text/css" href="./assets/css/ionicons.css" />
 		<link rel="stylesheet" type="text/css" href="./assets/js/jquery-ui-1.12.1.custom/jquery-ui.css" />
 		<link rel="stylesheet" type="text/css" href="./assets/css/dragula.min.css" />
@@ -26,7 +26,7 @@
 		<script src="./assets/js/lzstring.js"></script>
 		<script src="./assets/js/js.cookie.js"></script>
 		<script src="./assets/js/temperature.js"></script>
-		<script src="./assets/js/index.js"></script>
+		<script src="./assets/js/index.js?v=1531795536051"></script>
 	</head>
 
 	<body>
@@ -279,18 +279,49 @@
 
 			<section class="specs">
 				<h1>System Specifications</h1>
-
-				<div class="setting">Voltage <span class="value" rel="voltage">0.0</span> DC</div>
-				<div class="setting">Current <span class="value" rel="current">0.0</span> Amps</div>
-				<div class="setting">Power <span class="value" rel="power">0.0</span> Watts</div>
-				<div class="setting">
-					Derate
-					<select>
-						<option>10%</option>
-						<option>15%</option>
-						<option>20%</option>
-					</select>
-				</div>
+				
+				<table class="item-table" cellspacing="0">
+					<thead>
+						<tr>
+							<th>Parameter</th>
+							<th>Value</th>
+							<th>Type</th>
+							<th>Help</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Voltage</td>
+							<td rel="voltage">0.00</td>
+							<td>DC</td>
+							<td><button class="button-help icon ion-help"></button></td>
+						</tr>
+						<tr>
+							<td>Current</td>
+							<td rel="current">0.00</td>
+							<td>Amps</td>
+							<td><button class="button-help icon ion-help"></button></td>
+						</tr>
+						<tr>
+							<td>Power</td>
+							<td rel="power">0.00</td>
+							<td>Watts</td>
+							<td><button class="button-help icon ion-help"></button></td>
+						</tr>
+						<tr>
+							<td>Derate</td>
+							<td>
+								<select>
+									<option>10%</option>
+									<option>15%</option>
+									<option>20%</option>
+								</select>
+							</td>
+							<td></td>
+							<td><button class="button-help icon ion-help"></button></td>
+						</tr>
+					</tbody>
+				</table>
 			</section>
 
 			<section class="specs">
@@ -299,8 +330,7 @@
 				<div class="setting">
 					Work Mode 
 					<span class="value" onclick="navigateWizard('work-mode')" style="text-decoration: underline; cursor: pointer;" rel="work-mode">Auto (Tile Number)</span>
-					<button onclick="navigateWizard('work-mode')" class="icon ion-android-arrow-dropdown-circle" />
-					<button class="button-help icon ion-help-circled"></button>
+					<button class="button-help icon ion-help"></button>
 					
 					<div class="tooltip help">
 						<div class="arrow"></div>						
@@ -311,8 +341,7 @@
 				<div class="setting">
 					Color Temperature 
 					<span class="value"  onclick="navigateWizard('temperature')" style="text-decoration: underline; cursor: pointer;" rel="temperature">Neutral (4500K CCT)</span>
-					<button onclick="navigateWizard('temperature')" class="icon ion-android-arrow-dropdown-circle" />
-					<button class="button-help icon ion-help-circled"></button>
+					<button class="button-help icon ion-help"></button>
 					
 					<div class="tooltip help">
 						<div class="arrow"></div>						
@@ -326,11 +355,21 @@
 			<section class="components">
 				<h1>System Components</h1>
 
-				<div class="setting">Minimum Power Supply Rating <span class="value">25</span> Watts</div>
-				<div class="setting">IllumiTile Light Engine Quantity <span class="value" rel="tileCount">0</span></div>
-				<div class="setting">IllumiSnap Harness D Quantity <span class="value" rel="harnessCount">0</span></div>
-				<div class="setting">IllumiSnap Power Harness Quantity <span class="value" rel="powerCount">0</span></div>
-				<div class="setting">Number of Power Supplies <span class="value" rel="powerCount">0</span></div>
+				<table class="item-table" cellspacing="0">
+					<thead>
+						<tr>
+							<th>Item</th>
+							<th>Qty.</th>
+							<th>Help</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+				
+				<div class="buttons">
+					<button class="conf-button button-main"><div class="drop-shadow"></div>Export to PDF</button>
+					<button class="conf-button button-main"><div class="drop-shadow"></div>Where to Buy</button>
+				</div>
 			</section>
 		</footer>
 	</body>

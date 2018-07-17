@@ -42,6 +42,16 @@ body {
 	user-select: none;
 }
 
+.button-help {
+	color: white;
+	background: transparent;
+	border: 1px solid white;
+	border-radius: 10px;
+	padding: 3px 6px;
+	font-size: 0.6em;
+	vertical-align: middle;
+}
+
 header {
 	display: block;
 	position: fixed;
@@ -407,7 +417,6 @@ footer {
 	background: #2a41a0;
 	color: #fff;
 	font-size: 0.9em;
-	padding: 0px 20px;
 	z-index: 5;
 }
 
@@ -524,6 +533,20 @@ footer section .value {
 	font-weight: normal;
 }
 
+footer .components {
+	width: 420px;
+}
+
+footer .components .item-table {
+	margin-bottom: 20px;
+}
+
+footer .components .buttons {
+	display: flex;
+	justify-content: space-between;
+	margin: 10px 0px;
+}
+
 select {
 	background-color: #84449a;
 	color: #fff;
@@ -550,13 +573,36 @@ footer .specs {
 	font-size: 1.25em;
 }
 
-.specs .setting button {
+.item-table {
+	width: 100%;
 	color: white;
-	background: transparent;
+}
+
+.item-table thead tr {
+	background-color: #642265;
+	border-radius: 6px;
+}
+
+.item-table th {
+	text-align: left;
+	font-weight: normal;
+	border-left: 1px solid white;
+}
+
+.item-table th, .item-table td {
+	padding: 0px 10px;
+}
+
+.item-table th:first-child {
 	border: 0px;
-	margin-left: 10px;
-	vertical-align: middle;
-	font-size: 1.2em;
+}
+
+.item-table td:last-child {
+	text-align: center;
+}
+
+.specs .setting button {
+	margin-left: 5px;
 }
 
 .dialog {
@@ -855,3 +901,4 @@ img.gu-transit {
 		display: none;
 	}
 }
+
