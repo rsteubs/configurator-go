@@ -9,12 +9,12 @@ import (
 	"cretin.co/forge/1.0/logger"
 )
 
-type Context struct {
+type C struct {
 	Title string
 
 	d      time.Duration
 	s      int
-	h      map[int]*Transaction
+	h      map[int]*Tx
 	status uint8
 	ex     error
 
@@ -37,22 +37,22 @@ const (
 	Error = uint8(40)
 )
 
-func Create(t string) *Context {
-	return &Context{
+func Create(t string) *C {
+	return &C{
 		Title:  t,
 		d:      0,
 		s:      0,
-		h:      make(map[int]*Transaction),
+		h:      make(map[int]*Tx),
 		status: active,
 		ex:     nil,
 	}
 }
 
-func Createf(f string, a ...interface{}) *Context {
+func Createf(f string, a ...interface{}) *C {
 	return Create(fmt.Sprintf(f, a...))
 }
 
-func (c *Context) Start(i string) *Transaction {
+func (c *C) Start(i string) *Tx {
 	if c.status == active {
 		c.Lock()
 
@@ -67,11 +67,11 @@ func (c *Context) Start(i string) *Transaction {
 	return nil
 }
 
-func (c *Context) Startf(f string, a ...interface{}) *Transaction {
+func (c *C) Startf(f string, a ...interface{}) *Tx {
 	return c.Start(fmt.Sprintf(f, a...))
 }
 
-func (c *Context) Current() *Transaction {
+func (c *C) Current() *Tx {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -79,11 +79,10 @@ func (c *Context) Current() *Transaction {
 		return c.h[c.s].Current()
 	}
 
-
 	return nil
 }
 
-func (c *Context) Get(i string) *Transaction {
+func (c *C) Get(i string) *Tx {
 	if tx := c.Current(); tx == nil {
 		return c.Start(i)
 	} else {
@@ -91,7 +90,7 @@ func (c *Context) Get(i string) *Transaction {
 	}
 }
 
-func (c *Context) Getf(f string, a ...interface{}) *Transaction {
+func (c *C) Getf(f string, a ...interface{}) *Tx {
 	if tx := c.Current(); tx == nil {
 		return c.Startf(f, a)
 	} else {
@@ -99,7 +98,7 @@ func (c *Context) Getf(f string, a ...interface{}) *Transaction {
 	}
 }
 
-func (c *Context) Duration() time.Duration {
+func (c *C) Duration() time.Duration {
 	var runTime time.Duration
 
 	c.Lock()
@@ -115,7 +114,7 @@ func (c *Context) Duration() time.Duration {
 	return runTime
 }
 
-func (c *Context) Error(err error) {
+func (c *C) Error(err error) {
 	if c.status != active {
 		return
 	}
@@ -128,7 +127,7 @@ func (c *Context) Error(err error) {
 	logger.Error(c.String(), err)
 }
 
-func (c *Context) End() {
+func (c *C) End() {
 	if c.status != active {
 		return
 	}
@@ -139,7 +138,7 @@ func (c *Context) End() {
 	logger.Info(c.String())
 }
 
-func (c *Context) Status() string {
+func (c *C) Status() string {
 	switch c.status {
 	case active:
 		return StatusActive
@@ -152,7 +151,7 @@ func (c *Context) Status() string {
 	}
 }
 
-func (c *Context) String() string {
+func (c *C) String() string {
 	var b bytes.Buffer
 
 	fmt.Fprintf(&b, "%v - \"%v\" has %v transactions - %v\n", c.d, c.Title, c.s, c.Status())
@@ -202,7 +201,7 @@ func Logf(level uint8, msg string, v ...interface{}) {
 	}
 }
 
-func (c *Context) nextStep() int {
+func (c *C) nextStep() int {
 	c.s++
 	return c.s
 }

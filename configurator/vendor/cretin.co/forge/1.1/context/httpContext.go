@@ -7,8 +7,8 @@ import (
 	"strconv"
 )
 
-type HttpContext struct {
-	c *Context
+type Http struct {
+	c *C
 	r *http.Request
 	w http.ResponseWriter
 	s int
@@ -22,8 +22,8 @@ type responseStats struct {
 
 const serverErrorMessage = "An unexpected error occurred"
 
-func (c *Context) NewHttpContext(w http.ResponseWriter, r *http.Request) *HttpContext {
-	return &HttpContext{
+func (c *C) NewHttp(w http.ResponseWriter, r *http.Request) *Http {
+	return &Http{
 		c,
 		r,
 		w,
@@ -31,8 +31,8 @@ func (c *Context) NewHttpContext(w http.ResponseWriter, r *http.Request) *HttpCo
 	}
 }
 
-func (c *Context) NewHttpContextf(w http.ResponseWriter, r *http.Request, a ...interface{}) *HttpContext {
-	return &HttpContext{
+func (c *C) NewHttpf(w http.ResponseWriter, r *http.Request, a ...interface{}) *Http {
+	return &Http{
 		c,
 		r,
 		w,
@@ -40,23 +40,23 @@ func (c *Context) NewHttpContextf(w http.ResponseWriter, r *http.Request, a ...i
 	}
 }
 
-func (c *HttpContext) SetHeader(k, v string) {
+func (c *Http) SetHeader(k, v string) {
 	c.w.Header().Set(k, v)
 }
 
-func (c *HttpContext) Context() *Context {
+func (c *Http) Context() *C {
 	return c.c
 }
 
-func (c *HttpContext) Start(tx string) *Transaction {
+func (c *Http) Start(tx string) *Tx {
 	return c.c.Start(tx)
 }
 
-func (c *HttpContext) Startf(tx string, a ...interface{}) *Transaction {
+func (c *Http) Startf(tx string, a ...interface{}) *Tx {
 	return c.c.Startf(tx, a...)
 }
 
-func (c *HttpContext) Error(err error, status int) {
+func (c *Http) Error(err error, status int) {
 	c.c.Error(err)
 	c.s = status
 	msg := err.Error()
@@ -68,14 +68,14 @@ func (c *HttpContext) Error(err error, status int) {
 	c.writeJsonResponse(status, msg, nil)
 }
 
-func (c *HttpContext) End(status int, body interface{}) {
+func (c *Http) End(status int, body interface{}) {
 	c.s = status
 	c.c.End()
 
 	c.writeJsonResponse(status, httpStatus(status), body)
 }
 
-func (c *HttpContext) EndFile(status int, r io.Reader, contentType string, size int64) {
+func (c *Http) EndFile(status int, r io.Reader, contentType string, size int64) {
 	c.s = status
 	c.c.End()
 
@@ -86,11 +86,11 @@ func (c *HttpContext) EndFile(status int, r io.Reader, contentType string, size 
 	io.Copy(c.w, r)
 }
 
-func (c *HttpContext) Status() string {
+func (c *Http) Status() string {
 	return c.c.Status()
 }
 
-func (c *HttpContext) writeJsonResponse(status int, message string, body interface{}) {
+func (c *Http) writeJsonResponse(status int, message string, body interface{}) {
 	var doc []byte
 	var err error
 

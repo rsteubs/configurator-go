@@ -32,7 +32,7 @@ func (err Error) Error() string {
 func invalidTokenError() Error { return Error{"User is not authenticated."} }
 func invalidUserError() Error  { return Error{"User does not exist or password is invalid."} }
 
-func Authenticate(username, pwd string, c *context.Context) (User, error) {
+func Authenticate(username, pwd string, c *context.C) (User, error) {
 	tx := c.Getf("authenticating - %s", username)
 
 	if p, err := dstore.FetchProfile(username, c); err != nil {
@@ -60,7 +60,7 @@ func Authenticate(username, pwd string, c *context.Context) (User, error) {
 	}
 }
 
-func Authorize(username, token string, c *context.Context) (User, error) {
+func Authorize(username, token string, c *context.C) (User, error) {
 	if p, err := dstore.FetchProfile(username, c); err != nil {
 		return User{}, err
 	} else if err := dstore.VerifyToken(p.Handle, token, c); err != nil {
@@ -74,7 +74,20 @@ func Authorize(username, token string, c *context.Context) (User, error) {
 	}
 }
 
-func (u User) genToken(c *context.Context) {
+func CreateProfile(username, pwd string, c *context.C) (string, error) {
+	salt := app.NewHandle(5)
+	runes := []rune(pwd)
+
+	password := fmt.Sprintf("%s_%s_%s", runes[0:4], salt, runes[4:])
+	h := sha256.Sum256([]byte(password))
+
+	context.Logf(context.Trace, "Raw password: %s", pwd)
+	context.Logf(context.Trace, "Salted password: %s", password)
+
+	return dstore.CreateProfile(username, string(h[:]), salt, c)
+}
+
+func (u User) genToken(c *context.C) {
 	t := app.NewHandle(tokenLength)
 	h := sha256.Sum256([]byte(t))
 	expires := time.Now().Add(tokenExpiresIn).UTC()

@@ -12,7 +12,7 @@ import (
 )
 
 type EchoContext struct {
-	c *context.Context
+	c *context.C
 	e echo.Context
 	s int
 }
@@ -60,7 +60,7 @@ func NewMiddlewareContext(h MiddlewareHandler, n string) func(echo.HandlerFunc) 
 	}
 }
 
-func (c *EchoContext) Context() *context.Context {
+func (c *EchoContext) Context() *context.C {
 	return c.c
 }
 
@@ -80,11 +80,11 @@ func (c *EchoContext) Param(n string) string {
 	return c.e.Param(n)
 }
 
-func (c *EchoContext) Start(tx string) *context.Transaction {
+func (c *EchoContext) Start(tx string) *context.Tx {
 	return c.c.Start(tx)
 }
 
-func (c *EchoContext) Startf(tx string, a ...interface{}) *context.Transaction {
+func (c *EchoContext) Startf(tx string, a ...interface{}) *context.Tx {
 	return c.c.Startf(tx, a...)
 }
 

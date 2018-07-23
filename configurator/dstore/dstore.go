@@ -39,8 +39,8 @@ func (err Error) Error() string {
 
 func notFoundError() Error { return Error{"No data found"} }
 
-func CreateProfile(username, password, salt string, c *context.Context) (string, error) {
-	db := c.NewDataContext(context.DefaultDB, "import user")
+func CreateProfile(username, password, salt string, c *context.C) (string, error) {
+	db := c.NewDB(context.DefaultDB, "import user")
 
 	handle := app.NewHandle(7)
 
@@ -55,8 +55,8 @@ func CreateProfile(username, password, salt string, c *context.Context) (string,
 
 }
 
-func FetchProfile(username string, c *context.Context) (Profile, error) {
-	db := c.NewDataContext(context.DefaultDB, "fetch user")
+func FetchProfile(username string, c *context.C) (Profile, error) {
+	db := c.NewDB(context.DefaultDB, "fetch user")
 	p := Profile{}
 
 	query := "SELECT handle, username, password, salt, status FROM profile WHERE username = ?"
@@ -76,8 +76,8 @@ func FetchProfile(username string, c *context.Context) (Profile, error) {
 	return p, nil
 }
 
-func SetProfileStatus(handle string, status uint8, c *context.Context) error {
-	db := c.NewDataContext(context.DefaultDB, "update profile status")
+func SetProfileStatus(handle string, status uint8, c *context.C) error {
+	db := c.NewDB(context.DefaultDB, "update profile status")
 	query := "UPDATE profile SET status = ? WHERE handle = ?"
 
 	if _, err := db.Connection().Exec(query, status, handle); err != nil {
@@ -89,8 +89,8 @@ func SetProfileStatus(handle string, status uint8, c *context.Context) error {
 	return nil
 }
 
-func CreateProject(owner string, c *context.Context) (string, error) {
-	db := c.NewDataContext(context.DefaultDB, "Create Project")
+func CreateProject(owner string, c *context.C) (string, error) {
+	db := c.NewDB(context.DefaultDB, "Create Project")
 	query := "INSERT INTO project SELECT ?, ?, '', '', '', 10"
 
 	handle := app.NewHandle(7)
@@ -104,8 +104,8 @@ func CreateProject(owner string, c *context.Context) (string, error) {
 	return handle, nil
 }
 
-func FetchAllProjects(owner string, c *context.Context) ([]string, error) {
-	db := c.NewDataContext(context.DefaultDB, "Get Project")
+func FetchAllProjects(owner string, c *context.C) ([]string, error) {
+	db := c.NewDB(context.DefaultDB, "Get Project")
 	query := "SELECT handle FROM project WHERE owner = ? AND status = ?"
 
 	if rows, err := db.Connection().Query(query, owner, 10); err != nil {
@@ -128,8 +128,8 @@ func FetchAllProjects(owner string, c *context.Context) ([]string, error) {
 	}
 }
 
-func FetchProject(owner, handle string, c *context.Context) (Project, error) {
-	db := c.NewDataContext(context.DefaultDB, "Fetch Project")
+func FetchProject(owner, handle string, c *context.C) (Project, error) {
+	db := c.NewDB(context.DefaultDB, "Fetch Project")
 	query := "SELECT handle, owner, title, description, content, status FROM project WHERE owner = ? AND handle = ?"
 
 	p := Project{}
@@ -149,8 +149,8 @@ func FetchProject(owner, handle string, c *context.Context) (Project, error) {
 	return p, nil
 }
 
-func UpdateProject(owner string, p Project, c *context.Context) error {
-	db := c.NewDataContext(context.DefaultDB, "Record Event")
+func UpdateProject(owner string, p Project, c *context.C) error {
+	db := c.NewDB(context.DefaultDB, "Record Event")
 	query := "UPDATE project SET title = ?, description = ?, content = ? WHERE handle = ? AND owner = ?"
 
 	_, err := db.Connection().Exec(query, p.Title, p.Description, p.Content, p.Handle, owner)
@@ -158,8 +158,8 @@ func UpdateProject(owner string, p Project, c *context.Context) error {
 	return err
 }
 
-func WriteToken(owner, token string, expiration time.Time, c *context.Context) error {
-	db := c.NewDataContext(context.DefaultDB, "Create Token")
+func WriteToken(owner, token string, expiration time.Time, c *context.C) error {
+	db := c.NewDB(context.DefaultDB, "Create Token")
 	query := "INSERT INTO token SELECT ?, ?, ?"
 
 	if _, err := db.Connection().Exec(query, token, owner, expiration); err != nil {
@@ -170,8 +170,8 @@ func WriteToken(owner, token string, expiration time.Time, c *context.Context) e
 	return nil
 }
 
-func VerifyToken(owner, token string, c *context.Context) error {
-	db := c.NewDataContext(context.DefaultDB, "Verify Token")
+func VerifyToken(owner, token string, c *context.C) error {
+	db := c.NewDB(context.DefaultDB, "Verify Token")
 	query := "SELECT 1 FROM token WHERE owner = ? AND token = ? AND expiresOn >= now()"
 
 	if row, err := db.Connection().Query(query, owner, token); err != nil {
@@ -194,8 +194,8 @@ func VerifyToken(owner, token string, c *context.Context) error {
 	}
 }
 
-func RecordEvent(subject string, rType uint8, details string, c *context.Context) error {
-	db := c.NewDataContext(context.DefaultDB, "Record Event")
+func RecordEvent(subject string, rType uint8, details string, c *context.C) error {
+	db := c.NewDB(context.DefaultDB, "Record Event")
 	query := "INSERT INTO event SELECT ?, ?, ?, ?"
 
 	if _, err := db.Connection().Exec(query, subject, rType, details, time.Now()); err != nil {

@@ -1,15 +1,15 @@
 package context
 
 import (
-    "time"
+	"time"
 )
 
 type Handler interface {
-    StartTransaction(i string) *Transaction
-    CurrentTransaction() *Transaction
-    GetDuration() time.Duration
-    Error(err error)
-    End()
-    Status() string
-    String() string
+	StartTransaction(i string) *Tx
+	CurrentTransaction() *Tx
+	GetDuration() time.Duration
+	Error(err error)
+	End()
+	Status() string
+	String() string
 }
