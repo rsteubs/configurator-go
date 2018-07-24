@@ -63,9 +63,10 @@ func AuthorizeClient(c *EchoContext) (int, error) {
 func _createAccount(c *EchoContext) func() error {
 	return func() error {
 		d := struct {
-			U string `json:"username"`
-			P string `json:"password"`
-			C string `json:"captcha"`
+			U  string `json:"username"`
+			Co string `json:"company"`
+			P  string `json:"password"`
+			C  string `json:"captcha"`
 		}{}
 
 		if err := json.NewDecoder(c.Request().Body).Decode(&d); err != nil {
@@ -74,7 +75,11 @@ func _createAccount(c *EchoContext) func() error {
 			return c.Error(http.StatusBadRequest, errors.New("Must supply a username and a password"))
 		} else if err := verifyCaptcha(d.C, c); err != nil {
 			return c.Error(http.StatusBadRequest, err)
-		} else if h, err := service.CreateProfile(d.U, d.P, c.Context()); err != nil {
+		} else if h, err := service.CreateProfile(d.U, d.Co, d.P, c.Context()); err != nil {
+			if sErr, ok := err.(service.Error); ok {
+				return c.Error(http.StatusBadRequest, sErr)
+			}
+
 			return c.Error(http.StatusInternalServerError, err)
 		} else if t, err := _createToken(h); err != nil {
 			return c.Error(http.StatusInternalServerError, err)

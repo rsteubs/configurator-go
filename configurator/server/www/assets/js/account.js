@@ -1,10 +1,37 @@
 $(function() {
-    $("#signIn").click(function() {
+    $("[rel=sign-up]").hide();
+    $(".accountDialog").show();
+        
+    $(".accountDialog button").click(function() {
+        var el = $(this);
+
+        switch (el.attr("action")) {
+            case "signIn" : { signIn(); break; }
+            
+            case "register" : { 
+                $("[rel=sign-in]").hide(); 
+                $("[rel=sign-up]").show(); 
+                $(".title").text("Sign Up");
+                break; 
+            }
+            
+            case "createAccount" : { createAccount(); break; }
+            
+            case "backToSignIn" : { 
+                $("[rel=sign-in]").show(); 
+                $("[rel=sign-up]").hide(); 
+                $(".title").text("Sign In");
+                break; 
+            }
+        }
+    });
+    
+    function signIn() {
         event.preventDefault();
 
         var uname = $("#username").val();
         var pwd = $("#password").val();
-        var captcha = $("#g-recaptcha-response") .val();
+        var captcha = $("#g-recaptcha-response").val();
         
         $.post(
             "/auth", 
@@ -33,27 +60,28 @@ $(function() {
         )
         .fail(function(resp) {
             var response = resp.responseJSON && resp.responseJSON.response;
-            var message = (response && response.status < 500 && response.statusMessage) || "Your username or password were not accepted. Please try again, or create a new account.";
+            var message = (resp.status < 500 && resp.responseJSON && resp.responseJSON.message) || "Your username or password were not accepted. Please try again, or create a new account.";
+
 
             window.alert(message);
-            grecaptcha.reset();
         });
-    });
+    }
 
-    $("#createAccount").click(function(ev) {
-        event.preventDefault();
+    function createAccount() {
+//         event.preventDefault();
         
-		var createPanel = $(".createAccount")
+// 		var createPanel = $(".createAccount")
 		
-		if (createPanel.height() < 250) {
-    		createPanel.animate({height: "250px"}, 300, "easeInBack");
-    		$("#signIn").hide();
-    		return; 
-		}
+// 		if (createPanel.height() < 250) {
+//     		createPanel.animate({height: "250px"}, 300, "easeInBack");
+//     		$("#signIn").hide();
+//     		return; 
+// 		}
 
         var uname = $("#username").val();
         var pwd = $("#password").val();
         var verify = $("#verify").val();
+        var company = $("#company").val();
         var captcha = $("#g-recaptcha-response") .val();
         
         if (uname === "" || pwd === "") {
@@ -77,6 +105,7 @@ $(function() {
             JSON.stringify({
                 username: uname, 
                 password: pwd,
+                company: company,
                 captcha: captcha,
             }), 
 
@@ -93,10 +122,11 @@ $(function() {
             }
         )
         .fail(function(resp) {
-            var response = resp.responseJSON && resp.responseJSON.response;
-            var message = (response && response.status < 500 && response.statusMessage) || "There was an issue creating your account. Please try again.";
+            console.log("message", resp)
+            var message = (resp.status < 500 && resp.responseJSON && resp.responseJSON.message) || "There was an issue creating your account. Please try again.";
 
             window.alert(message);
+            grecaptcha.reset();
         });
-    });
+    }
 });

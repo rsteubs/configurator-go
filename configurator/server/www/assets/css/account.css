@@ -1,46 +1,27 @@
-.account form {
-    background: blue;
-    position: relative;
-    border: 10px solid white;
-    border-radius: 8px;
-    padding: 10px;
-    width: 600px;
-    margin: 0px auto;
-    top: 200px;
-}
-
-.account form label {
-    display: block;
-    font-size: 1.25em;
-    font-weight: bold;
-    color: white;
-    margin: 20px;
-}
-
-.account form label input {
-    display: block;
-    font-weight: bold;
-    font-size: 1.25em;
-    border: 1px solid white;
-    border-radius: 8px;
-    margin-top: 5px;
-}
-
-.account form .g-recaptcha {
+.accountDialog .g-recaptcha {
     margin: 40px 20px;
 }
 
-.account form button {
-    background: grey;
-    color: yellow;
-    font-weight: bold;
-    font-size: 1.5em;
-    border: 1px solid white;
-    padding: 5px;
-    margin: 0px 20px;
-}
-
-.account form .createAccount {
+.accountDialog .createAccount {
     overflow: hidden;
     height: 0px;
+}
+
+.accountDialog label {
+	padding-left: 5px;
+}
+
+.accountDialog input, .accountDialog textarea {
+	display: block;
+    background: #532059;
+    color: white;
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-left:  -5px;
+}
+
+.accountDialog .g-recaptcha {
+    margin: 0px 40px;
 }

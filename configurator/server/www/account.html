@@ -30,23 +30,36 @@
 
 	<body>
 		<header>
-			<img class="logo" src="./assets/img/logo.png" />
+			<img class="logo" src="./assets/img/logo-small.png" />
 		</header>
 
-		<section class="account">
-			<form>
+		<div class="dialog accountDialog">
+			<div class="drop-shadow"></div>
+			
+			<div class="contentBody">
+				<div class="title">Sign In</div>
+				
 				<label>Username (Email): <input id="username" type="email" /></label>
 				<label>Password: <input id="password" type="password" /></label>
 				
-				<div class="createAccount">
+				<div rel="sign-up">
 					<label>Verify Password: <input id="verify" type="password" /></label>
+					
+					<label>Company (optional): <input id="company" type="text" /></label>
 					
 					<div class="g-recaptcha" data-sitekey="6LdIR0cUAAAAAMa9h8RXFnQ0-mLmFiWl_KNHqmjW"></div>
 				</div>
 				
-				<button id="signIn">Sign In</button>
-				<button id="createAccount">Create Account</button>
-			</form>
-		</section>
+				<div class="buttons" rel="sign-in">
+					<button class="button-main" action="signIn">Sign In</button>
+					<button class="button-secondary" action="register">Create Account</button>
+				</div>
+				
+				<div class="buttons" rel="sign-up">
+					<button class="button-main" action="createAccount">Create Account</button>
+					<button class="button-secondary" action="backToSignIn">Back</button>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>

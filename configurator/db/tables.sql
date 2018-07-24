@@ -3,10 +3,11 @@ CREATE TABLE IF NOT EXISTS profile
 	handle varbinary(12) PRIMARY KEY NOT NULL,
 	username nvarchar(20) NOT NULL,
 	password varbinary(70)  NOT NULL,
+	company varbinary(100) NOT NULL,
 	salt varbinary(5) NOT NULL,
 	status tinyint NOT NULL,
 	
-	UNIQUE INDEX ix_profile_username (username)
+	INDEX ix_profile_username_status (username, status)
 );
 
 CREATE TABLE IF NOT EXISTS project

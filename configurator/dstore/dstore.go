@@ -1,31 +1,12 @@
 package dstore
 
 import (
-	"database/sql"
+	"encoding/base64"
+	"errors"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
-
-	"cretin.co/forge/1.1/app"
 	"cretin.co/forge/1.1/context"
 )
-
-type Profile struct {
-	Handle   string
-	Username string
-	Password string
-	Salt     string
-	Status   uint8
-}
-
-type Project struct {
-	Handle      string
-	Owner       string
-	Title       string
-	Description string
-	Content     string
-	Status      uint8
-}
 
 type Error struct {
 	msg string
@@ -39,161 +20,6 @@ func (err Error) Error() string {
 
 func notFoundError() Error { return Error{"No data found"} }
 
-func CreateProfile(username, password, salt string, c *context.C) (string, error) {
-	db := c.NewDB(context.DefaultDB, "import user")
-
-	handle := app.NewHandle(7)
-
-	if _, err := db.Connection().Exec("INSERT INTO profile SELECT ?,?,?,?,1", handle, username, password, salt); err != nil {
-		context.Logf(context.Error, "Could not create user profile: %v", err)
-		db.Error(err)
-
-		return "", err
-	} else {
-		return handle, nil
-	}
-
-}
-
-func FetchProfile(username string, c *context.C) (Profile, error) {
-	db := c.NewDB(context.DefaultDB, "fetch user")
-	p := Profile{}
-
-	query := "SELECT handle, username, password, salt, status FROM profile WHERE username = ?"
-	result := db.Connection().QueryRow(query, username)
-
-	if err := result.Scan(&p.Handle, &p.Username, &p.Password, &p.Salt, &p.Status); err != nil {
-		if err == sql.ErrNoRows {
-			return Profile{}, nil
-		}
-
-		context.Logf(context.Error, "Could not fetch profile: %v", err)
-		db.Error(err)
-
-		return Profile{}, nil
-	}
-
-	return p, nil
-}
-
-func SetProfileStatus(handle string, status uint8, c *context.C) error {
-	db := c.NewDB(context.DefaultDB, "update profile status")
-	query := "UPDATE profile SET status = ? WHERE handle = ?"
-
-	if _, err := db.Connection().Exec(query, status, handle); err != nil {
-		context.Logf(context.Error, "Error updating profile: %v", err)
-		db.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func CreateProject(owner string, c *context.C) (string, error) {
-	db := c.NewDB(context.DefaultDB, "Create Project")
-	query := "INSERT INTO project SELECT ?, ?, '', '', '', 10"
-
-	handle := app.NewHandle(7)
-
-	if _, err := db.Connection().Exec(query, handle, owner); err != nil {
-		context.Logf(context.Error, "Error creating project: %v", err)
-		db.Error(err)
-		return "", err
-	}
-
-	return handle, nil
-}
-
-func FetchAllProjects(owner string, c *context.C) ([]string, error) {
-	db := c.NewDB(context.DefaultDB, "Get Project")
-	query := "SELECT handle FROM project WHERE owner = ? AND status = ?"
-
-	if rows, err := db.Connection().Query(query, owner, 10); err != nil {
-		db.Error(err)
-		return nil, err
-	} else {
-		var list []string
-
-		for rows.Next() {
-			var handle string
-
-			if err := rows.Scan(&handle); err != nil {
-				context.Logf(context.Warn, "Error reading project handle: %v", err)
-			} else {
-				list = append(list, handle)
-			}
-		}
-
-		return list[:], nil
-	}
-}
-
-func FetchProject(owner, handle string, c *context.C) (Project, error) {
-	db := c.NewDB(context.DefaultDB, "Fetch Project")
-	query := "SELECT handle, owner, title, description, content, status FROM project WHERE owner = ? AND handle = ?"
-
-	p := Project{}
-	result := db.Connection().QueryRow(query, owner, handle)
-
-	if err := result.Scan(&p.Handle, &p.Owner, &p.Title, &p.Description, &p.Content, &p.Status); err != nil {
-		if err == sql.ErrNoRows {
-			return Project{}, nil
-		}
-
-		context.Logf(context.Error, "Could not fetch project: %v", err)
-		db.Error(err)
-
-		return Project{}, err
-	}
-
-	return p, nil
-}
-
-func UpdateProject(owner string, p Project, c *context.C) error {
-	db := c.NewDB(context.DefaultDB, "Record Event")
-	query := "UPDATE project SET title = ?, description = ?, content = ? WHERE handle = ? AND owner = ?"
-
-	_, err := db.Connection().Exec(query, p.Title, p.Description, p.Content, p.Handle, owner)
-
-	return err
-}
-
-func WriteToken(owner, token string, expiration time.Time, c *context.C) error {
-	db := c.NewDB(context.DefaultDB, "Create Token")
-	query := "INSERT INTO token SELECT ?, ?, ?"
-
-	if _, err := db.Connection().Exec(query, token, owner, expiration); err != nil {
-		context.Logf(context.Error, "Could not create user token: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func VerifyToken(owner, token string, c *context.C) error {
-	db := c.NewDB(context.DefaultDB, "Verify Token")
-	query := "SELECT 1 FROM token WHERE owner = ? AND token = ? AND expiresOn >= now()"
-
-	if row, err := db.Connection().Query(query, owner, token); err != nil {
-		context.Logf(context.Error, "Error validating token: %v", err)
-		return err
-	} else {
-		var found int
-
-		if err := row.Scan(&found); err != nil {
-			if err == sql.ErrNoRows {
-				return notFoundError()
-			} else {
-				return err
-			}
-		} else if found != 1 {
-			return notFoundError()
-		}
-
-		return nil
-	}
-}
-
 func RecordEvent(subject string, rType uint8, details string, c *context.C) error {
 	db := c.NewDB(context.DefaultDB, "Record Event")
 	query := "INSERT INTO event SELECT ?, ?, ?, ?"
@@ -206,4 +32,20 @@ func RecordEvent(subject string, rType uint8, details string, c *context.C) erro
 	}
 
 	return nil
+}
+
+func decodeString(val string) ([]byte, error) {
+	if dec, err := base64.StdEncoding.DecodeString(val); err == nil {
+		return dec, nil
+	} else if dec, err := base64.RawStdEncoding.DecodeString(val); err != nil {
+		return dec, nil
+	} else if dec, err := base64.RawURLEncoding.DecodeString(val); err != nil {
+		return dec, nil
+	}
+
+	return []byte{}, errors.New("Error encountered while decoding value")
+}
+
+func encodeToString(val []byte) string {
+	return base64.StdEncoding.EncodeToString(val)
 }

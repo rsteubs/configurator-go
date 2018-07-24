@@ -29,15 +29,18 @@ func (err Error) Error() string {
 	return err.msg
 }
 
-func invalidTokenError() Error { return Error{"User is not authenticated."} }
-func invalidUserError() Error  { return Error{"User does not exist or password is invalid."} }
+func invalidTokenError() Error  { return Error{"User is not authenticated."} }
+func invalidUserError() Error   { return Error{"User does not exist or password is invalid."} }
+func duplicateUserError() Error { return Error{"User name already exists."} }
 
 func Authenticate(username, pwd string, c *context.C) (User, error) {
 	tx := c.Getf("authenticating - %s", username)
 
-	if p, err := dstore.FetchProfile(username, c); err != nil {
+	if p, err := dstore.FetchProfile(username, active.AsUint(), c); err != nil {
 		tx.Startf("fail - %v", err)
 		return User{}, err
+	} else if len(p.Handle) == 0 {
+		return User{}, invalidUserError()
 	} else {
 		runes := []rune(pwd)
 		test := fmt.Sprintf("%s_%s_%s", runes[0:4], p.Salt, runes[4:])
@@ -61,7 +64,7 @@ func Authenticate(username, pwd string, c *context.C) (User, error) {
 }
 
 func Authorize(username, token string, c *context.C) (User, error) {
-	if p, err := dstore.FetchProfile(username, c); err != nil {
+	if p, err := dstore.FetchProfile(username, active.AsUint(), c); err != nil {
 		return User{}, err
 	} else if err := dstore.VerifyToken(p.Handle, token, c); err != nil {
 		if _, ok := err.(dstore.Error); ok {
@@ -74,7 +77,13 @@ func Authorize(username, token string, c *context.C) (User, error) {
 	}
 }
 
-func CreateProfile(username, pwd string, c *context.C) (string, error) {
+func CreateProfile(username, co, pwd string, c *context.C) (string, error) {
+	if p, err := dstore.FetchProfile(username, active.AsUint(), c); err != nil {
+		context.Logf(context.Warn, "Error fetching user (%s): %v", username, err)
+	} else if p.Username == username && (p.Status == active.AsUint() || p.Status == pending.AsUint()) {
+		return "", duplicateUserError()
+	}
+
 	salt := app.NewHandle(5)
 	runes := []rune(pwd)
 
@@ -84,7 +93,7 @@ func CreateProfile(username, pwd string, c *context.C) (string, error) {
 	context.Logf(context.Trace, "Raw password: %s", pwd)
 	context.Logf(context.Trace, "Salted password: %s", password)
 
-	return dstore.CreateProfile(username, string(h[:]), salt, c)
+	return dstore.CreateProfile(username, co, string(h[:]), salt, pending.AsUint(), c)
 }
 
 func (u User) genToken(c *context.C) {
