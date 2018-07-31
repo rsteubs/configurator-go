@@ -1,13 +1,25 @@
-CREATE TABLE IF NOT EXISTS profile
+CREATE TABLE IF NOT EXISTS account
 (
 	handle varbinary(12) PRIMARY KEY NOT NULL,
 	username nvarchar(20) NOT NULL,
 	password varbinary(70)  NOT NULL,
-	company varbinary(100) NOT NULL,
 	salt varbinary(5) NOT NULL,
 	status tinyint NOT NULL,
+	recordDate datettime NOT NULL,
 	
-	INDEX ix_profile_username_status (username, status)
+	INDEX ix_account_username_status (username, status)
+);
+
+CREATE TABLE IF NOT EXISTS profile
+(
+	handle varbinary(12) PRIMARY KEY NOT NULL,
+	company varbinary(100) NOT NULL,
+	title varbinary(100) NOT NULL,
+	phoneNumber varbinary(30) NOT NULL,
+	status tinyint NOT NULL,
+	recordDate datettime NOT NULL,
+	
+	INDEX ix_profile_handle_status (handle, status)
 );
 
 CREATE TABLE IF NOT EXISTS project
@@ -34,7 +46,7 @@ CREATE TABLE IF NOT EXISTS eventLog
 
 CREATE TABLE IF NOT EXISTS token
 (
-	handle varbinary(15) NOT NULL,
+	handle varbinary(60) NOT NULL,
 	owner varbinary(12) NOT NULL,
 	expiresOn datetime NOT NULL,
 	

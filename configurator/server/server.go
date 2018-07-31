@@ -18,5 +18,8 @@ func Start() {
 	pr.PUT("/:handle", NewEchoContext(UpdateProject, "Update Project"))
 	pr.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client"))
 
+	admin := s.Group("/admin")
+	admin.GET("/all-accounts", NewEchoContext(GetAllAccounts, "Admin - Get All Accounts"))
+
 	s.Logger.Fatal(s.Start(":" + app.Environment("PORT")))
 }

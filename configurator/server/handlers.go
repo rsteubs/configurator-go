@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -35,6 +38,10 @@ func UpdateProject(c *EchoContext) error {
 
 func GetProjects(c *EchoContext) error {
 	return _getProjects(c)()
+}
+
+func GetAllAccounts(c *EchoContext) error {
+	return _getAllAccounts(c)()
 }
 
 func AuthorizeClient(c *EchoContext) (int, error) {
@@ -75,19 +82,25 @@ func _createAccount(c *EchoContext) func() error {
 			return c.Error(http.StatusBadRequest, errors.New("Must supply a username and a password"))
 		} else if err := verifyCaptcha(d.C, c); err != nil {
 			return c.Error(http.StatusBadRequest, err)
-		} else if h, err := service.CreateProfile(d.U, d.Co, d.P, c.Context()); err != nil {
-			if sErr, ok := err.(service.Error); ok {
-				return c.Error(http.StatusBadRequest, sErr)
+		} else {
+			p := service.Profile{
+				Company: d.Co,
 			}
 
-			return c.Error(http.StatusInternalServerError, err)
-		} else if t, err := _createToken(h); err != nil {
-			return c.Error(http.StatusInternalServerError, err)
-		} else {
-			return c.End(http.StatusOK, struct {
-				H string `json:"handle"`
-				T string `json:"token"`
-			}{h, t})
+			if h, err := service.CreateUser(d.U, d.P, p, c.Context()); err != nil {
+				if sErr, ok := err.(service.Error); ok {
+					return c.Error(http.StatusBadRequest, sErr)
+				}
+
+				return c.Error(http.StatusInternalServerError, err)
+			} else if t, err := _createToken(h); err != nil {
+				return c.Error(http.StatusInternalServerError, err)
+			} else {
+				return c.End(http.StatusOK, struct {
+					H string `json:"handle"`
+					T string `json:"token"`
+				}{h, t})
+			}
 		}
 	}
 }
@@ -113,15 +126,12 @@ func _auth(c *EchoContext) func() error {
 			} else {
 				return c.Error(http.StatusInternalServerError, err)
 			}
-		} else if t, err := _createToken(u.Handle); err != nil {
-			context.Logf(context.Error, "Error signing token for %s: %v", u.Handle, err)
-			return c.Error(http.StatusInternalServerError, err)
 		} else {
 			return c.End(http.StatusOK, struct {
 				H string    `json:"handle"`
 				T string    `json:"token"`
 				E time.Time `json:"expiration"`
-			}{u.Handle, t, time.Now().Add(time.Minute * 30).UTC()})
+			}{u.Handle, u.Token, time.Now().Add(time.Minute * 30).UTC()})
 		}
 	}
 }
@@ -187,6 +197,75 @@ func _getProjects(c *EchoContext) func() error {
 			}
 
 			return c.End(status, out[:index])
+		}
+	}
+}
+
+func _getAllAccounts(c *EchoContext) func() error {
+	return func() error {
+		if u, err := authUser(c); err != nil {
+			return err
+		} else if l, err := u.ProfileList(c.Context()); err != nil {
+			return c.Error(http.StatusInternalServerError, err)
+		} else {
+			type account struct {
+				Handle      string `json:"handle"`
+				Username    string `json:"username"`
+				Role        string `json:"role"`
+				Status      string `json:"status"`
+				Company     string `json:"company"`
+				Title       string `json:"title"`
+				PhoneNumber string `json:"phoneNumber"`
+			}
+
+			out := []account{}
+			ch := make(chan []account)
+
+			pageSize := 50
+			pages := int(math.Ceil(float64(len(l)) / float64(pageSize)))
+
+			for page := 0; page < pages; page++ {
+				do := func(p []service.UserAccount) {
+					l := make([]account, len(p))
+
+					for i, x := range p {
+						a := account{}
+
+						app.TranslateCustom(x, &a, func(name string, value reflect.Value) reflect.Value {
+							switch name {
+							case "Role":
+								return reflect.ValueOf(service.UserRole(value.Uint()).String())
+							case "Status":
+								return reflect.ValueOf(service.StatusCode(value.Uint()).String())
+							default:
+								return value
+							}
+						})
+
+						app.Translate(x.Profile, &a)
+
+						l[i] = a
+					}
+
+					ch <- l
+				}
+
+				if page == pages-1 {
+					go do(l[page*pageSize:])
+				} else {
+					go do(l[page*pageSize : page*pageSize+pageSize])
+				}
+			}
+
+			for i := 0; i < pages; i++ {
+				x := <-ch
+				out = append(out, x...)
+			}
+
+			return c.End(http.StatusOK, struct {
+				C int       `json:"count"`
+				A []account `json:"accounts"`
+			}{len(out), out})
 		}
 	}
 }
@@ -270,4 +349,28 @@ func verifyCaptcha(captcha string, c *EchoContext) error {
 	}
 
 	return nil
+}
+
+func authUser(c *EchoContext) (service.User, error) {
+	a := strings.Split(c.Request().Header.Get("x-configurator-auth"), ":")
+
+	if len(a) < 2 {
+		err := errors.New("Could not authenticate user - no credetials supplied.")
+
+		c.Error(http.StatusUnauthorized, err)
+		return service.User{}, err
+	}
+
+	if u, err := service.Authorize(a[0], a[1], c.Context()); err != nil {
+		if uErr, ok := err.(service.Error); ok {
+			c.Error(http.StatusUnauthorized, uErr)
+			return service.User{}, uErr
+		}
+
+		c.Error(http.StatusInternalServerError, err)
+
+		return service.User{}, err
+	} else {
+		return u, nil
+	}
 }

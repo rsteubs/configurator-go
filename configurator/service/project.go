@@ -63,9 +63,11 @@ func RetrieveProject(owner string, project string, c *context.C) (Project, error
 		p := Project{}
 
 		app.TranslateCustom(d, &p, func(name string, field reflect.Value) reflect.Value {
-			switch (name) {
-				case "Status" : return ValueAsStatusCode(field)
-				default	: return field
+			switch name {
+			case "Status":
+				return valueAsStatusCode(field)
+			default:
+				return field
 			}
 		})
 
