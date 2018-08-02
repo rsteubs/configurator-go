@@ -1,7 +1,7 @@
 package server
 
 import (
-	"cretin.co/forge/1.1/app"
+	"github.com/cptcretin/forge/app"
 )
 
 func Start() {

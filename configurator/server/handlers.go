@@ -14,8 +14,8 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 
-	"cretin.co/forge/1.1/app"
-	"cretin.co/forge/1.1/context"
+	"github.com/cptcretin/forge/app"
+	"github.com/cptcretin/forge/context"
 
 	"configurator/service"
 )

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"cretin.co/forge/1.1/context"
+	"github.com/cptcretin/forge/context"
 )
 
 type Error struct {

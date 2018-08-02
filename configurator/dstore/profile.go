@@ -7,8 +7,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"cretin.co/forge/1.1/app"
-	"cretin.co/forge/1.1/context"
+	"github.com/cptcretin/forge/app"
+	"github.com/cptcretin/forge/context"
 )
 
 type Account struct {

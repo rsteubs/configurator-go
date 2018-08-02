@@ -3,7 +3,19 @@
 	"ignore": "test",
 	"package": [
 		{
+			"path": "app",
+			"revision": ""
+		},
+		{
 			"path": "appengine/cloudsql",
+			"revision": ""
+		},
+		{
+			"path": "context",
+			"revision": ""
+		},
+		{
+			"path": "forge/1.0/app",
 			"revision": ""
 		},
 		{
@@ -35,6 +47,12 @@
 			"path": "github.com/gorilla/mux",
 			"revision": "c0091a029979286890368b4c7b301261e448e242",
 			"revisionTime": "2018-01-20T07:58:19Z"
+		},
+		{
+			"checksumSHA1": "SbguDK5lY8uhaHNrmJmNbiWIGM0=",
+			"path": "github.com/kr/text",
+			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
+			"revisionTime": "2018-05-06T08:24:08Z"
 		},
 		{
 			"checksumSHA1": "5iqm7GXIAWdlSGO7ZGgFTrLZaVw=",
@@ -131,6 +149,10 @@
 			"path": "google.golang.org/appengine/cloudsql",
 			"revision": "5bee14b453b4c71be47ec1781b0fa61c2ea182db",
 			"revisionTime": "2017-12-12T22:30:47Z"
+		},
+		{
+			"path": "logger",
+			"revision": ""
 		}
 	],
 	"rootPath": "configurator"
