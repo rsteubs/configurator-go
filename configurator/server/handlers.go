@@ -44,6 +44,18 @@ func GetAllAccounts(c *EchoContext) error {
 	return _getAllAccounts(c)()
 }
 
+func ApproveAccount(c *EchoContext) error {
+	return _approveAccount(c)()
+}
+
+func SuspendAccount(c *EchoContext) error {
+	return _suspendAccount(c)()
+}
+
+func DenyAccount(c *EchoContext) error {
+	return _denyAccount(c)()
+}
+
 func AuthorizeClient(c *EchoContext) (int, error) {
 	t := c.Request().Header.Get("Authorization")
 	u := c.Request().Header.Get("x-configurator-user")
@@ -321,6 +333,60 @@ func _createToken(handle string) (string, error) {
 	})
 
 	return t.SignedString([]byte(handle))
+}
+
+func _approveAccount(c *EchoContext) func() error {
+	h := c.Param("handle")
+
+	return func() error {
+		if u, err := authUser(c); err != nil {
+			return err
+		} else if err := u.ApproveAccount(h, c.Context()); err != nil {
+			if sErr, ok := err.(service.Error); ok {
+				return c.Error(http.StatusBadRequest, sErr)
+			}
+
+			return c.Error(http.StatusInternalServerError, err)
+		}
+
+		return c.End(http.StatusOK, nil)
+	}
+}
+
+func _suspendAccount(c *EchoContext) func() error {
+	h := c.Param("handle")
+
+	return func() error {
+		if u, err := authUser(c); err != nil {
+			return err
+		} else if err := u.SuspendAccount(h, c.Context()); err != nil {
+			if sErr, ok := err.(service.Error); ok {
+				return c.Error(http.StatusBadRequest, sErr)
+			}
+
+			return c.Error(http.StatusInternalServerError, err)
+		}
+
+		return c.End(http.StatusOK, nil)
+	}
+}
+
+func _denyAccount(c *EchoContext) func() error {
+	h := c.Param("handle")
+
+	return func() error {
+		if u, err := authUser(c); err != nil {
+			return err
+		} else if err := u.DismissAccount(h, c.Context()); err != nil {
+			if sErr, ok := err.(service.Error); ok {
+				return c.Error(http.StatusBadRequest, sErr)
+			}
+
+			return c.Error(http.StatusInternalServerError, err)
+		}
+
+		return c.End(http.StatusOK, nil)
+	}
 }
 
 func verifyCaptcha(captcha string, c *EchoContext) error {

@@ -7,6 +7,14 @@ import (
 type StatusCode uint8
 type UserRole uint8
 
+type Error struct {
+	msg string
+}
+
+func (err Error) Error() string {
+	return err.msg
+}
+
 const (
 	active    = StatusCode(10)
 	pending   = StatusCode(20)
@@ -17,6 +25,9 @@ const (
 	reseller = UserRole(20)
 	admin    = UserRole(30)
 )
+
+func invalidStatusCodeErr() Error { return Error{"Invalid account status"} }
+func invalidUserRoleErr() Error   { return Error{"Invalid user role"} }
 
 func (v StatusCode) String() string {
 	switch v {
@@ -35,6 +46,22 @@ func (v StatusCode) String() string {
 
 func (v StatusCode) AsUint() uint8 {
 	return uint8(v)
+}
+
+func ParseStatusCode(v string) (StatusCode, error) {
+
+	switch v {
+	case "active":
+		return active, nil
+	case "pending":
+		return pending, nil
+	case "suspended":
+		return suspended, nil
+	case "archived":
+		return archived, nil
+	default:
+		return StatusCode(0), invalidStatusCodeErr()
+	}
 }
 
 func valueAsStatusCode(v reflect.Value) reflect.Value {
@@ -56,6 +83,19 @@ func (v UserRole) String() string {
 
 func (v UserRole) AsUint() uint8 {
 	return uint8(v)
+}
+
+func ParseUserRole(v string) (UserRole, error) {
+	switch v {
+	case "general":
+		return general, nil
+	case "reseller":
+		return reseller, nil
+	case "admin":
+		return admin, nil
+	default:
+		return UserRole(0), invalidUserRoleErr()
+	}
 }
 
 func valueAsUserRole(v reflect.Value) reflect.Value {

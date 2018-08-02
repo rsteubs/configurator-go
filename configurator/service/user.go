@@ -24,18 +24,10 @@ type Profile struct {
 	PhoneNumber string
 }
 
-type Error struct {
-	msg string
-}
-
 const (
 	tokenLength    = 10
 	tokenExpiresIn = 30
 )
-
-func (err Error) Error() string {
-	return err.msg
-}
 
 func invalidTokenError() Error  { return Error{"User is not authenticated."} }
 func invalidUserError() Error   { return Error{"User does not exist or password is invalid."} }

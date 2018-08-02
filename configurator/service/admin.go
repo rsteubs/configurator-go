@@ -85,3 +85,27 @@ func (u User) ProfileList(c *context.C) ([]UserAccount, error) {
 		return out, nil
 	}
 }
+
+func (u User) ApproveAccount(h string, c *context.C) error {
+	if !u.valid() || u.Role != admin {
+		return invalidUserError()
+	}
+
+	return dstore.SetAccountStatus(h, active.AsUint(), c)
+}
+
+func (u User) SuspendAccount(h string, c *context.C) error {
+	if !u.valid() || u.Role != admin {
+		return invalidUserError()
+	}
+
+	return dstore.SetAccountStatus(h, suspended.AsUint(), c)
+}
+
+func (u User) DismissAccount(h string, c *context.C) error {
+	if !u.valid() || u.Role != admin {
+		return invalidUserError()
+	}
+
+	return dstore.SetAccountStatus(h, archived.AsUint(), c)
+}

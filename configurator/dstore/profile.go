@@ -142,7 +142,7 @@ func FetchUser(h string, status uint8, c *context.C) (Account, Profile, error) {
 }
 
 func SetAccountStatus(handle string, status uint8, c *context.C) error {
-	db := c.NewDB(context.DefaultDB, "update profile status")
+	db := c.NewDB(context.DefaultDB, "update account status")
 	query := "UPDATE account SET status = ? WHERE handle = ?"
 
 	if _, err := db.Connection().Exec(query, status, handle); err != nil {
