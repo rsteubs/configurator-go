@@ -21,11 +21,11 @@ type Project struct {
 func projectNotAvailableError() Error { return Error{"The project does not exist or is not available."} }
 
 func CreateProject(owner string, c *context.C) (string, error) {
-	return dstore.CreateProject(owner, c)
+	return dstore.CreateProject(owner, uint8(pending), c)
 }
 
 func GetProjects(owner string, c *context.C) ([]Project, error) {
-	if h, err := dstore.FetchAllProjects(owner, c); err != nil {
+	if h, err := dstore.FetchAllProjects(owner, uint8(active), c); err != nil {
 		return nil, err
 	} else {
 		list := make([]Project, len(h))
@@ -76,6 +76,8 @@ func RetrieveProject(owner string, project string, c *context.C) (Project, error
 }
 
 func SaveProject(user string, p Project, c *context.C) error {
+	p.Status = active
+
 	d := dstore.Project{}
 
 	app.TranslateCustom(p, &d, func(name string, value reflect.Value) reflect.Value {
@@ -87,4 +89,18 @@ func SaveProject(user string, p Project, c *context.C) error {
 	})
 
 	return dstore.UpdateProject(user, d, c)
+}
+
+func DeleteProject(owner, h string, c *context.C) error {
+	if d, err := dstore.FetchProject(owner, h, c); err != nil {
+		if _, ok := err.(dstore.Error); ok {
+			return projectNotAvailableError()
+		} else {
+			return err
+		}
+	} else {
+		d.Status = uint8(archived)
+
+		return dstore.UpdateProject(owner, d, c)
+	}
 }

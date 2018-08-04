@@ -74,7 +74,7 @@ $( function() {
 		switch(val) {
 			case "newProject" : startProject(); break;
 			case "openProject" : openProject(); break;
-			case "saveProject" : saveProject(); break;
+			case "saveProject" : saveCurrentProject(); break;
 			case "export" : exportProject(); break;
 			case "closeProject" : closeProject(); break;
 			case "print" : printProject(); break;
@@ -91,7 +91,7 @@ $( function() {
 	} 
 
 	if (Cookies.get("_save")) {
-		 saveProject();		
+		 saveCurrentProject();		
 	} 
 
 	if (Cookies.get("auth")) {
@@ -523,14 +523,24 @@ function openProject() {
 	}
 }
 
-function saveProject() {
-	var ws = compressWorkspace();
-	
-	console.log("compressed to", ws);
-	
-	Cookies.remove("_ws");
-	Cookies.remove("_save");
-	
+function saveCurrentProject() {
+	if (!Cookies.get("auth")) {
+		Cookies.set("_ws", ws);
+		Cookies.set("_save", 1);
+		
+		window.location = "/account.html";
+	} else {
+		Cookies.remove("_ws");
+		Cookies.remove("_save");
+
+		var ws = compressWorkspace();
+		var h = Cookies.get("ws");
+		
+		saveProject(ws, h);
+	}
+}
+
+function saveProject(ws, handle) {
 	var token = Cookies.get("auth");
 	var user = Cookies.get("user");
 
@@ -565,47 +575,78 @@ function saveProject() {
 		});
     };
 
-	if (token) {
-		var dialog = $(".saveProject")
+	var dialog = $(".saveProject")
+	
+	dialog.show();
+	dialog.find("input").focus();
+	
+	dialog.find("button[action=save]").click(function() {
+		if (handle && handle.length > 0) {
+			doSave(handle);
+		} else {
+			createProject(
+				function(resp) { 
+					doSave(resp.data.handle);
+				},
+				function(resp) {
+		            var response = resp.responseJSON && resp.responseJSON.response;
+		            var message = (response && response.status < 500 && response.statusMessage) || "There was a problem saving your project. Please try again later.";
 		
-		dialog.show();
-		dialog.find("input").focus();
+		            window.alert(message);
+				}
+			);
+		}
 		
-		dialog.find("button[action=save]").click(function() {
-			Cookies.remove("_save");
-			
-			var handle = Cookies.get("ws");
+		dialog.find("button[action=save]").unbind("click");
+	});
 
-			if (handle && handle.length > 0) {
-				doSave(handle);
-			} else {
-				createProject(
-					function(resp) { 
-						doSave(resp.data.handle);
-					},
-					function(resp) {
-			            var response = resp.responseJSON && resp.responseJSON.response;
-			            var message = (response && response.status < 500 && response.statusMessage) || "There was a problem saving your project. Please try again later.";
-			
-			            window.alert(message);
-					}
-				);
+	dialog.find("button[action=close]").click(function() {
+		dialog.find("button[action=save]").unbind("click");
+		dialog.hide();
+	});
+
+}
+
+function editProject(project) {
+	var dialog = $(".saveProject");
+	
+    dialog.find("[name=projectTitle]").val(project.title);
+    dialog.find("[name=projectDescription]").val(project.description);
+    
+    saveProject(project.content, project.handle);
+}
+
+function copyProject(project) {
+	var dialog = $(".saveProject");
+	
+    dialog.find("[name=projectTitle]").val(project.title + " (Copy)");
+    dialog.find("[name=projectDescription]").val(project.description);
+    
+    saveProject(project.content);
+}
+
+function deleteProject(handle, next) {
+	$.ajax({
+		url: "/project/" + handle,
+		method: "DELETE",
+		
+        headers: {
+        	"Authorization": Cookies.get("auth"),
+        	"x-configurator-user": Cookies.get("user"),
+        }, 
+        
+		success: function() {
+			if (next) {
+				next();
 			}
-			
-			dialog.find("button[action=save]").unbind("click");
-		});
+		}
+	})
+	.fail(function (resp) {
+        var response = resp.responseJSON && resp.responseJSON.response;
+        var message = (response && response.status < 500 && response.statusMessage) || "There was a problem removing your project. Please try again later.";
 
-		dialog.find("button[action=close]").click(function() {
-			dialog.find("button[action=save]").unbind("click");
-			dialog.hide();
-		});
-	} else {
-		Cookies.set("_ws", ws);
-		Cookies.set("_save", 1);
-		
-		window.location = "/account.html";
-	}
-
+        window.alert(message);
+	});	
 }
 
 function exportProject() {
@@ -706,10 +747,10 @@ function loadProjects(next) {
 	var projPanel = function() {
 		return $("<div />")
 			.addClass("action-panel")
-			.append($("<button />").text("Open").addClass("open"))
-			.append($("<button />").addClass("icon ion-edit"))
-			.append($("<button />").addClass("icon ion-close"))
-			.append($("<button />").addClass("icon ion-ios-copy"))
+			.append($("<button />").text("Open").attr("rel", "open").addClass("open"))
+			.append($("<button />").attr("rel", "edit").addClass("icon ion-edit"))
+			.append($("<button />").attr("rel", "delete").addClass("icon ion-close"))
+			.append($("<button />").attr("rel", "copy").addClass("icon ion-ios-copy"))
 	};
 	
 	var projInfo = function(project) {
@@ -746,6 +787,7 @@ function loadProjects(next) {
 			for (var i = 0, project; project = resp.data[i]; i++) {
 				$("<div />")
 					.addClass("project-item")
+					.attr("rel", project.handle)
 					.append(projPanel())
 					.append(projInfo(project))
 					.appendTo(projectList);
@@ -756,6 +798,51 @@ function loadProjects(next) {
 			} else {
 				$(".openProject").find(".button-navigation").hide();
 			}
+
+			projectList.find(".action-panel button")
+				.click(function() {
+					var button = $(this);
+					var item = button.parents(".project-item");
+					var h = item.attr("rel");
+					var project;
+
+					for (var i = 0, p; p = resp.data[i]; i++) {
+						if (p.handle === h) {
+							project = p;
+							break;
+						}
+					}
+
+					if (!project) {
+						return;
+					}
+					
+					switch (button.attr("rel")) {
+						case "open": 
+							Cookies.set("ws", project.handle);
+							decompressWorkspace(project.content);
+							$(".sub-title[rel=project-title]").text(project.title);
+			
+							$(".openProject").hide();
+							
+							break;
+							
+						case "edit" :
+							editProject(project);
+							$(".openProject").hide();
+							
+							break;
+						case "copy" :
+							copyProject(project);
+							$(".openProject").hide();
+							
+							break;
+
+						case "delete" :
+							deleteProject(h);
+							break;
+					}
+				})
 
 			if (next) {
 				next(resp);

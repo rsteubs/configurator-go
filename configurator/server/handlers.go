@@ -40,6 +40,10 @@ func GetProjects(c *EchoContext) error {
 	return _getProjects(c)()
 }
 
+func DeleteProject(c *EchoContext) error {
+	return _deleteProject(c)()
+}
+
 func GetAllAccounts(c *EchoContext) error {
 	return _getAllAccounts(c)()
 }
@@ -317,6 +321,29 @@ func _updateProject(c *EchoContext) func() error {
 				} else {
 					return c.Error(http.StatusInternalServerError, err)
 				}
+			}
+		}
+
+		return c.End(http.StatusOK, nil)
+	}
+}
+
+func _deleteProject(c *EchoContext) func() error {
+	h := c.Param("handle")
+	u := c.Request().Header.Get("x-configurator-user")
+
+	return func() error {
+		if len(h) == 0 {
+			return c.Error(http.StatusBadRequest, errors.New("No project handle supplied"))
+		}
+
+		context.Logf(context.Trace, "Deleting project for %s - %s", u, h)
+
+		if err := service.DeleteProject(u, h, c.Context()); err != nil {
+			if sErr, ok := err.(service.Error); ok {
+				return c.Error(http.StatusNotAcceptable, sErr)
+			} else {
+				return c.Error(http.StatusInternalServerError, err)
 			}
 		}
 

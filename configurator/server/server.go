@@ -16,6 +16,7 @@ func Start() {
 	pr.GET("/", NewEchoContext(GetProjects, "Retrieve Projects"))
 	pr.POST("/", NewEchoContext(CreateProject, "Create Project"))
 	pr.PUT("/:handle", NewEchoContext(UpdateProject, "Update Project"))
+	pr.DELETE("/:handle", NewEchoContext(DeleteProject, "Delete Project"))
 	pr.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client"))
 
 	admin := s.Group("/admin")

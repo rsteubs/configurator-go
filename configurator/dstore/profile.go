@@ -311,7 +311,7 @@ func AccountProfileList(h []string, c *context.C) ([]AccountProfile, error) {
 
 func _readEncodedColumn(name, id, v string) string {
 	if b, err := decodeString(v); err != nil {
-		context.Logf(context.Warn, "Could not %s title (%s): %v", id, err)
+		context.Logf(context.Warn, "Could not read %s (%s): %v", name, id, err)
 		return ""
 	} else {
 		return string(b)
