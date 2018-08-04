@@ -79,6 +79,7 @@ $(function() {
 // 		}
 
         var uname = $("#username").val();
+        var name = $("#name").val();
         var pwd = $("#password").val();
         var verify = $("#verify").val();
         var company = $("#company").val();
@@ -86,6 +87,11 @@ $(function() {
         
         if (uname === "" || pwd === "") {
             alert("Please provide both a username and a password.");
+            return;
+        }
+        
+        if (name === "") {
+            alert("Please provide your full name.");
             return;
         }
         
@@ -105,6 +111,7 @@ $(function() {
             JSON.stringify({
                 username: uname, 
                 password: pwd,
+                name: name,
                 company: company,
                 captcha: captcha,
             }), 

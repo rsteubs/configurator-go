@@ -19,6 +19,7 @@ type User struct {
 }
 
 type Profile struct {
+	Name        string
 	Company     string
 	Title       string
 	PhoneNumber string

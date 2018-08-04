@@ -20,8 +20,8 @@ func Start() {
 
 	admin := s.Group("/admin")
 	admin.GET("/all-accounts", NewEchoContext(GetAllAccounts, "Admin - Get All Accounts"))
-	admin.PUT("/approve/{handle}", NewEchoContext(ApproveAccount, "Admin - Approve Account"))
-	admin.PUT("/suspend/{handle}", NewEchoContext(ApproveAccount, "Admin - Suspend Account"))
-	admin.PUT("/deny/{handle}", NewEchoContext(ApproveAccount, "Admin - Deny Account"))
+	admin.PUT("/approve/:handle", NewEchoContext(ApproveAccount, "Admin - Approve Account"))
+	admin.PUT("/suspend/:handle", NewEchoContext(SuspendAccount, "Admin - Suspend Account"))
+	admin.PUT("/deny/:handle", NewEchoContext(DenyAccount, "Admin - Deny Account"))
 	s.Logger.Fatal(s.Start(":" + app.Environment("PORT")))
 }

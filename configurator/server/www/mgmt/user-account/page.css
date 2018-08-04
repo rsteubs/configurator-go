@@ -1,0 +1,111 @@
+body {
+	margin: 0px;
+	min-width: 0px;
+	min-height: 0px;
+	overflow: visible;
+}
+
+.end {
+	float: right;
+}
+
+.account-list {
+	margin: 150px 10px; 
+	color: white;
+	font-size: 1.25em;
+}
+
+.account-list .tab-bar {
+	margin-bottom: 20px;
+}
+
+.account-list .tab-bar button {
+	margin: 0px 3px;
+	border-radius: 3px;
+}
+
+.account-list .content-body {
+	overflow: hidden;
+}
+
+.account-list .content-body .title {
+	margin: 20px 0px;
+}
+
+.account-list .content-body .title button {
+	font-size: 0.7em;
+}
+
+.account-list .account-item {
+	position: relative;
+	background: #7b2b7f;
+	margin: 9px 0px;
+	padding: 5px;
+}
+
+.account-list .account-item:hover {
+	background: #84449a;	
+}
+
+.account-list .account-item:first-child {
+	margin: 0px;
+}
+
+.account-list .account-item .project-info {
+	cursor: pointer;
+}
+
+.account-list .account-item label, .account-list .account-item p {
+	max-width: calc(60% - 20px);	
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.account-list .account-item label {
+	font-weight: normal;
+	cursor: inherit;
+}
+
+.account-list .account-item p {
+	font-size: 0.75em;
+	opacity: 1;
+}
+
+.account-list .account-item .badge {
+    display: inline-block;
+    background: grey;
+    padding: 5px;
+    font-size: 0.7em;
+    border-radius: 10px;
+}
+
+.account-list .account-item .action-panel {
+	display: block;
+	position: absolute;
+	top: 12px;
+	right: 5px;
+}
+
+.account-list .account-item .action-panel button {
+	display: inline-block;
+	width: 26px;
+	height: 26px;
+	padding: 0px;
+	margin: 0px 10px;
+	color: white;
+	background: transparent;
+	border: 1px solid white;
+	border-radius: 14px;
+	font-size: 1em;
+	cursor: pointer;
+	vertical-align: middle;
+}
+
+.account-list .account-item .action-panel .open {
+    width: auto;
+    height: auto;
+    padding: 5px;
+    border-radius: 6px;
+    font-size: 0.8em;
+}

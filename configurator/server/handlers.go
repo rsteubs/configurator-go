@@ -83,6 +83,7 @@ func _createAccount(c *EchoContext) func() error {
 	return func() error {
 		d := struct {
 			U  string `json:"username"`
+			N  string `json:"name"`
 			Co string `json:"company"`
 			P  string `json:"password"`
 			C  string `json:"captcha"`
@@ -96,6 +97,7 @@ func _createAccount(c *EchoContext) func() error {
 			return c.Error(http.StatusBadRequest, err)
 		} else {
 			p := service.Profile{
+				Name:    d.N,
 				Company: d.Co,
 			}
 
@@ -141,9 +143,10 @@ func _auth(c *EchoContext) func() error {
 		} else {
 			return c.End(http.StatusOK, struct {
 				H string    `json:"handle"`
+				R string    `json:"role"`
 				T string    `json:"token"`
 				E time.Time `json:"expiration"`
-			}{u.Handle, u.Token, time.Now().Add(time.Minute * 30).UTC()})
+			}{u.Handle, u.Role.String(), u.Token, time.Now().Add(time.Minute * 30).UTC()})
 		}
 	}
 }
@@ -225,6 +228,7 @@ func _getAllAccounts(c *EchoContext) func() error {
 				Username    string `json:"username"`
 				Role        string `json:"role"`
 				Status      string `json:"status"`
+				Name        string `json:"name"`
 				Company     string `json:"company"`
 				Title       string `json:"title"`
 				PhoneNumber string `json:"phoneNumber"`

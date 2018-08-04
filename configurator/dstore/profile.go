@@ -22,6 +22,7 @@ type Account struct {
 
 type Profile struct {
 	Handle      string
+	Name        string
 	Company     string
 	Title       string
 	PhoneNumber string
@@ -53,8 +54,9 @@ func CreateUser(a Account, p Profile, status uint8, c *context.C) (string, error
 		return "", err
 	}
 
-	if _, err := db.Connection().Exec("INSERT INTO profile SELECT ?,?,?,?,?,?",
+	if _, err := db.Connection().Exec("INSERT INTO profile SELECT ?,?,?,?,?,?,?",
 		handle,
+		encodeToString([]byte(p.Name)),
 		encodeToString([]byte(p.Company)),
 		encodeToString([]byte(p.Title)),
 		encodeToString([]byte(p.PhoneNumber)),
@@ -80,8 +82,9 @@ func UpdateProfile(p Profile, status, archiveStatus uint8, c *context.C) error {
 	var err error
 
 	if _, err = db.Connection().Exec("UPDATE profile SET status = ? WHERE handle = ? AND status = ?", archiveStatus, p.Handle, status); err == nil {
-		_, err = db.Connection().Exec("INSERT INTO profile SELECT ?,?,?,?,?",
+		_, err = db.Connection().Exec("INSERT INTO profile SELECT ?,?,?,?,?,?",
 			p.Handle,
+			encodeToString([]byte(p.Name)),
 			encodeToString([]byte(p.Company)),
 			encodeToString([]byte(p.Title)),
 			encodeToString([]byte(p.PhoneNumber)),
@@ -106,6 +109,7 @@ func FetchUser(h string, status uint8, c *context.C) (Account, Profile, error) {
 			a.password, 
 			a.salt, 
 			a.role, 
+			p.name,
 			p.company, 
 			p.title, 
 			p.phoneNumber 
@@ -118,11 +122,12 @@ func FetchUser(h string, status uint8, c *context.C) (Account, Profile, error) {
 	a := Account{}
 	p := Profile{}
 	uname := ""
+	name := ""
 	co := ""
 	title := ""
 	phone := ""
 
-	if err := result.Scan(&a.Handle, &uname, &a.Password, &a.Salt, &a.Role, &co, &title, &phone); err != nil {
+	if err := result.Scan(&a.Handle, &uname, &a.Password, &a.Salt, &a.Role, &name, &co, &title, &phone); err != nil {
 		if err == sql.ErrNoRows {
 			return Account{}, Profile{}, nil
 		}
@@ -134,6 +139,7 @@ func FetchUser(h string, status uint8, c *context.C) (Account, Profile, error) {
 	}
 
 	a.Username = _readEncodedColumn("username", h, uname)
+	p.Name = _readEncodedColumn("name", h, name)
 	p.Company = _readEncodedColumn("company", h, co)
 	p.Title = _readEncodedColumn("title", h, title)
 	p.PhoneNumber = _readEncodedColumn("phone number", h, phone)
@@ -236,6 +242,7 @@ func AccountProfileList(h []string, c *context.C) ([]AccountProfile, error) {
 			a.salt, 
 			a.role, 
 			a.status,
+			p.name, 
 			p.company, 
 			p.title, 
 			p.phoneNumber 
@@ -272,16 +279,18 @@ func AccountProfileList(h []string, c *context.C) ([]AccountProfile, error) {
 			a := Account{}
 			p := Profile{}
 			uname := ""
+			name := ""
 			co := ""
 			title := ""
 			phone := ""
 
-			if err := rows.Scan(&a.Handle, &uname, &a.Password, &a.Salt, &a.Role, &a.Status, &co, &title, &phone); err != nil {
+			if err := rows.Scan(&a.Handle, &uname, &a.Password, &a.Salt, &a.Role, &a.Status, &name, &co, &title, &phone); err != nil {
 				context.Logf(context.Warn, "Could not read account: %v", err)
 				continue
 			}
 
 			a.Username = _readEncodedColumn("username", a.Handle, uname)
+			p.Name = _readEncodedColumn("name", a.Handle, name)
 			p.Company = _readEncodedColumn("company", a.Handle, co)
 			p.Title = _readEncodedColumn("title", a.Handle, title)
 			p.PhoneNumber = _readEncodedColumn("phone number", a.Handle, phone)

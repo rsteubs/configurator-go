@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS account
 (
 	handle varbinary(12) PRIMARY KEY NOT NULL,
-	username nvarchar(20) NOT NULL,
+	username nvarchar(50) NOT NULL,
 	password varbinary(70)  NOT NULL,
 	salt varbinary(5) NOT NULL,
 	status tinyint NOT NULL,
@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS account
 CREATE TABLE IF NOT EXISTS profile
 (
 	handle varbinary(12) PRIMARY KEY NOT NULL,
+	name varbinary(100) NOT NULL,
 	company varbinary(100) NOT NULL,
 	title varbinary(100) NOT NULL,
 	phoneNumber varbinary(30) NOT NULL,
