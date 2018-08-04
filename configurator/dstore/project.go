@@ -12,13 +12,14 @@ type Project struct {
 	Owner       string
 	Title       string
 	Description string
+	Meta        string
 	Content     string
 	Status      uint8
 }
 
 func CreateProject(owner string, status uint8, c *context.C) (string, error) {
 	db := c.NewDB(context.DefaultDB, "Create Project")
-	query := "INSERT INTO project SELECT ?, ?, '', '', '', ?"
+	query := "INSERT INTO project SELECT ?, ?, '', '', '', '', ?"
 
 	handle := app.NewHandle(7)
 
@@ -57,7 +58,7 @@ func FetchAllProjects(owner string, status uint8, c *context.C) ([]string, error
 
 func FetchProject(owner, handle string, c *context.C) (Project, error) {
 	db := c.NewDB(context.DefaultDB, "Fetch Project")
-	query := "SELECT handle, owner, title, description, content, status FROM project WHERE owner = ? AND handle = ?"
+	query := "SELECT handle, owner, title, description, meta, content, status FROM project WHERE owner = ? AND handle = ?"
 
 	p := Project{}
 	result := db.Connection().QueryRow(query, owner, handle)
@@ -65,9 +66,10 @@ func FetchProject(owner, handle string, c *context.C) (Project, error) {
 	var (
 		title       string
 		description string
+		meta        string
 	)
 
-	if err := result.Scan(&p.Handle, &p.Owner, &title, &description, &p.Content, &p.Status); err != nil {
+	if err := result.Scan(&p.Handle, &p.Owner, &title, &description, &meta, &p.Content, &p.Status); err != nil {
 		if err == sql.ErrNoRows {
 			return Project{}, nil
 		}
@@ -80,15 +82,16 @@ func FetchProject(owner, handle string, c *context.C) (Project, error) {
 
 	p.Title = _readEncodedColumn("Title", handle, title)
 	p.Description = _readEncodedColumn("Description", handle, description)
+	p.Meta = _readEncodedColumn("Meta", handle, meta)
 
 	return p, nil
 }
 
 func UpdateProject(owner string, p Project, c *context.C) error {
 	db := c.NewDB(context.DefaultDB, "Record Event")
-	query := "UPDATE project SET title = ?, description = ?, content = ?, status = ? WHERE handle = ? AND owner = ?"
+	query := "UPDATE project SET title = ?, description = ?, meta = ?, content = ?, status = ? WHERE handle = ? AND owner = ?"
 
-	_, err := db.Connection().Exec(query, encodeToString([]byte(p.Title)), encodeToString([]byte(p.Description)), p.Content, p.Status, p.Handle, owner)
+	_, err := db.Connection().Exec(query, encodeToString([]byte(p.Title)), encodeToString([]byte(p.Description)), encodeToString([]byte(p.Meta)), p.Content, p.Status, p.Handle, owner)
 
 	return err
 }

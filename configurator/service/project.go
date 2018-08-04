@@ -14,6 +14,7 @@ type Project struct {
 	Owner       string
 	Title       string
 	Description string
+	Meta        string
 	Content     string
 	Status      StatusCode
 }

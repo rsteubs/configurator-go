@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS project
 	owner varbinary(12) NOT NULL,
 	title nvarchar(50) NOT NULL,
 	description nvarchar(140) NOT NULL,
+	meta nvarchar(100000) NOT NULL,
 	content nvarchar(100000) NOT NULL,
 	status tinyint NOT NULL,
 	

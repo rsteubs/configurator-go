@@ -2,7 +2,6 @@
 var selectingComponents = true;
 var selected = [];
 
-var workspaces = [];
 var drake;
 
 var WORK_MODE_SELECT = 10;
@@ -33,15 +32,6 @@ var CIRCUIT_COLOR = [
 	"#808080", //Grey	
 ];
 
-var workingProject = {
-	temperature: "",
-	workMode: "",
-	areaWidth: "",
-	areaHeight: "",
-	tileWidth: "",
-	tileHeight: "",
-};
-
 var temperatureOptions = [];
 
 temperatureOptions["cool"] = "Cool (6000K CCT)";
@@ -49,6 +39,11 @@ temperatureOptions["neutral"] = "Neutral (4500K CCT)";
 temperatureOptions["warm"] = "Warm (3000K CCT)";
 
 $( function() {
+	if (!Cookies.get("auth")) {
+		window.location = "/account.html";
+		return;
+	}
+	
 	resetWorkTable();
 
 	$("#footerHandle").on("click", function() {
@@ -84,35 +79,26 @@ $( function() {
 		menu.val("");
 	});
 
-	var ws = null;
-	
-	if ((ws = Cookies.get("_ws"))) {
-		decompressWorkspace(ws);
-	} 
+	Project.refreshList(function(list) {
+		list.forEach(function(x) {
+			addProjectToDialog(x);
+		});
+
+		if (Cookies.get("_open")) {
+			Cookies.remove("_open");
+			openProject();		
+		} 
+	}, function(msg) {
+		alert(msg);
+	});
 
 	if (Cookies.get("_save")) {
-		 saveCurrentProject();		
+		Project.unstash();
+		Cookies.remove("_save");
+		
+		saveCurrentProject();		
 	} 
-
-	if (Cookies.get("auth")) {
-		loadProjects(function(resp) {
-			if (Cookies.get("_open")) {
-				 openProject();		
-			} else if ((ws = Cookies.get("ws"))) {
-				for (var i = 0, project; project = resp.data[i]; i++) {
-					if (project.handle === ws) {
-						var saveDialog = $(".saveProject");
-						var saveTitle = saveDialog.find("[name=projectTitle]");
-						var saveDescription = saveDialog.find("[name=projectDescription]");
-						
-						decompressWorkspace(project.content);
-						saveTitle.val(project.title);
-						saveDescription.val(project.description);
-					}
-				}
-			} 
-		})
-	}
+	
 
 	$("[name=work-table-width], [name=work-table-height]")
 		.change(function() {
@@ -138,25 +124,18 @@ $( function() {
 			field.val(val.toFixed(0));
 		});
 
-	if (window.localStorage) {
-		$(window)
-			.on("unload", function() {
-				window.localStorage.lastProject = JSON.stringify({ html: compressWorkspace(), project: workingProject });
-			});
-			
-		if (window.localStorage.lastProject) {
-			var p = JSON.parse(window.localStorage.lastProject);
-			
-			workingProject = p.project;
-			decompressWorkspace(p.html);
-			prepareWizard();
-		} else {
-			prepareWizard();
-		}
-	} else {
+	$(window).on("unload", function() {	
+		Project.stash(compressWorkspace());
+	});
+
+	if (Project.unstash()) {
+		decompressWorkspace(Project.active.content);
 		prepareWizard();
+	} else {
+		startProject();
 	}
 	
+
 	if ($(".work-table .tile").length === 0) {
 		navigateWizard("temperature");
 	}
@@ -277,9 +256,7 @@ function setWorkMode(mode) {
 
 function closeProject() {
 	resetWorkTable(); 
-
-	Cookies.remove("ws");
-	Cookies.remove("_ws");
+	Project.close();
 }
 
 function resetWorkTable() {
@@ -365,7 +342,7 @@ function initializeDrag() {
 			map.above.find(".power-up").remove();
 			map.aft.find(".power-left").remove();
 
-			projectHistory.record();
+			Project.recordStep(compressWorkspace());
 		} else if (onto.hasClass("zone")) {
 			var tile = onto.parents(".tile");
 			var map = tilePosition(tile);
@@ -401,7 +378,7 @@ function initializeDrag() {
 			
 			joinCircuit(circuit, tile);
 			
-			projectHistory.record();
+			Project.recordStep(compressWorkspace());
 		} else if (onto.hasClass("tile")) {
 			var ps = $("<img />").attr("rel", "power");
 			var map = tilePosition(onto);
@@ -441,7 +418,7 @@ function initializeDrag() {
 				.click(selectComponentForDeletion);
 			
 				buildComponentList();
-				projectHistory.record();
+				Project.recordStep(compressWorkspace());
 			}
 		}
 	});
@@ -482,7 +459,7 @@ function removeComponents() {
 				adjustCircuit(circuit);
 			}
 			
-			projectHistory.record();
+			Project.recordStep(compressWorkspace());
 		}
 
 		$(".tile-row:not(:has(.tile))").remove();
@@ -498,7 +475,8 @@ function removeComponents() {
 
 function startProject() {
 	closeProject();
-	createProject(function() {
+	
+	Project.create(function() {
 		prepareWizard();
 		navigateWizard("temperature");
 	});
@@ -515,7 +493,6 @@ function openProject() {
 	});
 	
 	if (token) {
-		Cookies.remove("_open");
 		dialog.show();
 	} else {
 		Cookies.set("_open", 1);
@@ -525,78 +502,39 @@ function openProject() {
 
 function saveCurrentProject() {
 	if (!Cookies.get("auth")) {
-		Cookies.set("_ws", ws);
+		Project.stash(compressWorkspace())
 		Cookies.set("_save", 1);
 		
 		window.location = "/account.html";
 	} else {
-		Cookies.remove("_ws");
-		Cookies.remove("_save");
-
-		var ws = compressWorkspace();
-		var h = Cookies.get("ws");
+		var p = Project.active;
 		
-		saveProject(ws, h);
+		p.content = compressWorkspace();
+		saveProject(p);
 	}
 }
 
-function saveProject(ws, handle) {
-	var token = Cookies.get("auth");
-	var user = Cookies.get("user");
-
-    var doSave = function(handle) {
-        var title = $("[name=projectTitle]").val();
-        var description = $("[name=projectDescription").val();
-
-		$.ajax({
-			url: "/project/" + handle,
-			method: "PUT",
-			
-            headers: {
-            	"Authorization": token,
-            	"x-configurator-user": user,
-            },
-
-			data: JSON.stringify({
-				title: title,
-				description: description,
-				content: ws,
-			}),
-			
-			success: function() {
-				dialog.hide();
-			}
-		})
-		.fail(function (resp) {
-            var response = resp.responseJSON && resp.responseJSON.response;
-            var message = (response && response.status < 500 && response.statusMessage) || "There was a problem saving your project. Please try again later.";
-
-            window.alert(message);
-		});
-    };
-
+function saveProject(p) {
 	var dialog = $(".saveProject")
-	
+
 	dialog.show();
-	dialog.find("input").focus();
+	dialog.find("[name=projectTitle]").val(p.title).focus();
+    dialog.find("[name=projectDescription]").val(p.description);		
 	
 	dialog.find("button[action=save]").click(function() {
-		if (handle && handle.length > 0) {
-			doSave(handle);
-		} else {
-			createProject(
-				function(resp) { 
-					doSave(resp.data.handle);
-				},
-				function(resp) {
-		            var response = resp.responseJSON && resp.responseJSON.response;
-		            var message = (response && response.status < 500 && response.statusMessage) || "There was a problem saving your project. Please try again later.";
-		
-		            window.alert(message);
-				}
-			);
-		}
-		
+		var title = $("[name=projectTitle]").val();
+        var description = $("[name=projectDescription").val();		
+        
+        p.title = title;
+        p.description = description;
+
+		Project.save(p, function() {
+			addProjectToDialog(p);
+			dialog.hide();
+		}, function(msg) {
+			alert(msg);
+		});
+
 		dialog.find("button[action=save]").unbind("click");
 	});
 
@@ -604,49 +542,18 @@ function saveProject(ws, handle) {
 		dialog.find("button[action=save]").unbind("click");
 		dialog.hide();
 	});
-
-}
-
-function editProject(project) {
-	var dialog = $(".saveProject");
-	
-    dialog.find("[name=projectTitle]").val(project.title);
-    dialog.find("[name=projectDescription]").val(project.description);
-    
-    saveProject(project.content, project.handle);
 }
 
 function copyProject(project) {
-	var dialog = $(".saveProject");
-	
-    dialog.find("[name=projectTitle]").val(project.title + " (Copy)");
-    dialog.find("[name=projectDescription]").val(project.description);
+	Project.create(function(copy) {
+		copy.title = project.title + " (Copy)";
+		copy.description = project.description;
+		copy.content = project.content;
+		copy.configuration = project.configuration;
+		copy.settings = project.settings;
     
-    saveProject(project.content);
-}
-
-function deleteProject(handle, next) {
-	$.ajax({
-		url: "/project/" + handle,
-		method: "DELETE",
-		
-        headers: {
-        	"Authorization": Cookies.get("auth"),
-        	"x-configurator-user": Cookies.get("user"),
-        }, 
-        
-		success: function() {
-			if (next) {
-				next();
-			}
-		}
-	})
-	.fail(function (resp) {
-        var response = resp.responseJSON && resp.responseJSON.response;
-        var message = (response && response.status < 500 && response.statusMessage) || "There was a problem removing your project. Please try again later.";
-
-        window.alert(message);
-	});	
+    	saveProject(copy);
+	});
 }
 
 function exportProject() {
@@ -696,54 +603,9 @@ function decompressWorkspace(b64) {
 	buildComponentList();
 }
 
-function createProject(next, err) {
-	var token = Cookies.get("auth");
-	var user = Cookies.get("user");
+function addProjectToDialog(project) {
+	var projectList = $(".project-list");
 
-	Cookies.remove("ws");
-	projectHistory.clear();
-
-    $.ajax({
-        url: "/project/",
-        method: "POST",
-        
-        headers: {
-        	"Authorization": token,
-        	"x-configurator-user": user,
-        },
-
-        success: function(resp) {
-        	var handle = resp.data.handle;
-        	
-        	Cookies.set("ws", handle);
-        	
-			workingProject.temperature = "";
-			workingProject.workMode = "";
-			workingProject.areaWidth = "";
-			workingProject.areaHeight = "";
-			workingProject.tileWidth = "";
-			workingProject.tileHeight = "";
-			
-        	if (next) {
-        		next(resp);
-        	}
-        }
-    })
-    .fail(function(resp) {
-    	console.warn("error creating project", resp);
-    	
-    	if (err) {
-    		err(resp);
-    	}
-    });
-}
-
-function loadProjects(next) {
-	var token = Cookies.get("auth");
-	var user = Cookies.get("user");
-
-	console.log("loading projects");
-	
 	var projPanel = function() {
 		return $("<div />")
 			.addClass("action-panel")
@@ -764,101 +626,79 @@ function loadProjects(next) {
 				$("<p />").text(project.description)
 			)
 			.click(function() { 
-				Cookies.set("ws", project.handle);
-				decompressWorkspace(project.content);
-				$(".sub-title[rel=project-title]").text(project.title);
-
-				$(".openProject").hide();
+				Project.open(project.handle, function() {
+					decompressWorkspace(project.content);
+					prepareWizard();
+					$(".sub-title[rel=project-title]").text(project.title);
+					$(".openProject").hide();
+				});
 			});
 	};
 
-    $.ajax({
-        url: "/project/",
-        method: "GET",
-        
-        headers: {
-        	"Authorization": token,
-        	"x-configurator-user": user,
-        },
+	var item = $("<div />")
+		.addClass("project-item")
+		.attr("rel", project.handle)
+		.append(projPanel())
+		.append(projInfo(project))
+		.prependTo(projectList);
 
-		success: function(resp) {
-			var projectList = $(".project-list");
+	if (projectList.children().length > 3) {
+		$(".openProject").find(".button-navigation").show();
+	} else {
+		$(".openProject").find(".button-navigation").hide();
+	}
 
-			for (var i = 0, project; project = resp.data[i]; i++) {
-				$("<div />")
-					.addClass("project-item")
-					.attr("rel", project.handle)
-					.append(projPanel())
-					.append(projInfo(project))
-					.appendTo(projectList);
+	item.find(".action-panel button")
+		.click(function() {
+			var button = $(this);
+			var item = button.parents(".project-item");
+			var h = item.attr("rel");
+			var project = Project.find(h);
+
+			if (!project) {
+				return;
 			}
 			
-			if (resp.data.length > 3) {
-				$(".openProject").find(".button-navigation").show();
-			} else {
-				$(".openProject").find(".button-navigation").hide();
-			}
-
-			projectList.find(".action-panel button")
-				.click(function() {
-					var button = $(this);
-					var item = button.parents(".project-item");
-					var h = item.attr("rel");
-					var project;
-
-					for (var i = 0, p; p = resp.data[i]; i++) {
-						if (p.handle === h) {
-							project = p;
-							break;
-						}
-					}
-
-					if (!project) {
-						return;
-					}
+			switch (button.attr("rel")) {
+				case "open": 
+					Project.open(h, function() {
+						decompressWorkspace(project.content);
+						prepareWizard();
+						$(".sub-title[rel=project-title]").text(project.title);
+						$(".openProject").hide();
+					});
 					
-					switch (button.attr("rel")) {
-						case "open": 
-							Cookies.set("ws", project.handle);
-							decompressWorkspace(project.content);
-							$(".sub-title[rel=project-title]").text(project.title);
-			
-							$(".openProject").hide();
-							
-							break;
-							
-						case "edit" :
-							editProject(project);
-							$(".openProject").hide();
-							
-							break;
-						case "copy" :
-							copyProject(project);
-							$(".openProject").hide();
-							
-							break;
+					break;
+					
+				case "edit" :
+					saveProject(project);
+					$(".openProject").hide();
+					
+					break;
+				case "copy" :
+					copyProject(project);
+					$(".openProject").hide();
+					
+					break;
 
-						case "delete" :
-							deleteProject(h);
-							break;
-					}
-				})
-
-			if (next) {
-				next(resp);
+				case "delete" :
+					Project.delete(h, function() {
+						if (Project.active.handle === h) {
+							closeProject();
+						}
+						
+						item.remove();
+					}, function(msg) {
+						alert(msg);
+					});
+					
+					break;
 			}
-		},	
-    })
-    .fail(function(resp) {
-        var response = resp.responseJSON && resp.responseJSON.response;
-        var message = (response && response.status < 500 && response.statusMessage) || "There was a problem retrieving your projects. Please try again later.";
-
-        window.alert(message);
-    });
+		});
 }
 
 function updateSystemSpecs(circuitNumber) {
-	var selectedTemperature = workingProject.temperature;
+	var selectedTemperature = Project.active.temperature;
 	var specs = temperature[selectedTemperature];
 	var workTable = $(".work-table");
 	var tiles = workTable.find(".tile");
@@ -1026,7 +866,7 @@ function dimensionWorkTable(workspaceWidth, workspaceHeight) {
 	
 	drake.containers = drake.containers.concat($(".work-table").find(".tile-slot, .tile, .zone").get());
 	
-	projectHistory.record();
+	Project.recordStep(compressWorkspace());
 	
 	if (panningEnabled) {
 		$(".work-table")
@@ -1408,7 +1248,7 @@ function testCircuit(number, enabled) {
 		
 		tile
 			.parents(".tile-slot")
-			.append($("<div />").addClass("test-pass").addClass("tile-temperature-" + workingProject.temperature))
+			.append($("<div />").addClass("test-pass").addClass("tile-temperature-" + Project.active.configuration.temperature))
 			.find(".test-fail, .test-pass:gt(0)")
 			.remove();
 			
@@ -1741,20 +1581,24 @@ function setWizardWorkMode(mode) {
 }
 
 function prepareWizard() {
+	var project = Project.active;
+	
+	project.configuration = project.configuration || {};
+
 	$(".wizard[rel=temperature] input[name=temperature]").prop("checked", false);
 	$(".wizard[rel=work-mode] input[name=configuration]").prop("checked", false);
 
-	if (workingProject.temperature && workingProject.temperature.length > 0) {
-		$(".wizard[rel=temperature] input[name=temperature][value=" + workingProject.temperature + "]").prop("checked", true);
+	if (project.configuration.temperature && project.configuration.temperature.length > 0) {
+		$(".wizard[rel=temperature] input[name=temperature][value=" + project.configuration.temperature + "]").prop("checked", true);
 	}
 	
-	if (workingProject.workMode && workingProject.workMode.length > 0) {
-		$(".wizard[rel=work-mode] input[name=configuration][value=" + workingProject.workMode + "]").prop("checked", true);
+	if (project.configuration.workMode && project.configuration.workMode.length > 0) {
+		$(".wizard[rel=work-mode] input[name=configuration][value=" + project.configuration.workMode + "]").prop("checked", true);
 	}
 
-	if (workingProject.workMode === "auto-area") {
-		$(".wizard[rel=auto-config] input[name=work-table-width]").val(workingProject.areaWidth);
-		$(".wizard[rel=auto-config] input[name=work-table-height]").val(workingProject.areaHeight);
+	if (project.configuration.workMode === "auto-area") {
+		$(".wizard[rel=auto-config] input[name=work-table-width]").val(project.configuration.areaWidth);
+		$(".wizard[rel=auto-config] input[name=work-table-height]").val(project.configuration.areaHeight);
 
 		if ($("footer .tools .overlay").length === 0) {
 			$("<div />")
@@ -1766,9 +1610,9 @@ function prepareWizard() {
 		$(".wizard[rel=auto-config] input[name=work-table-height]").val("");
 	}
 	
-	if (workingProject.workMode === "auto-size") {
-		$(".wizard[rel=auto-config] input[name=tile-count-width]").val(workingProject.tileWidth);
-		$(".wizard[rel=auto-config] input[name=tile-count-height]").val(workingProject.tileHeight);
+	if (project.configuration.workMode === "auto-size") {
+		$(".wizard[rel=auto-config] input[name=tile-count-width]").val(project.configuration.tileWidth);
+		$(".wizard[rel=auto-config] input[name=tile-count-height]").val(project.configuration.tileHeight);
 		
 		if ($("footer .tools .overlay").length === 0) {
 			$("<div />")
@@ -1780,22 +1624,26 @@ function prepareWizard() {
 		$(".wizard[rel=auto-config] input[name=tile-count-height]").val("");
 	}
 
-	if (workingProject.workMode === "manual") {
+	if (project.configuration.workMode === "manual") {
 		$("footer .tools .overlay").remove();
 	}
 	
-	setWizardWorkMode(workingProject.workMode);
+	setWizardWorkMode(project.configuration.workMode);
 }
 
 function saveWizard() {
-	workingProject.temperature = $(".wizard[rel=temperature] input[name=temperature]:checked").val();
-	workingProject.workMode = $(".wizard[rel=work-mode] input[name=configuration]:checked").val();
+	var project = Project.active;
 	
-	if (workingProject.workMode === "auto-area") {
-		workingProject.areaWidth = $(".wizard[rel=auto-config] input[name=work-table-width]").val();
-		workingProject.areaHeight = $(".wizard[rel=auto-config] input[name=work-table-height]").val();
+	project.configuration = project.configuration || {};
+	
+	project.configuration.temperature = $(".wizard[rel=temperature] input[name=temperature]:checked").val();
+	project.configuration.workMode = $(".wizard[rel=work-mode] input[name=configuration]:checked").val();
+	
+	if (project.configuration.workMode === "auto-area") {
+		project.configuration.areaWidth = $(".wizard[rel=auto-config] input[name=work-table-width]").val();
+		project.configuration.areaHeight = $(".wizard[rel=auto-config] input[name=work-table-height]").val();
 
-		dimensionWorkTable(Math.floor(parseFloat(workingProject.areaWidth) / 4.0), Math.floor(parseFloat(workingProject.areaHeight) / 4.0));
+		dimensionWorkTable(Math.floor(parseFloat(project.configuration.areaWidth) / 4.0), Math.floor(parseFloat(project.configuration.areaHeight) / 4.0));
 
 		if ($("footer .tools .overlay").length === 0) {
 			$("<div />")
@@ -1803,15 +1651,15 @@ function saveWizard() {
 				.appendTo($("footer .tools"));
 		}
 	} else {
-		workingProject.areaWidth = "";
-		workingProject.areaHeight = "";
+		project.configuration.areaWidth = "";
+		project.configuration.areaHeight = "";
 	}
 	
-	if (workingProject.workMode === "auto-size") {
-		workingProject.tileWidth = $(".wizard[rel=auto-config] input[name=tile-count-width]").val();
-		workingProject.tileHeight = $(".wizard[rel=auto-config] input[name=tile-count-height]").val();
+	if (project.configuration.workMode === "auto-size") {
+		project.configuration.tileWidth = $(".wizard[rel=auto-config] input[name=tile-count-width]").val();
+		project.configuration.tileHeight = $(".wizard[rel=auto-config] input[name=tile-count-height]").val();
 		
-		dimensionWorkTable(parseFloat(workingProject.tileWidth), parseFloat(workingProject.tileHeight));
+		dimensionWorkTable(parseFloat(project.configuration.tileWidth), parseFloat(project.configuration.tileHeight));
 
 		if ($("footer .tools .overlay").length === 0) {
 			$("<div />")
@@ -1819,11 +1667,11 @@ function saveWizard() {
 				.appendTo($("footer .tools"));
 		}
 	} else {
-		workingProject.tileWidth = "";
-		workingProject.tileHeight = "";
+		project.configuration.tileWidth = "";
+		project.configuration.tileHeight = "";
 	}
 
-	if (workingProject.workMode === "manual") {
+	if (project.configuration.workMode === "manual") {
 		$("footer .tools .overlay").remove();
 	}
 
@@ -1831,76 +1679,14 @@ function saveWizard() {
 }
 
 function exitWizard() {
+	var project = Project.active;
+	
 	navigateWizard("_blank");
 	
-	workingProject.temperature = "";
-	workingProject.workMode = "";
-	workingProject.areaWidth = "";
-	workingProject.areaHeight = "";
-	workingProject.tileWidth = "";
-	workingProject.tileHeight = "";	
+	project.configuration.temperature = "";
+	project.configuration.workMode = "";
+	project.configuration.areaWidth = "";
+	project.configuration.areaHeight = "";
+	project.configuration.tileWidth = "";
+	project.configuration.tileHeight = "";	
 }
-
-function navigateHistory(direction, e) {
-	var ws = undefined;
-	
-	switch (direction) {
-		case "+" : ws = projectHistory.forward(); break;
-		case "-" : ws = projectHistory.back(); break;
-	}
-	
-	if (ws) {
-		decompressWorkspace(ws);
-		cleanupCircuitPanel();
-	}
-}
-
-var projectHistory = {
-	steps: [],
-	step: -1,
-	
-	record: function() {
-		var ws = compressWorkspace();
-		
-		if (this.step < this.steps.length - 1) {
-			this.steps = this.steps.splice(0, this.step + 1);
-		}
-		
-		this.steps.push(ws);
-		this.step = this.steps.length - 1;
-
-		console.log("project history - steps", this.steps.length);
-		console.log("project history - current step", this.step);
-		
-		return this.step;
-	},
-	
-	back: function() {
-		if (this.step > 0) {
-			this.step--;
-		} else {
-			return undefined;
-		}
-		
-		console.log("project history - reverse to", this.step);
-		
-		return this.steps[this.step];
-	},
-	
-	forward: function() {
-		if (this.step < this.steps.length - 1) {
-			this.step++;
-		} else {
-			return undefined;
-		}
-		
-		console.log("project history - forward to", this.step);
-		
-		return this.steps[this.step];
-	},
-	
-	clear: function() {
-		this.steps = [];
-		this.step = -1;
-	},
-};

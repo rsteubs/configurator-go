@@ -194,6 +194,7 @@ func _getProjects(c *EchoContext) func() error {
 				Handle      string `json:"handle"`
 				Title       string `json:"title"`
 				Description string `json:"description"`
+				Meta        string `json:"meta"`
 				Content     string `json:"content"`
 			}
 
@@ -298,6 +299,7 @@ func _updateProject(c *EchoContext) func() error {
 		d := struct {
 			Title       string `json:"title"`
 			Description string `json:"description"`
+			Meta        string `json:"meta"`
 			Content     string `json:"content"`
 		}{}
 
