@@ -167,7 +167,7 @@ func _createProject(c *EchoContext) func() error {
 			}
 		} else {
 			return c.End(http.StatusOK, struct {
-				string `json:"handle"`
+				H string `json:"handle"`
 			}{h})
 		}
 	}
