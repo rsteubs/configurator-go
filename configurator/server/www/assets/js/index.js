@@ -1690,3 +1690,17 @@ function exitWizard() {
 	project.configuration.tileWidth = "";
 	project.configuration.tileHeight = "";	
 }
+
+function navigateHistory(direction, e) {
+	var ws = undefined;
+	
+	switch (direction) {
+		case "+" : ws = Project.stepForward(); break;
+		case "-" : ws = Project.stepBackward(); break;
+	}
+	
+	if (ws) {
+		decompressWorkspace(ws);
+		cleanupCircuitPanel();
+	}
+}
