@@ -148,10 +148,21 @@ header .circuit-panel .circuit-button .circuit-test-button button {
 	
 }
 
-header .circuit-panel .test-pass {
-	background-color: yellow;	
+header .circuit-panel .test-pass.test-temperature-cool button {
 	color: black;
+	background: #f4f2f2;	
 }
+
+header .circuit-panel .test-pass.test-temperature-neutral button {
+	color: black;
+	background: #faf8cf;	
+}
+
+header .circuit-panel .test-pass.test-temperature-warm button {
+	color: black;
+	background: #f6f193;	
+}
+
 
 header .circuit-panel .test-fail {
 	background-color: red;	

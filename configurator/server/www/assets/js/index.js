@@ -1,3 +1,6 @@
+/* global $ */
+/* global Project */
+/* global temperature */
 
 var selectingComponents = true;
 var selected = [];
@@ -30,6 +33,13 @@ var CIRCUIT_COLOR = [
 	"#000080", //Navy
 	"#e6194b", //Red
 	"#808080", //Grey	
+];
+
+var POWER_SUPPLY = [
+	{ value: 15, title: "Power Supply - Min. Power Rating 15W" },	
+	{ value: 30, title: "Power Supply - Min. Power Rating 30W" },	
+	{ value: 45, title: "Power Supply - Min. Power Rating 45W" },	
+	{ value: 60, title: "Power Supply - Min. Power Rating 60W" },	
 ];
 
 var temperatureOptions = [];
@@ -698,7 +708,7 @@ function addProjectToDialog(project) {
 }
 
 function updateSystemSpecs(circuitNumber) {
-	var selectedTemperature = Project.active.temperature;
+	var selectedTemperature = Project.active.configuration.temperature;
 	var specs = temperature[selectedTemperature];
 	var workTable = $(".work-table");
 	var tiles = workTable.find(".tile");
@@ -752,15 +762,30 @@ function buildComponentList() {
 	var tiles = workTable.find(".tile");
 	var harnessCount = tiles.find(".zone img").length;
 	var psCount = workTable.find("img.power").length;
+	var ps = [];
 	var list = [];
 	var tbody = [];
 
 	list.push({ name: "IllumiTile Light Engine", count: tiles.length });
 	list.push({ name: "IllumiSnap Harness D", count: harnessCount });
 	list.push({ name: "IllumiSnap Power Harness", count: psCount });
-	list.push({ name: "Power Supply - Min. Power Rating 25W", count: psCount });
 	
-	for (var i = 0, item; item = list[i]; i++) {
+	workTable.find("img.power")
+		.each(function(_, el) {
+			var circuit = $(el).parents(".tile").attr("circuit");
+			var rated = rateCircuitPower(circuit);
+			var agg = ps[rated.value] || { ps: rated, count: 0 };
+			
+			agg.count++;
+			
+			ps[rated.value] = agg;
+		});
+
+	ps.forEach(function(x) {
+		list.push({ name: x.ps.title, count: x.count });
+	});
+	
+	for (var i = 0, item; (item = list[i]); i++) {
 		if (item.count > 0) {
 			tbody.push(
 				$("<tr />")
@@ -1380,6 +1405,7 @@ function joinCircuit(number, circuitKey) {
 	
 	cleanupCircuitPanel();
 	updateSystemSpecs(number);
+	buildComponentList();
 }
 
 function adjustCircuit(number) {
@@ -1537,10 +1563,12 @@ function addToCircuitPanel(number, circuitColor) {
 			var button = $(this);
 			var circuit = $(".work-table .tile[circuit=" + number + "]");
 			var testing = !button.hasClass("circuit-button-test");
+			var testTempClass = "test-temperature-" + Project.active.configuration.temperature;
 
 			button.toggleClass("circuit-button-test");
 			button.removeClass("test-fail");
 			button.removeClass("test-pass");
+			button.removeClass(testTempClass);
 			
 			testCircuit(number, testing);
 			
@@ -1548,7 +1576,9 @@ function addToCircuitPanel(number, circuitColor) {
 				if (circuit.hasClass("test-fail")) {
 					button.addClass("test-fail");
 				} else {
-					button.addClass("test-pass");
+					button
+						.addClass("test-pass")
+						.addClass(testTempClass);
 				}
 			}
 		})
@@ -1703,4 +1733,29 @@ function navigateHistory(direction, e) {
 		decompressWorkspace(ws);
 		cleanupCircuitPanel();
 	}
+}
+
+function rateCircuitPower(circuitNumber) {
+	var specs = temperature[Project.active.configuration.temperature];
+	var workTable = $(".work-table");
+	var circuitTiles = workTable.find(`.tile[circuit=${circuitNumber}]`);
+	var circuitHarnessCount = circuitTiles.find(".zone img").length;
+
+	console.log(`rating circuit - ${circuitNumber}: ${circuitTiles.length} tiles, ${circuitHarnessCount} harnesses`);
+
+	for (var i = 0, spec; (spec = specs[i]); i++) {
+		if (spec.tiles == circuitTiles.length && spec.harnesses <= circuitHarnessCount) {
+			var derate = parseFloat($("[rel=power-derate]").val());
+			var power = spec.power;
+			var rating = Math.ceil(power + power * derate);
+
+			console.log(`power: ${spec.power}, derate: ${derate}, rating: ${rating}`);
+
+			for (var y = 0, ps; (ps = POWER_SUPPLY[y]); y++) {
+				if (ps.value >= rating) {
+					return ps;
+				}
+			}
+		}
+	}	
 }
