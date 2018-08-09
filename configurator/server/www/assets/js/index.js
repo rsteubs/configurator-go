@@ -1,6 +1,11 @@
-/* global $ */
-/* global Project */
-/* global temperature */
+/* WORKSPACE */
+
+/* global 
+	$ 
+	Project 
+	temperature 
+	Cookies 
+*/
 
 var selectingComponents = true;
 var selected = [];
@@ -42,8 +47,12 @@ var POWER_SUPPLY = [
 	{ value: 60, title: "Power Supply - Min. Power Rating 60W" },	
 ];
 
-var temperatureOptions = [];
+var configModeOptions = [];
+configModeOptions['auto-area'] = 'Auto - Specified Illumination Area';
+configModeOptions['auto-size'] = 'Auto - Specified Count of IllumiTile';
+configModeOptions['manual'] = 'Manual';
 
+var temperatureOptions = [];
 temperatureOptions["cool"] = "Cool (6000K CCT)";
 temperatureOptions["neutral"] = "Neutral (4500K CCT)";
 temperatureOptions["warm"] = "Warm (3000K CCT)";
@@ -141,6 +150,7 @@ $( function() {
 	if (Project.unstash()) {
 		decompressWorkspace(Project.active.content);
 		prepareWizard();
+		displayConfiguration();
 	} else {
 		startProject();
 	}
@@ -639,6 +649,7 @@ function addProjectToDialog(project) {
 				Project.open(project.handle, function() {
 					decompressWorkspace(project.content);
 					prepareWizard();
+					displayConfiguration();
 					$(".sub-title[rel=project-title]").text(project.title);
 					$(".openProject").hide();
 				});
@@ -674,6 +685,7 @@ function addProjectToDialog(project) {
 					Project.open(h, function() {
 						decompressWorkspace(project.content);
 						prepareWizard();
+						displayConfiguration();
 						$(".sub-title[rel=project-title]").text(project.title);
 						$(".openProject").hide();
 					});
@@ -1705,6 +1717,7 @@ function saveWizard() {
 		$("footer .tools .overlay").remove();
 	}
 
+	displayConfiguration();	
 	navigateWizard("_blank");
 }
 
@@ -1736,7 +1749,7 @@ function navigateHistory(direction, e) {
 }
 
 function rateCircuitPower(circuitNumber) {
-	var specs = temperature[Project.active.configuration.temperature];
+	var specs = temperature[Project.active.configuration.temperature || "neutral"];
 	var workTable = $(".work-table");
 	var circuitTiles = workTable.find(`.tile[circuit=${circuitNumber}]`);
 	var circuitHarnessCount = circuitTiles.find(".zone img").length;
@@ -1758,4 +1771,12 @@ function rateCircuitPower(circuitNumber) {
 			}
 		}
 	}	
+}
+
+function displayConfiguration() {
+	var project = Project.active;
+	
+	$(".specs .setting [rel=work-mode]").text(configModeOptions[project.configuration.workMode]);
+	$(".specs .setting [rel=temperature]").text(temperatureOptions[project.configuration.temperature]);
+
 }

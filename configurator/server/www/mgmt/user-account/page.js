@@ -1,3 +1,9 @@
+/* USER ACCOUNT */
+
+/* global
+    $
+*/
+
 var accountList = [];
 var ACTIVE = "active";
 var PENDING = "pending";
@@ -161,6 +167,10 @@ function renderAccountList(list) {
                             });
                         });
                     }
+                    
+                case "view": 
+                    viewAccount(handle);
+                    break;
             }
         });
 }
@@ -232,4 +242,83 @@ function archiveAccount(h, next) {
 
         window.alert(message);
     });
+}
+
+function viewAccount(h) {
+    var account = accountList.find(function(x) {
+        return x.handle === h;
+    });
+
+    if (account) {
+        var dialog = $(".dialog-user-account");
+        var title = (account.name && account.name.length && account.name) || account.username;
+        
+        dialog.find(".title").text(title);
+
+        dialog.find("[rel=username] [rel=value]").text(account.username);
+        dialog.find("[rel=role] [rel=value]").text(account.role);
+        dialog.find("[rel=status] [rel=value]").text(account.status);        
+        
+        if (account.company.length > 0) {
+            dialog.find("[rel=company]")
+                .show()
+                .find("[rel=value]")
+                .text(account.company);
+        } else {
+            dialog.find("[rel=company]").hide();
+        }
+        
+        if (account.title.length > 0) {
+            dialog.find("[rel=title]")
+                .show()
+                .find("[rel=value]")
+                .text(account.title);
+        } else {
+            dialog.find("[rel=title]").hide();
+        }
+        
+        if (account.phoneNumber.length > 0) {
+            dialog.find("[rel=phoneNumber]")
+                .show()
+                .find("[rel=value]")
+                .text(account.phoneNumber);
+        } else {
+            dialog.find("[rel=phoneNumber]").hide();
+        }
+        
+        if (account.status === ACTIVE) {
+            dialog.find("button[action=approve]").hide();
+        } else {
+            dialog.find("button[action=approve]").show();
+        }
+        
+        dialog
+            .find("button")
+            .unbind("click")
+            .click(function() {
+                var el = $(this);
+                
+                switch (el.attr("action")) {
+                    case "close" :
+                        dialog.hide();
+                        break
+                        
+                    case "approve" :
+                        activateAccount(account.handle, function() {
+                            dialog.hide();
+                            $("button[rel=refresh]").click();
+                        });
+                        break;
+                        
+                    case "deny" :
+                        suspendAccount(account.handle, function() {
+                            dialog.hide();
+                            $("button[rel=refresh]").click();
+                        });
+                        break;
+                }
+            })
+        
+        dialog.show();
+    }
 }

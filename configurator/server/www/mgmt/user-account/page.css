@@ -1,3 +1,5 @@
+/* USER ACCOUNT */
+
 body {
 	margin: 0px;
 	min-width: 0px;
@@ -108,4 +110,51 @@ body {
     padding: 5px;
     border-radius: 6px;
     font-size: 0.8em;
+}
+
+.dialog {
+	width: 95%;
+	height: 95%;
+	margin: auto;
+	top: 5px;
+	left: 0px;
+	right: 0px;
+}
+
+.dialog .content-body {
+	width: auto;
+	height: 100%;
+}
+
+.dialog .buttons {
+	position: absolute;
+	left: 0px;
+	right: 0px;
+	bottom: -6px;
+	margin: 0px 6px;
+}
+
+.dialog .buttons button {
+	padding: 10px;
+	margin: 10px 20px;
+}
+
+@media screen and (min-width: 320px) {
+	.dialog {
+		visibility: inherit;
+	}
+	
+	.dialog .buttons button {
+		width: 90%;
+	}
+}
+
+@media screen and (min-width: 640px) {
+	.dialog {
+		visibility: inherit;
+	}
+	
+	.dialog .buttons button {
+		width: auto;
+	}
 }

@@ -1,0 +1,48 @@
+/* ADMIN HOME */
+
+body {
+	margin: 0px;
+	min-width: 0px;
+	min-height: 0px;
+	overflow: visible;
+}
+
+.end {
+	float: right;
+}
+
+.portal {
+	margin: 150px 10px; 
+	color: white;
+	font-size: 1.25em;
+}
+
+.portal-action-item {
+	position: relative;
+	background: #7b2b7f;
+	margin: 12px 10px;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.portal-action-item:hover {
+	background: #84449a;	
+}
+
+.portal-action-item .sub {
+	margin-top: 4px;
+	font-size: 0.75em;
+	font-weight: normal;
+}
+
+.portal-action-item button {
+	position: absolute;
+	margin: auto;
+	top: 0px;
+	bottom: 0px;
+	right: 10px;
+	color: white;
+	background: transparent;
+	border: 0px;
+	font-size: 1.25em;
+}
