@@ -2,6 +2,7 @@
 
 /* global
     $
+    Cookies
 */
 
 var accountList = [];
@@ -35,13 +36,15 @@ $(function() {
                 } else {
                     renderAccountList(getAccounts(activeStatus));
                 }
-            })
-        })
+            });
+        });
         
     getAccountList(function(l) {
         accountList = l;
         renderAccountList(getAccounts(PENDING));
     });
+    
+    Cookies.remove("x-configurator-user");
 });
 
 function getAccountList(next) {
@@ -50,7 +53,6 @@ function getAccountList(next) {
         method: "GET",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-user": Cookies.get("user"),
         	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
@@ -81,13 +83,13 @@ function getAccounts(status) {
 
 function renderAccountList(list) {
 	var ui = [];
-	console.log("rendering", list)
+
 	var panel = function() {
 		return $("<div />")
 			.addClass("action-panel")
 			.append($("<button />").attr("rel", "view").text("View").addClass("open"))
 			.append($("<button />").attr("rel", "approve").addClass("icon ion-checkmark"))
-			.append($("<button />").attr("rel", "deny").addClass("icon ion-close"))
+			.append($("<button />").attr("rel", "deny").addClass("icon ion-close"));
 	};
 	
 	var info = function(account) {
@@ -181,7 +183,6 @@ function activateAccount(h, next) {
         method: "PUT",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-user": Cookies.get("user"),
         	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
@@ -204,7 +205,6 @@ function suspendAccount(h, next) {
         method: "PUT",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-user": Cookies.get("user"),
         	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
@@ -227,7 +227,6 @@ function archiveAccount(h, next) {
         method: "PUT",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-user": Cookies.get("user"),
         	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
@@ -299,6 +298,12 @@ function viewAccount(h) {
                 var el = $(this);
                 
                 switch (el.attr("action")) {
+                    case "projects": 
+                        Cookies.set("x-configurator-user", account.handle);
+                        Cookies.set("_open", "1");
+                        window.location = "/workspace/";
+                        break;
+                        
                     case "close" :
                         dialog.hide();
                         break
@@ -317,7 +322,7 @@ function viewAccount(h) {
                         });
                         break;
                 }
-            })
+            });
         
         dialog.show();
     }

@@ -62,7 +62,6 @@ func DenyAccount(c *EchoContext) error {
 
 func AuthorizeClient(c *EchoContext) (int, error) {
 	t := c.Request().Header.Get("Authorization")
-	u := c.Request().Header.Get("x-configurator-user")
 
 	test := func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -70,12 +69,20 @@ func AuthorizeClient(c *EchoContext) (int, error) {
 			return nil, errors.New("Could not authorize request")
 		}
 
-		return []byte(u), nil
+		return []byte(apiHmac), nil
 	}
 
 	if token, err := jwt.Parse(t, test); err != nil {
 		return http.StatusBadRequest, errors.New("missing or malformed jwt")
 	} else if token.Valid {
+		context.Logf(context.Trace, "Claims: %v", token.Claims)
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			context.Logf(context.Trace, "Got claims: %v", claims)
+		} else {
+			context.Logf(context.Warn, "Error reading claims")
+		}
+
 		c.Set("user", token)
 		return http.StatusOK, nil
 	} else {
@@ -105,19 +112,19 @@ func _createAccount(c *EchoContext) func() error {
 				Company: d.Co,
 			}
 
-			if h, err := service.CreateUser(d.U, d.P, p, c.Context()); err != nil {
+			if u, err := service.CreateUser(d.U, d.P, p, c.Context()); err != nil {
 				if sErr, ok := err.(service.Error); ok {
 					return c.Error(http.StatusBadRequest, sErr)
 				}
 
 				return c.Error(http.StatusInternalServerError, err)
-			} else if t, err := _createToken(h); err != nil {
+			} else if t, err := _createToken(u); err != nil {
 				return c.Error(http.StatusInternalServerError, err)
 			} else {
 				return c.End(http.StatusOK, struct {
 					H string `json:"handle"`
 					T string `json:"token"`
-				}{h, t})
+				}{u.Handle, t})
 			}
 		}
 	}
@@ -144,13 +151,15 @@ func _auth(c *EchoContext) func() error {
 			} else {
 				return c.Error(http.StatusInternalServerError, err)
 			}
+		} else if t, err := _createToken(u); err != nil {
+			return c.Error(http.StatusInternalServerError, err)
 		} else {
 			return c.End(http.StatusOK, struct {
 				H string    `json:"handle"`
 				R string    `json:"role"`
 				T string    `json:"token"`
 				E time.Time `json:"expiration"`
-			}{u.Handle, u.Role.String(), u.Token, time.Now().Add(time.Minute * 30).UTC()})
+			}{u.Handle, u.Role.String(), t, time.Now().Add(time.Minute * 30).UTC()})
 		}
 	}
 }
@@ -353,19 +362,16 @@ func _deleteProject(c *EchoContext) func() error {
 	}
 }
 
-func _createToken(handle string) (string, error) {
-	i := struct {
-		Name string
-		Role string
-	}{handle, "Client"}
-
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iss":  "configurator",
-		"exp":  time.Now().Add(time.Minute * 30).Unix(),
-		"info": i,
+func _createToken(u service.User) (string, error) {
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject:   u.Handle,
+		Issuer:    "configurator.illumisci.com",
+		IssuedAt:  time.Now().Unix(),
+		ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
+		Audience:  u.Role.String(),
 	})
 
-	return t.SignedString([]byte(handle))
+	return t.SignedString([]byte(apiHmac))
 }
 
 func _approveAccount(c *EchoContext) func() error {

@@ -1,3 +1,8 @@
+/*
+    global
+    $
+*/
+
 var Units = {
     IN: { label: "Inches", symbol: "in." },
     CM: { label: "Centimeters", symbol: "cm." },
@@ -73,7 +78,7 @@ window.Project = {
             
             headers: {
             	"Authorization": sender.cookies.get("auth"),
-            	"x-configurator-user": sender.cookies.get("user"),
+            	"x-configurator-user": sender.cookies.get("x-configurator-user") || sender.cookies.get("user"),
             },
             
             success: function(resp) {
@@ -82,7 +87,7 @@ window.Project = {
                     
                     if (x.meta && x.meta.length > 0) {
                         meta = JSON.parse(x.meta);
-                        console.log("meta", meta)
+                        console.log("meta", meta);
                     }
                     
                     sender.projectList.push({
@@ -121,7 +126,7 @@ window.Project = {
             
             headers: {
             	"Authorization": sender.cookies.get("auth"),
-            	"x-configurator-user": sender.cookies.get("user"),
+            	"x-configurator-user": sender.cookies.get("x-configurator-user") || sender.cookies.get("user"),
             },
     
             success: function(resp) {
@@ -153,7 +158,7 @@ window.Project = {
 			
             headers: {
             	"Authorization": sender.cookies.get("auth"),
-            	"x-configurator-user": sender.cookies.get("user"),
+            	"x-configurator-user": sender.cookies.get("x-configurator-user") || sender.cookies.get("user"),
             },
 
 			data: JSON.stringify({
@@ -191,7 +196,7 @@ window.Project = {
 			
             headers: {
             	"Authorization": sender.cookies.get("auth"),
-            	"x-configurator-user": sender.cookies.get("user"),
+            	"x-configurator-user": sender.cookies.get("x-configurator-user") || sender.cookies.get("user"),
             },
 
 			success: function() {

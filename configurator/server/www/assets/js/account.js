@@ -1,3 +1,10 @@
+/*
+    global
+    $
+    Cookies
+    grecaptcha
+*/
+
 $(function() {
     $("[rel=sign-up]").hide();
     $(".accountDialog").show();
@@ -52,14 +59,13 @@ $(function() {
                     Cookies.set("user", data.handle);
                     Cookies.set("auth", data.token, {expires: expires});
 
-                    window.location = "/";
+                    window.location = "/workspace/";
                 } else {
                     window.alert("Your username or password were not accepted. Please try again, or create a new account.");
                 }
             }
         )
         .fail(function(resp) {
-            var response = resp.responseJSON && resp.responseJSON.response;
             var message = (resp.status < 500 && resp.responseJSON && resp.responseJSON.message) || "Your username or password were not accepted. Please try again, or create a new account.";
 
 
@@ -68,16 +74,6 @@ $(function() {
     }
 
     function createAccount() {
-//         event.preventDefault();
-        
-// 		var createPanel = $(".createAccount")
-		
-// 		if (createPanel.height() < 250) {
-//     		createPanel.animate({height: "250px"}, 300, "easeInBack");
-//     		$("#signIn").hide();
-//     		return; 
-// 		}
-
         var uname = $("#username").val();
         var name = $("#name").val();
         var pwd = $("#password").val();
@@ -124,12 +120,12 @@ $(function() {
                     document.cookie = "user=" + data.handle;
                     document.cookie = "token=" + data.token;
                     
-                    window.location = "/";
+                    window.location = "/workspace/";
                 }
             }
         )
         .fail(function(resp) {
-            console.log("message", resp)
+            console.log("message", resp);
             var message = (resp.status < 500 && resp.responseJSON && resp.responseJSON.message) || "There was an issue creating your account. Please try again.";
 
             window.alert(message);

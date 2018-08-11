@@ -80,11 +80,11 @@ func Authorize(h, token string, c *context.C) (User, error) {
 	}
 }
 
-func CreateUser(username, pwd string, p Profile, c *context.C) (string, error) {
+func CreateUser(username, pwd string, p Profile, c *context.C) (User, error) {
 	if a, _, err := dstore.FetchUser(username, active.AsUint(), c); err != nil {
 		context.Logf(context.Warn, "Error fetching user (%s): %v", username, err)
 	} else if a.Username == username && (a.Status == active.AsUint() || a.Status == pending.AsUint()) {
-		return "", duplicateUserError()
+		return User{}, duplicateUserError()
 	}
 
 	salt := app.NewHandle(5)
@@ -107,7 +107,11 @@ func CreateUser(username, pwd string, p Profile, c *context.C) (string, error) {
 
 	app.Translate(p, &dP)
 
-	return dstore.CreateUser(dA, dP, pending.AsUint(), c)
+	if h, err := dstore.CreateUser(dA, dP, pending.AsUint(), c); err != nil {
+		return User{}, err
+	} else {
+		return User{Handle: h, Role: general}, nil
+	}
 }
 
 func (u *User) genToken(c *context.C) {

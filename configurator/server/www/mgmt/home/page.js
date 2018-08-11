@@ -58,7 +58,6 @@ function getAccountList(next) {
         method: "GET",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-user": Cookies.get("user"),
         	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
