@@ -57,8 +57,7 @@ function getAccountList(next) {
         url: "/admin/all-accounts",
         method: "GET",
         headers: {
-        	"Authorization": Cookies.get("auth"),
-        	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
+        	"Authorization": Cookies.get("auth")
         },
         
         success: function(resp) {

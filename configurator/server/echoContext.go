@@ -68,6 +68,10 @@ func (c *EchoContext) Request() *http.Request {
 	return c.e.Request()
 }
 
+func (c *EchoContext) Get(n string) interface{} {
+	return c.e.Get(n)
+}
+
 func (c *EchoContext) Set(n string, v interface{}) {
 	c.e.Set(n, v)
 }

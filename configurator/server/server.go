@@ -18,14 +18,19 @@ func Start() {
 
 	s.Static("/", "server/www")
 
+	u := s.Group("/user")
+	u.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client - User"))
+	u.GET("/verify", NewEchoContext(VerifyUser, "Verify User"))
+
 	pr := s.Group("/project")
-	pr.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client"))
+	pr.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client - Project"))
 	pr.GET("/", NewEchoContext(GetProjects, "Retrieve Projects"))
 	pr.POST("/", NewEchoContext(CreateProject, "Create Project"))
 	pr.PUT("/:handle", NewEchoContext(UpdateProject, "Update Project"))
 	pr.DELETE("/:handle", NewEchoContext(DeleteProject, "Delete Project"))
 
 	admin := s.Group("/admin")
+	admin.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client - Admin"))
 	admin.GET("/all-accounts", NewEchoContext(GetAllAccounts, "Admin - Get All Accounts"))
 	admin.PUT("/approve/:handle", NewEchoContext(ApproveAccount, "Admin - Approve Account"))
 	admin.PUT("/suspend/:handle", NewEchoContext(SuspendAccount, "Admin - Suspend Account"))

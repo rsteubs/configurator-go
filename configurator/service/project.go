@@ -21,19 +21,27 @@ type Project struct {
 
 func projectNotAvailableError() Error { return Error{"The project does not exist or is not available."} }
 
-func CreateProject(owner string, c *context.C) (string, error) {
-	return dstore.CreateProject(owner, uint8(pending), c)
+func (u User) CreateProject(c *context.C) (string, error) {
+	if !u.valid() {
+		return "", invalidUserError()
+	}
+
+	return dstore.CreateProject(u.Handle, uint8(pending), c)
 }
 
-func GetProjects(owner string, c *context.C) ([]Project, error) {
-	if h, err := dstore.FetchAllProjects(owner, uint8(active), c); err != nil {
+func (u User) GetProjects(c *context.C) ([]Project, error) {
+	if !u.valid() {
+		return nil, invalidUserError()
+	}
+
+	if h, err := dstore.FetchAllProjects(u.Handle, uint8(active), c); err != nil {
 		return nil, err
 	} else {
 		list := make([]Project, len(h))
 		ch := make(chan Project)
 
 		fetch := func(h string) {
-			if p, err := RetrieveProject(owner, h, c); err != nil {
+			if p, err := u.RetrieveProject(h, c); err != nil {
 				context.Logf(context.Warn, "Error retrieving project (%s): %v", h, err)
 				ch <- Project{}
 			} else {
@@ -53,8 +61,12 @@ func GetProjects(owner string, c *context.C) ([]Project, error) {
 	}
 }
 
-func RetrieveProject(owner string, project string, c *context.C) (Project, error) {
-	if d, err := dstore.FetchProject(owner, project, c); err != nil {
+func (u User) RetrieveProject(project string, c *context.C) (Project, error) {
+	if !u.valid() {
+		return Project{}, invalidUserError()
+	}
+
+	if d, err := dstore.FetchProject(u.Handle, project, c); err != nil {
 		if _, ok := err.(dstore.Error); ok {
 			return Project{}, projectNotAvailableError()
 		} else {
@@ -76,7 +88,11 @@ func RetrieveProject(owner string, project string, c *context.C) (Project, error
 	}
 }
 
-func SaveProject(user string, p Project, c *context.C) error {
+func (u User) SaveProject(p Project, c *context.C) error {
+	if !u.valid() {
+		return invalidUserError()
+	}
+
 	p.Status = active
 
 	d := dstore.Project{}
@@ -89,11 +105,15 @@ func SaveProject(user string, p Project, c *context.C) error {
 		return value
 	})
 
-	return dstore.UpdateProject(user, d, c)
+	return dstore.UpdateProject(u.Handle, d, c)
 }
 
-func DeleteProject(owner, h string, c *context.C) error {
-	if d, err := dstore.FetchProject(owner, h, c); err != nil {
+func (u User) DeleteProject(h string, c *context.C) error {
+	if !u.valid() {
+		return invalidUserError()
+	}
+
+	if d, err := dstore.FetchProject(u.Handle, h, c); err != nil {
 		if _, ok := err.(dstore.Error); ok {
 			return projectNotAvailableError()
 		} else {
@@ -102,6 +122,6 @@ func DeleteProject(owner, h string, c *context.C) error {
 	} else {
 		d.Status = uint8(archived)
 
-		return dstore.UpdateProject(owner, d, c)
+		return dstore.UpdateProject(u.Handle, d, c)
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -19,6 +18,12 @@ import (
 
 	"configurator/service"
 )
+
+type claim struct {
+	H string `json:"handle,omitempty"`
+	R string `json:"role,omitempty"`
+	t string
+}
 
 func CreateAccount(c *EchoContext) error {
 	return _createAccount(c)()
@@ -60,6 +65,10 @@ func DenyAccount(c *EchoContext) error {
 	return _denyAccount(c)()
 }
 
+func VerifyUser(c *EchoContext) error {
+	return _verifyUser(c)()
+}
+
 func AuthorizeClient(c *EchoContext) (int, error) {
 	t := c.Request().Header.Get("Authorization")
 
@@ -79,15 +88,21 @@ func AuthorizeClient(c *EchoContext) (int, error) {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			context.Logf(context.Trace, "Got claims: %v", claims)
+
+			c.Set("user", claim{
+				claims["sub"].(string),
+				claims["aud"].(string),
+				claims["jti"].(string),
+			})
+
+			return http.StatusOK, nil
 		} else {
 			context.Logf(context.Warn, "Error reading claims")
 		}
 
-		c.Set("user", token)
-		return http.StatusOK, nil
-	} else {
-		return http.StatusUnauthorized, errors.New("invalid or expired jwt")
 	}
+
+	return http.StatusUnauthorized, errors.New("invalid or expired jwt")
 }
 
 func _createAccount(c *EchoContext) func() error {
@@ -165,10 +180,10 @@ func _auth(c *EchoContext) func() error {
 }
 
 func _createProject(c *EchoContext) func() error {
-	u := c.Request().Header.Get("x-configurator-user")
-
 	return func() error {
-		if h, err := service.CreateProject(u, c.Context()); err != nil {
+		if u, err := authUser(c); err != nil {
+			return err
+		} else if h, err := u.CreateProject(c.Context()); err != nil {
 			if sErr, ok := err.(service.Error); ok {
 				return c.Error(http.StatusNotAcceptable, sErr)
 			} else {
@@ -183,14 +198,14 @@ func _createProject(c *EchoContext) func() error {
 }
 
 func _getProjects(c *EchoContext) func() error {
-	u := c.Request().Header.Get("x-configurator-user")
-
 	return func() error {
-		context.Logf(context.Trace, "Fetching projects for %s", u)
+		context.Logf(context.Trace, "Fetching projects")
 
 		c.Start("get projects")
 
-		if p, err := service.GetProjects(u, c.Context()); err != nil {
+		if u, err := authUser(c); err != nil {
+			return err
+		} else if p, err := u.GetProjects(c.Context()); err != nil {
 			c.Startf("failed - %v", err)
 
 			if sErr, ok := err.(service.Error); ok {
@@ -302,7 +317,6 @@ func _getAllAccounts(c *EchoContext) func() error {
 
 func _updateProject(c *EchoContext) func() error {
 	h := c.Param("handle")
-	u := c.Request().Header.Get("x-configurator-user")
 
 	return func() error {
 		d := struct {
@@ -324,9 +338,11 @@ func _updateProject(c *EchoContext) func() error {
 			app.Translate(d, &p)
 			p.Handle = h
 
-			context.Logf(context.Trace, "Saving project for %s - %s: %v", u, h, p)
+			context.Logf(context.Trace, "Saving project %s: %v", h, p)
 
-			if err := service.SaveProject(u, p, c.Context()); err != nil {
+			if u, err := authUser(c); err != nil {
+				return err
+			} else if err := u.SaveProject(p, c.Context()); err != nil {
 				if sErr, ok := err.(service.Error); ok {
 					return c.Error(http.StatusNotAcceptable, sErr)
 				} else {
@@ -341,16 +357,17 @@ func _updateProject(c *EchoContext) func() error {
 
 func _deleteProject(c *EchoContext) func() error {
 	h := c.Param("handle")
-	u := c.Request().Header.Get("x-configurator-user")
 
 	return func() error {
 		if len(h) == 0 {
 			return c.Error(http.StatusBadRequest, errors.New("No project handle supplied"))
 		}
 
-		context.Logf(context.Trace, "Deleting project for %s - %s", u, h)
+		context.Logf(context.Trace, "Deleting project %s", h)
 
-		if err := service.DeleteProject(u, h, c.Context()); err != nil {
+		if u, err := authUser(c); err != nil {
+			return err
+		} else if err := u.DeleteProject(h, c.Context()); err != nil {
 			if sErr, ok := err.(service.Error); ok {
 				return c.Error(http.StatusNotAcceptable, sErr)
 			} else {
@@ -369,6 +386,7 @@ func _createToken(u service.User) (string, error) {
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
 		Audience:  u.Role.String(),
+		Id:        u.Token,
 	})
 
 	return t.SignedString([]byte(apiHmac))
@@ -428,6 +446,16 @@ func _denyAccount(c *EchoContext) func() error {
 	}
 }
 
+func _verifyUser(c *EchoContext) func() error {
+	return func() error {
+		if _, err := authUser(c); err != nil {
+			return err
+		}
+
+		return c.End(http.StatusOK, c.Get("user"))
+	}
+}
+
 func verifyCaptcha(captcha string, c *EchoContext) error {
 	values := url.Values{
 		"secret":   {"6LdIR0cUAAAAAC8BuroicHko9U9UPj-SFd4MLnZ-"},
@@ -457,16 +485,9 @@ func verifyCaptcha(captcha string, c *EchoContext) error {
 }
 
 func authUser(c *EchoContext) (service.User, error) {
-	a := strings.Split(c.Request().Header.Get("x-configurator-auth"), ":")
+	claims := c.Get("user").(claim)
 
-	if len(a) < 2 {
-		err := errors.New("Could not authenticate user - no credetials supplied.")
-
-		c.Error(http.StatusUnauthorized, err)
-		return service.User{}, err
-	}
-
-	if u, err := service.Authorize(a[0], a[1], c.Context()); err != nil {
+	if u, err := service.Authorize(claims.H, claims.t, c.Context()); err != nil {
 		if uErr, ok := err.(service.Error); ok {
 			c.Error(http.StatusUnauthorized, uErr)
 			return service.User{}, uErr
