@@ -53,7 +53,6 @@ function getAccountList(next) {
         method: "GET",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
         success: function(resp) {
@@ -183,7 +182,6 @@ function activateAccount(h, next) {
         method: "PUT",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
         success: function(resp) {
@@ -205,7 +203,6 @@ function suspendAccount(h, next) {
         method: "PUT",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
         success: function(resp) {
@@ -227,7 +224,6 @@ function archiveAccount(h, next) {
         method: "PUT",
         headers: {
         	"Authorization": Cookies.get("auth"),
-        	"x-configurator-auth": Cookies.get("user")+":"+Cookies.get("auth"),
         },
         
         success: function(resp) {

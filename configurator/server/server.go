@@ -18,6 +18,10 @@ func Start() {
 
 	s.Static("/", "server/www")
 
+	u := s.Group("/user")
+	u.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client"))
+	u.GET("/verify", NewEchoContext(VerifyUser, "Verify User"))
+
 	pr := s.Group("/project")
 	pr.Use(NewMiddlewareContext(AuthorizeClient, "Authorize Client"))
 	pr.GET("/", NewEchoContext(GetProjects, "Retrieve Projects"))

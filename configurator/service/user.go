@@ -140,5 +140,5 @@ func (u *User) genToken(c *context.C) {
 func (u User) valid() bool {
 	return len(u.Handle) > 0 &&
 		len(u.Token) > 0 &&
-		u.Role.String() != "unkown"
+		u.Role.String() != "unknown"
 }
