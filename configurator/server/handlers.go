@@ -486,6 +486,9 @@ func verifyCaptcha(captcha string, c *EchoContext) error {
 
 func authUser(c *EchoContext) (service.User, error) {
 	claims := c.Get("user").(claim)
+	asUser := c.Request().Header.Get("x-configurator-user")
+
+	context.Logf(context.Trace, "Using impersonation: %s", asUser)
 
 	if u, err := service.Authorize(claims.H, claims.t, c.Context()); err != nil {
 		if uErr, ok := err.(service.Error); ok {
@@ -496,6 +499,9 @@ func authUser(c *EchoContext) (service.User, error) {
 		c.Error(http.StatusInternalServerError, err)
 
 		return service.User{}, err
+	} else if i, err := u.As(asUser, c.Context()); err == nil {
+		context.Logf(context.Trace, "User appears as %v", i)
+		return i, nil
 	} else {
 		return u, nil
 	}

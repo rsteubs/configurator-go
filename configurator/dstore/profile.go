@@ -64,7 +64,7 @@ func CreateUser(a Account, p Profile, status uint8, c *context.C) (string, error
 		time.Now()); err != nil {
 
 		if _, err := db.Connection().Exec("DELETE FROM account WHERE handle = ?", handle); err != nil {
-			context.Logf(context.Error, "Could not roll back faulty user account (%s): %v", handle, err)
+			context.Logf(context.Warn, "Could not roll back faulty user account (%s): %v", handle, err)
 		}
 
 		context.Logf(context.Error, "Could not create user profile : %v", err)

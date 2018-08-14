@@ -114,6 +114,34 @@ func CreateUser(username, pwd string, p Profile, c *context.C) (User, error) {
 	}
 }
 
+func (u User) As(h string, c *context.C) (User, error) {
+	if !u.valid() {
+		return User{}, invalidUserError()
+	}
+
+	if len(h) == 0 || u.Handle == h {
+		return u, nil
+	}
+
+	if u.Role != admin {
+		context.Logf(context.Warn, "Attempt to impersonate user %s by %s", h, u.Handle)
+		return u, nil
+	} else if d, _, err := dstore.FetchUser(h, active.AsUint(), c); err != nil {
+		context.Logf(context.Error, "Error during impersonation: %v", err)
+		return User{}, invalidUserError()
+	} else {
+		context.Logf(context.Trace, "User %s masquerading as %s", u.Handle, h)
+
+		i := User{
+			Handle: d.Handle,
+			Role:   UserRole(d.Role),
+		}
+
+		(&i).genToken(c)
+		return i, nil
+	}
+}
+
 func (u *User) genToken(c *context.C) {
 	tx := c.Current().Start("generate token")
 
