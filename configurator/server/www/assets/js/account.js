@@ -59,7 +59,14 @@ $(function() {
                     Cookies.set("user", data.handle);
                     Cookies.set("auth", data.token, {expires: expires});
 
-                    window.location = "/workspace/";
+                    switch (data.role) {
+                        case "admin": 
+                            window.location = "/mgmt/home/";
+                            break;
+                            
+                        default:
+                            window.location = "/workspace/";
+                    }
                 } else {
                     window.alert("Your username or password were not accepted. Please try again, or create a new account.");
                 }

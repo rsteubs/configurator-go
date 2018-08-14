@@ -478,6 +478,12 @@ footer .specs {
 	margin-left: 5px;
 }
 
+.specs h1 .conf-button {
+	font-size: 0.5em;
+	float: right;
+	margin-top: 3px;
+}
+
 .wizard {
 	padding: 0px;
 }

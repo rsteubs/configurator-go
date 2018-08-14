@@ -143,7 +143,7 @@ select {
 	color: #fff;
 }
 
-.button-main, .button-secondary {
+.button-main, .button-secondary, .button-clear {
 	background-color: #642265;
 	color: #fff;
 	border: 1px solid transparent;
@@ -153,6 +153,11 @@ select {
 
 .button-secondary {
 	background-color: grey;
+}
+
+.button-clear {
+	border-color: white;
+	background: transparent;
 }
 
 .item-table {

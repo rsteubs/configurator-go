@@ -49,7 +49,9 @@ $(function() {
                 break;
             }
         }
-    })
+    });
+    
+    Cookies.remove("x-configurator-user");
 });
 
 function getAccountList(next) {
