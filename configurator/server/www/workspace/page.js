@@ -203,6 +203,9 @@ $( function() {
 			$(this)
 				.css({display: "none"});
 		});
+		
+	$(".main-toolbar, footer .tools")
+		.draggable({ handle: ".handle" });
 });
 
 function toggleDeleteMode(ev) {
