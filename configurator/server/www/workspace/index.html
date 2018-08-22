@@ -129,7 +129,7 @@
 				<div class="button-place"><button onclick="scaleCanvas('-', event)" class="icon ion-search icon-search icon-search-minus"></button></div>
 				<div class="button-place"><button onclick="navigateHistory('-', event)" class="icon ion-reply"></button></div>
 				<div class="button-place"><button onclick="navigateHistory('+', event)" class="icon ion-forward"></button></div>
-				<div class="button-place"><button onclick="toggleDeleteMode(event)" class="icon ion-ios-trash"></button></div>
+				<div class="button-place"><button rel="delete" onclick="toggleDeleteMode(event)" class="icon ion-ios-trash"></button></div>
 			</div>
 		</div>
 
@@ -261,6 +261,24 @@
 			</div>
 		</div>
 
+		<div class="dialog" rel="project-settings">
+			<div class="drop-shadow"></div>
+			
+			<div class="content-body">
+				<div class="title">Project Settings</div>
+				
+				<div><label><input type="checkbox" rel="dimensions" />Show Dimensions</label> <button class="button-help icon ion-help"></button></div>
+				<div><label><input type="checkbox" rel="psConnections" />Show Power Supply Connections</label> <button class="button-help icon ion-help"></button></div>
+				<div><label><input type="checkbox" rel="tooltips" />Show Tooltips</label> <button class="button-help icon ion-help"></button></div>
+				<div><label><input type="checkbox" rel="illumination" />Show Effective Illumination Area</label> <button class="button-help icon ion-help"></button></div>
+				
+				<div class="buttons">
+					<div onclick="hideProjectSettings()" class="conf-button"><div class="drop-shadow"></div><button class="button-secondary">Exit</button></div>
+				</div>
+			</div>
+		</div>
+
+
 		<footer>
 			<div class="alpha"></div>
 			<button id="footerHandle" class="footer-handle icon ion-arrow-down-a"></button>
@@ -325,7 +343,7 @@
 			</section>
 
 			<section class="specs">
-				<h1>Configuration <button class="conf-button button-clear">Change Settings</button></h1>
+				<h1>Configuration <button onclick="showProjectSettings()" class="conf-button button-clear">Change Settings</button></h1>
 
 				<div class="setting">
 					Work Mode 

@@ -647,6 +647,19 @@ footer .specs {
     margin-left:  -5px;
 }
 
+.dialog[rel=project-settings] label {
+	display: inline-block;
+	margin: 5px 20px;
+}
+
+.dialog[rel=project-settings] .button-help {
+	float: right;
+	margin-right: 10px;
+	padding: 3px 6px;
+	border: 1px solid white;
+	border-radius: 8px;
+}
+
 img.gu-transit {
 	display: block;
 	visibility: hidden;

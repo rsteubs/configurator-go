@@ -206,6 +206,116 @@ $( function() {
 		
 	$(".main-toolbar, footer .tools")
 		.draggable({ handle: ".handle" });
+		
+	$(document)
+		.keyup(function(e) {
+			console.log("key pressesd", e.which, e.ctrlKey, e.altKey);
+			
+			switch (e.which) {
+				case 46 : // DELETE
+					$(".main-toolbar button[rel=delete]").click();
+					break;
+					
+				case 37: // LEFT
+					var left = parseInt($(".work-table").css("left")) - 10;
+					
+					$(".work-table").css({left: left + "px"});
+					break;
+					
+				case 38: // UP
+					var top = parseInt($(".work-table").css("top")) - 10;
+					
+					$(".work-table").css({top: top + "px"});
+					break;
+					
+				case 39: // RIGHT
+					var left = parseInt($(".work-table").css("left")) + 10;
+					
+					$(".work-table").css({left: left + "px"});
+					break;
+					
+				case 40: // DOWN
+					var top = parseInt($(".work-table").css("top")) + 10;
+					
+					$(".work-table").css({top: top + "px"});
+					break;
+					
+				case 77: // MANUAL MODE
+					if (e.shiftKey) {
+						var project = Project.active;
+						
+						if (project) {
+							project.configuration.workMode = "manual";
+							$("footer .tools .overlay").remove();
+							displayConfiguration();	
+						}
+						
+						break;
+					}
+					
+				case 89: // REDO
+					if (e.ctrlKey) {
+						navigateHistory("+");
+					}
+					break;
+					
+				case 90: // UNDO
+					if (e.ctrlKey) {
+						navigateHistory("-");
+					}
+					break;
+					
+				case 107: // ZOOM IN
+					if (e.ctrlKey) {
+						scaleCanvas("+");
+					}
+					break;
+					
+				case 109: // ZOOM OUT
+					if (e.ctrlKey) {
+						scaleCanvas("-");
+					}
+					break;
+					
+				case 191: // HELP
+					if (e.shiftKey) {
+						alert("HELP!");
+					}
+					break;
+					
+				case 79: // OPEN
+					if (e.altKey) {
+						openProject();	
+					}
+					break;
+					
+				case 83: // SAVE
+					if (e.altKey) {
+						saveCurrentProject();
+					}
+					break;
+					
+				case 80: // PRINT
+					if (e.altKey) {
+						printProject();
+					}
+					break;
+					
+				case 87: // CLOSE
+					if (e.altKey) {
+						closeProject();
+					}
+					break;
+					
+				case 88: // EXIT
+					if (e.altKey) {
+						
+					}
+					break;
+					
+					
+			}
+		});
 });
 
 function toggleDeleteMode(ev) {
@@ -1781,4 +1891,34 @@ function displayConfiguration() {
 	$(".specs .setting [rel=work-mode]").text(configModeOptions[project.configuration.workMode]);
 	$(".specs .setting [rel=temperature]").text(temperatureOptions[project.configuration.temperature]);
 
+}
+
+function showProjectSettings() {
+	var dialog = $("[rel=project-settings]");
+	var project = Project.active;
+	
+	if (project) {
+		dialog.find("[rel=dimensions]").prop("checked", project.settings.showDimensions);
+		dialog.find("[rel=psConnections]").prop("checked", project.settings.showPS);
+		dialog.find("[rel=tooltips]").prop("checked", project.settings.showTooltips);
+		dialog.find("[rel=illumination]").prop("checked", project.settings.showLightArea);
+	}
+		
+	dialog.show();
+}
+
+function hideProjectSettings() {
+	var dialog = $("[rel=project-settings]");
+	var project = Project.active;
+	
+	if (project) {
+		project.settings.showDimensions = dialog.find("[rel=dimensions]").prop("checked");
+		project.settings.showPS = dialog.find("[rel=psConnections]").prop("checked");
+		project.settings.showTooltips = dialog.find("[rel=tooltips]").prop("checked");
+		project.settings.showLightArea = dialog.find("[rel=illumination]").prop("checked");
+	}
+
+	console.log("wrote settings", project.settings);
+
+	dialog.hide();
 }
