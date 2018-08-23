@@ -31,6 +31,7 @@ window.Project = {
         		areaHeight: "",
         		tileWidth: "",
         		tileHeight: "",
+        		derate: 0.1,
             },
             
             settings: {
