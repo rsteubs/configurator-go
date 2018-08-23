@@ -217,27 +217,19 @@ $( function() {
 					break;
 					
 				case 37: // LEFT
-					var left = parseInt($(".work-table").css("left")) - 10;
-					
-					$(".work-table").css({left: left + "px"});
+					panCanvas("l");
 					break;
 					
 				case 38: // UP
-					var top = parseInt($(".work-table").css("top")) - 10;
-					
-					$(".work-table").css({top: top + "px"});
+					panCanvas("u");
 					break;
 					
 				case 39: // RIGHT
-					var left = parseInt($(".work-table").css("left")) + 10;
-					
-					$(".work-table").css({left: left + "px"});
+					panCanvas("r");
 					break;
 					
 				case 40: // DOWN
-					var top = parseInt($(".work-table").css("top")) + 10;
-					
-					$(".work-table").css({top: top + "px"});
+					panCanvas("d");
 					break;
 					
 				case 77: // MANUAL MODE
@@ -266,13 +258,15 @@ $( function() {
 					break;
 					
 				case 107: // ZOOM IN
-					if (e.ctrlKey) {
+				case 187:
+					if (e.altKey) {
 						scaleCanvas("+");
 					}
 					break;
 					
 				case 109: // ZOOM OUT
-					if (e.ctrlKey) {
+				case 189:
+					if (e.altKey) {
 						scaleCanvas("-");
 					}
 					break;
@@ -313,7 +307,16 @@ $( function() {
 					}
 					break;
 					
-					
+			}
+		});
+		
+	$("[rel=power-derate]")
+		.change(function() {
+			var field = $(this);
+			
+			if (Project.active) {
+				Project.active.configuration.derate = parseFloat(field.val());
+				buildComponentList();
 			}
 		});
 });
@@ -363,11 +366,16 @@ function setWorkMode(mode) {
 				
 			$(".canvas")
 				.get()[0].addEventListener("wheel", function(e) {
-					console.log("wheel detected", e.deltaY);
 					if (e.deltaY < 0) {
 						scaleCanvas("+");
 					} else if (e.deltaY > 0) {
 						scaleCanvas("-");
+					} 
+					
+					if (e.deltaX < 0) {
+						panCanvas("l");
+					} else if (e.deltaX > 0) {
+						panCanvas("r");
 					} 
 				});
 
@@ -689,11 +697,13 @@ function copyProject(project) {
 }
 
 function exportProject() {
-	window.open("print.html", "_blank");
+	Project.stash(compressWorkspace());
+	window.open("./print.html", "_blank");
 }
 
 function printProject() {
-	window.open("print.html", "_blank");
+	Project.stash(compressWorkspace());
+	window.open("./print.html", "_blank");
 }
 
 function compressWorkspace() {
@@ -988,6 +998,36 @@ function scaleCanvas(direction, ev) {
 
 	canvas.css("transform", "scale(" + scale + ")");
 	canvas.attr("scale", scale);
+}
+
+function panCanvas(direction, ev) {
+	var left = parseInt($(".work-table").css("left"));
+	var top = parseInt($(".work-table").css("top"));
+	var canvas = $(".work-table");
+	var step = 10;
+
+	switch (direction) {
+		case "l": 
+			left -= step;
+			break;
+
+		case "r": 
+			left += step;
+			break;
+
+		case "u": 
+			top -= step;
+			break;
+			
+		case "d": 
+			top += step;
+			break;
+	}
+
+	canvas.css({
+		top: top + "px",
+		left: left + "px",
+	});
 }
 
 function dimensionWorkTable(workspaceWidth, workspaceHeight) {
@@ -1865,12 +1905,12 @@ function rateCircuitPower(circuitNumber) {
 	var workTable = $(".work-table");
 	var circuitTiles = workTable.find(`.tile[circuit=${circuitNumber}]`);
 	var circuitHarnessCount = circuitTiles.find(".zone img").length;
+	var derate = Project.active.configuration.derate || 0.1;
 
 	console.log(`rating circuit - ${circuitNumber}: ${circuitTiles.length} tiles, ${circuitHarnessCount} harnesses`);
 
 	for (var i = 0, spec; (spec = specs[i]); i++) {
 		if (spec.tiles == circuitTiles.length && spec.harnesses <= circuitHarnessCount) {
-			var derate = parseFloat($("[rel=power-derate]").val());
 			var power = spec.power;
 			var rating = Math.ceil(power + power * derate);
 
@@ -1888,6 +1928,7 @@ function rateCircuitPower(circuitNumber) {
 function displayConfiguration() {
 	var project = Project.active;
 	
+	$("[rel=power-derate]").val(project.configuration.derate);
 	$(".specs .setting [rel=work-mode]").text(configModeOptions[project.configuration.workMode]);
 	$(".specs .setting [rel=temperature]").text(temperatureOptions[project.configuration.temperature]);
 
