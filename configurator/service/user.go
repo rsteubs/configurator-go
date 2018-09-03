@@ -35,10 +35,10 @@ func invalidUserError() Error   { return Error{"User does not exist or password 
 func duplicateUserError() Error { return Error{"User name already exists."} }
 
 func Authenticate(username, pwd string, c *context.C) (User, error) {
-	tx := c.Getf("authenticating - %s", username)
+	tx := c.Get("authenticating - %s", username)
 
 	if a, _, err := dstore.FetchUser(username, active.AsUint(), c); err != nil {
-		tx.Startf("fail - %v", err)
+		tx.Start("fail - %v", err)
 		return User{}, err
 	} else if len(a.Handle) == 0 {
 		return User{}, invalidUserError()

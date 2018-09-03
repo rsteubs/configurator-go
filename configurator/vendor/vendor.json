@@ -15,10 +15,6 @@
 			"revision": ""
 		},
 		{
-			"path": "forge/1.0/app",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "m6ulNlEzjUYadG5spKmU9qrLHQI=",
 			"path": "github.com/aws/aws-sdk-go/aws",
 			"revision": "91e1b0e1eaf2ae1786d669ab6ba47df466a9a3fd",
@@ -209,6 +205,24 @@
 			"path": "github.com/codegangsta/negroni",
 			"revision": "22c5532ea862c34fdad414e90f8cc00b4f6f4cab",
 			"revisionTime": "2018-01-30T04:45:49Z"
+		},
+		{
+			"checksumSHA1": "nlmqdzepjEW+pT5ZoVCXJ1im6oU=",
+			"path": "github.com/cptcretin/forge/app",
+			"revision": "ef8817047e76e44c8cf421cd3fd0bf99245967f9",
+			"revisionTime": "2018-09-03T06:31:02Z"
+		},
+		{
+			"checksumSHA1": "0dNLHRhwSN1CruR+hKJIwiI3DjE=",
+			"path": "github.com/cptcretin/forge/context",
+			"revision": "ef8817047e76e44c8cf421cd3fd0bf99245967f9",
+			"revisionTime": "2018-09-03T06:31:02Z"
+		},
+		{
+			"checksumSHA1": "iPEGAcyKFDsdssJDiPqkoRrKpOc=",
+			"path": "github.com/cptcretin/forge/logger",
+			"revision": "ef8817047e76e44c8cf421cd3fd0bf99245967f9",
+			"revisionTime": "2018-09-03T06:31:02Z"
 		},
 		{
 			"checksumSHA1": "+TKtBzv23ywvmmqRiGEjUba4YmI=",

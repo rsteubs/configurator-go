@@ -53,7 +53,7 @@ func prepareConnections() {
 	}
 }
 
-func (c *C) NewDB(conn, tx string) *Data {
+func (c *C) NewDB(conn, tx string, a ...interface{}) *Data {
 	if connections == nil {
 		prepareConnections()
 	}
@@ -62,24 +62,7 @@ func (c *C) NewDB(conn, tx string) *Data {
 		conn = DefaultDB
 	}
 
-	c.Get(tx)
-
-	return &Data{
-		c,
-		connections[conn],
-	}
-}
-
-func (c *C) NewDBf(conn, tx string, a ...interface{}) *Data {
-	if connections == nil {
-		prepareConnections()
-	}
-
-	if len(conn) == 0 {
-		conn = DefaultDB
-	}
-
-	c.Getf(tx, a...)
+	c.Get(tx, a...)
 
 	return &Data{
 		c,
@@ -91,12 +74,8 @@ func (c *Data) Connection() *sql.DB {
 	return c.db
 }
 
-func (c *Data) Start(tx string) *Tx {
-	return c.c.Start(tx)
-}
-
-func (c *Data) Startf(tx string, a ...interface{}) *Tx {
-	return c.c.Startf(tx, a...)
+func (c *Data) Start(tx string, a ...interface{}) *Tx {
+	return c.c.Start(tx, a...)
 }
 
 func (c *Data) Error(err error) {

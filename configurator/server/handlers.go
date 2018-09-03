@@ -159,7 +159,7 @@ func _auth(c *EchoContext) func() error {
 		} else if len(d.U) == 0 || len(d.P) == 0 {
 			return c.Error(http.StatusBadRequest, errors.New("Must supply a username and a password"))
 		} else if u, err := service.Authenticate(d.U, d.P, c.Context()); err != nil {
-			c.Startf("failed - %v", err)
+			c.Start("failed - %v", err)
 
 			if sErr, ok := err.(service.Error); ok {
 				return c.Error(http.StatusUnauthorized, sErr)
@@ -206,7 +206,7 @@ func _getProjects(c *EchoContext) func() error {
 		if u, err := authUser(c); err != nil {
 			return err
 		} else if p, err := u.GetProjects(c.Context()); err != nil {
-			c.Startf("failed - %v", err)
+			c.Start("failed - %v", err)
 
 			if sErr, ok := err.(service.Error); ok {
 				return c.Error(http.StatusBadRequest, sErr)
@@ -226,7 +226,7 @@ func _getProjects(c *EchoContext) func() error {
 			out := make([]project, len(p))
 			index := 0
 
-			c.Startf("parsing %v projects", len(p))
+			c.Start("parsing %v projects", len(p))
 
 			for _, i := range p {
 				if len(i.Handle) == 0 {

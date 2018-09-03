@@ -48,12 +48,8 @@ func (c *Http) Context() *C {
 	return c.c
 }
 
-func (c *Http) Start(tx string) *Tx {
-	return c.c.Start(tx)
-}
-
-func (c *Http) Startf(tx string, a ...interface{}) *Tx {
-	return c.c.Startf(tx, a...)
+func (c *Http) Start(tx string, a ...interface{}) *Tx {
+	return c.c.Start(tx, a)
 }
 
 func (c *Http) Error(err error, status int) {

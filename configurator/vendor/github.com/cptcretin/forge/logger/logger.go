@@ -62,7 +62,7 @@ func init() {
 
 	if (c.LogOutput & logOutFile) == logOutFile {
 		l := lumberjack.Logger{
-			MaxSize:    int64(c.MaxSize),
+			MaxSize:    c.MaxSize,
 			MaxBackups: c.MaxBackups,
 			MaxAge:     c.MaxAge,
 			LocalTime:  c.LocalTime,

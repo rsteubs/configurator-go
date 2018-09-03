@@ -34,7 +34,7 @@ func CreateServer() *echo.Echo {
 
 func NewEchoContext(h RequestHandler, n string) func(echo.Context) error {
 	return func(e echo.Context) error {
-		c := context.Create(n)
+		c := context.New(n)
 
 		defer c.End()
 		return h(&EchoContext{c, e, http.StatusOK})
@@ -44,7 +44,7 @@ func NewEchoContext(h RequestHandler, n string) func(echo.Context) error {
 func NewMiddlewareContext(h MiddlewareHandler, n string) func(echo.HandlerFunc) echo.HandlerFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(e echo.Context) error {
-			c := context.Create(n)
+			c := context.New(n)
 
 			defer c.End()
 
@@ -84,12 +84,8 @@ func (c *EchoContext) Param(n string) string {
 	return c.e.Param(n)
 }
 
-func (c *EchoContext) Start(tx string) *context.Tx {
-	return c.c.Start(tx)
-}
-
-func (c *EchoContext) Startf(tx string, a ...interface{}) *context.Tx {
-	return c.c.Startf(tx, a...)
+func (c *EchoContext) Start(tx string, a ...interface{}) *context.Tx {
+	return c.c.Start(tx, a...)
 }
 
 func (c *EchoContext) Error(status int, err error) error {
