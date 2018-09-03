@@ -339,28 +339,28 @@
 			"revisionTime": "2017-02-24T21:24:29Z"
 		},
 		{
-			"checksumSHA1": "zHLlCNnnX/KNVue2tHr+FWxbszA=",
+			"checksumSHA1": "/pfkYB22L5MtzxrfIHQ0tWylnZw=",
 			"path": "golang.org/x/crypto/acme",
-			"revision": "b2aa35443fbc700ab74c586ae79b81c171851023",
-			"revisionTime": "2018-04-03T08:00:15Z"
+			"revision": "182538f80094b6a8efaade63a8fd8e0d9d5843dd",
+			"revisionTime": "2018-08-30T18:34:03Z"
 		},
 		{
-			"checksumSHA1": "6NdRp9OYL38e71vEtcQtSkN/ZbA=",
+			"checksumSHA1": "Ayt033DfS42Y57XUoOAZvfGUyaA=",
 			"path": "golang.org/x/crypto/acme/autocert",
-			"revision": "b2aa35443fbc700ab74c586ae79b81c171851023",
-			"revisionTime": "2018-04-03T08:00:15Z"
+			"revision": "182538f80094b6a8efaade63a8fd8e0d9d5843dd",
+			"revisionTime": "2018-08-30T18:34:03Z"
 		},
 		{
-			"checksumSHA1": "Mwu8T+68sKdnkn0AWla8trKDOfI=",
+			"checksumSHA1": "fg6cP5KbsnnxyZshqa32ZT9DgKk=",
 			"path": "golang.org/x/sys/unix",
-			"revision": "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e",
-			"revisionTime": "2018-04-04T17:59:11Z"
+			"revision": "2b024373dcd9800f0cae693839fac6ede8d64a8c",
+			"revisionTime": "2018-09-03T19:00:32Z"
 		},
 		{
 			"checksumSHA1": "LiyXfqOzaeQ8vgYZH3t2hUEdVTw=",
 			"path": "google.golang.org/appengine/cloudsql",
-			"revision": "5bee14b453b4c71be47ec1781b0fa61c2ea182db",
-			"revisionTime": "2017-12-12T22:30:47Z"
+			"revision": "03cac3b07182cfb08c0d0c0b6ee72a1ceb151c92",
+			"revisionTime": "2018-08-27T17:01:13Z"
 		},
 		{
 			"path": "logger",
