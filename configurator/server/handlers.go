@@ -270,6 +270,8 @@ func _getAllAccounts(c *EchoContext) func() error {
 			pages := int(math.Ceil(float64(len(l)) / float64(pageSize)))
 
 			for page := 0; page < pages; page++ {
+				p := page
+
 				do := func(p []service.UserAccount) {
 					l := make([]account, len(p))
 
@@ -295,11 +297,16 @@ func _getAllAccounts(c *EchoContext) func() error {
 					ch <- l
 				}
 
-				if page == pages-1 {
-					go do(l[page*pageSize:])
-				} else {
-					go do(l[page*pageSize : page*pageSize+pageSize])
-				}
+				c.c.
+					NewThread("converting profile - page number: %v", p).
+					Run(func(tx *context.Tx) {
+						if p == pages-1 {
+							do(l[p*pageSize:])
+						} else {
+							do(l[p*pageSize : p*pageSize+pageSize])
+						}
+					})
+
 			}
 
 			for i := 0; i < pages; i++ {

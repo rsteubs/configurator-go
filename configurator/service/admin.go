@@ -43,6 +43,8 @@ func (u User) ProfileList(c *context.C) ([]UserAccount, error) {
 		pages := int(math.Ceil(float64(len(d)) / float64(pageSize)))
 
 		for page := 0; page < pages; page++ {
+			p := page
+
 			do := func(p []dstore.AccountProfile) {
 				l := make([]UserAccount, len(p))
 
@@ -70,11 +72,15 @@ func (u User) ProfileList(c *context.C) ([]UserAccount, error) {
 				ch <- l
 			}
 
-			if page == pages-1 {
-				go do(d[page*pageSize:])
-			} else {
-				go do(d[page*pageSize : page*pageSize+pageSize])
-			}
+			c.
+				NewThread("reading profiles - page: %v", p).
+				Run(func(tx *context.Tx) {
+					if p == pages-1 {
+						do(d[p*pageSize:])
+					} else {
+						do(d[page*pageSize : page*pageSize+pageSize])
+					}
+				})
 		}
 
 		for i := 0; i < pages; i++ {

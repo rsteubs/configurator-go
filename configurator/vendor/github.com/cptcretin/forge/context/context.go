@@ -77,7 +77,7 @@ func (c *C) Current() *Tx {
 
 func (c *C) Get(i string, a ...interface{}) *Tx {
 	if tx := c.Current(); tx == nil {
-		return c.Start(i, a)
+		return c.Start(i, a...)
 	} else {
 		return tx
 	}

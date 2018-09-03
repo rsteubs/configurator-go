@@ -50,7 +50,11 @@ func (u User) GetProjects(c *context.C) ([]Project, error) {
 		}
 
 		for _, handle := range h {
-			go fetch(handle)
+			c.
+				NewThread("fetch project: %s", handle).
+				Run(func(tx *context.Tx) {
+					fetch(handle)
+				})
 		}
 
 		for i, _ := range h {
