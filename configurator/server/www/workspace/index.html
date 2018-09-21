@@ -20,9 +20,11 @@
 		<link rel="stylesheet" type="text/css" href="../assets/css/ionicons.css" />
 		<link rel="stylesheet" type="text/css" href="../assets/js/jquery-ui-1.12.1.custom/jquery-ui.css" />
 		<link rel="stylesheet" type="text/css" href="../assets/css/dragula.min.css" />
+		<link rel="stylesheet" href="../assets/js/poshytip/tip-violet/tip-violet.css" type="text/css" />
 
 		<script src="../assets/js/jquery-3.2.1.js"></script>
 		<script src="../assets/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+		<script src="../assets/js/poshytip/jquery.poshytip.min.js"></script>
 		<script src="../assets/js/lzstring.js"></script>
 		<script src="../assets/js/js.cookie.js"></script>
 		<script src="../assets/js/temperature.js"></script>
@@ -124,12 +126,12 @@
 			
 			
 			<div class="content-body">
-				<div class="handle icon ion-android-menu"></div>
-				<div class="button-place"><button onclick="scaleCanvas('+', event)" class="icon ion-search icon-search icon-search-plus"></button></div>
-				<div class="button-place"><button onclick="scaleCanvas('-', event)" class="icon ion-search icon-search icon-search-minus"></button></div>
-				<div class="button-place"><button onclick="navigateHistory('-', event)" class="icon ion-reply"></button></div>
-				<div class="button-place"><button onclick="navigateHistory('+', event)" class="icon ion-forward"></button></div>
-				<div class="button-place"><button rel="delete" onclick="toggleDeleteMode(event)" class="icon ion-ios-trash"></button></div>
+				<div class="handle icon ion-android-menu"  data-conf-tooltip="workspace.toolbar.handle"></div>
+				<div class="button-place"><button onclick="scaleCanvas('+', event)" data-conf-tooltip="workspace.toolbar.zoomIn" class="icon ion-search icon-search icon-search-plus"></button></div>
+				<div class="button-place"><button onclick="scaleCanvas('-', event)" data-conf-tooltip="workspace.toolbar.zoomOut" class="icon ion-search icon-search icon-search-minus"></button></div>
+				<div class="button-place"><button onclick="navigateHistory('-', event)" data-conf-tooltip="workspace.toolbar.undo" class="icon ion-reply"></button></div>
+				<div class="button-place"><button onclick="navigateHistory('+', event)" data-conf-tooltip="workspace.toolbar.redo" class="icon ion-forward"></button></div>
+				<div class="button-place"><button rel="delete" onclick="toggleDeleteMode(event)" data-conf-tooltip="workspace.toolbar.delete" class="icon ion-ios-trash"></button></div>
 			</div>
 		</div>
 
@@ -267,10 +269,10 @@
 			<div class="content-body">
 				<div class="title">Project Settings</div>
 				
-				<div><label><input type="checkbox" rel="dimensions" />Show Dimensions</label> <button class="button-help icon ion-help"></button></div>
-				<div><label><input type="checkbox" rel="psConnections" />Show Power Supply Connections</label> <button class="button-help icon ion-help"></button></div>
-				<div><label><input type="checkbox" rel="tooltips" />Show Tooltips</label> <button class="button-help icon ion-help"></button></div>
-				<div><label><input type="checkbox" rel="illumination" />Show Effective Illumination Area</label> <button class="button-help icon ion-help"></button></div>
+				<div><label><input onchange="updateProjectSetting(event)" type="checkbox" rel="dimensions" />Show Dimensions</label> <button class="button-help icon ion-help"></button></div>
+				<div><label><input onchange="updateProjectSetting(event)" type="checkbox" rel="psConnections" />Show Power Supply Connections</label> <button class="button-help icon ion-help"></button></div>
+				<div><label><input onchange="updateProjectSetting(event)" type="checkbox" rel="tooltips" />Show Tooltips</label> <button class="button-help icon ion-help"></button></div>
+				<div><label><input onchange="updateProjectSetting(event)" type="checkbox" rel="illumination" />Show Effective Illumination Area</label> <button class="button-help icon ion-help"></button></div>
 				
 				<div class="buttons">
 					<div onclick="hideProjectSettings()" class="conf-button"><div class="drop-shadow"></div><button class="button-secondary">Exit</button></div>
@@ -288,10 +290,10 @@
 				
 				<div class="content-body">
 					<div class="overlay"></div>
-					<div class="tool-button drag-to-canvas" rel="tile"><img src="../assets/img/tile/illumitile_32x32.png" /><div class="helper"></div></div>
-					<div class="tool-button drag-to-canvas" rel="harness"><img src="../assets/img/tile/harness_90x11.png" /><div class="helper"></div></div>
-					<div class="tool-button drag-to-canvas" rel="power"><img src="../assets/img/tile/power_150x41.png" style="width:100px;" /><div class="helper"></div></div>
-					<div class="tool-button handle icon ion-android-menu"></div>
+					<div class="tool-button drag-to-canvas"  data-conf-tooltip="footer.tools.tile" rel="tile"><img src="../assets/img/tile/illumitile_32x32.png" /><div class="helper"></div></div>
+					<div class="tool-button drag-to-canvas"  data-conf-tooltip="footer.tools.harness" rel="harness"><img src="../assets/img/tile/harness_90x11.png" /><div class="helper"></div></div>
+					<div class="tool-button drag-to-canvas"  data-conf-tooltip="footer.tools.power" rel="power"><img src="../assets/img/tile/power_150x41.png" style="width:100px;" /><div class="helper"></div></div>
+					<div class="tool-button handle icon ion-android-menu" data-conf-tooltip="footer.tools.handle"></div>
 				</div>
 			</div>
 
@@ -308,19 +310,19 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
+						<tr data-conf-tooltip="footer.field.voltage">
 							<td>Voltage</td>
 							<td rel="voltage">0.00</td>
 							<td>DC</td>
 							<td><button class="button-help icon ion-help"></button></td>
 						</tr>
-						<tr>
+						<tr data-conf-tooltip="footer.field.current">
 							<td>Current</td>
 							<td rel="current">0.00</td>
 							<td>Amps</td>
 							<td><button class="button-help icon ion-help"></button></td>
 						</tr>
-						<tr>
+						<tr data-conf-tooltip="footer.field.power">
 							<td>Power</td>
 							<td rel="power">0.00</td>
 							<td>Watts</td>
@@ -329,7 +331,7 @@
 						<tr>
 							<td>Derate</td>
 							<td>
-								<select rel="power-derate">
+								<select rel="power-derate" data-conf-tooltip="footer.field.derate">
 									<option value="0.1">10%</option>
 									<option value="0.15">15%</option>
 									<option value="0.2">20%</option>
@@ -343,31 +345,44 @@
 			</section>
 
 			<section class="specs">
-				<h1>Configuration <button onclick="showProjectSettings()" class="conf-button button-clear">Change Settings</button></h1>
+				<h1>Configuration <button onclick="showProjectSettings()" class="conf-button button-clear" data-conf-tooltip="config.field.wizard">Change Settings</button></h1>
 
 				<div class="setting">
 					Work Mode 
-					<span class="value" onclick="navigateWizard('work-mode')" style="text-decoration: underline; cursor: pointer;" rel="work-mode">Auto (Tile Number)</span>
-					<button class="button-help icon ion-help"></button>
+					<span 
+						class="value" 
+						onclick="navigateWizard('work-mode')" 
+						style="text-decoration: underline; cursor: pointer;" 
+						data-conf-tooltip="config.field.workMode"						
+						rel="work-mode">
 					
-					<div class="tooltip help">
-						<div class="arrow"></div>						
-						This Derate feature allows you to change the calculated margin for power variances that occur due to temperature shifts. A Derating factor is specified because a power supply should not be operated at its rated power/current thresh-old. Doing so leaves no margin for any variances. A 10% derate margin works for most common applications where the IllumiTile arrays and power supplies have ample cooling, and the power supplies are of high quality. If the LED system is to be placed in a room/environment where the temperature may vary greatly, then a derating factor of 20% is appropriate, otherwise 10% for most applications is acceptable.
-					</div>
+						Auto (Tile Number)
+					</span>
+					<button class="button-help icon ion-help"></button>
 				</div>
 
 				<div class="setting">
 					Color Temperature 
-					<span class="value"  onclick="navigateWizard('temperature')" style="text-decoration: underline; cursor: pointer;" rel="temperature">Neutral (4500K CCT)</span>
+					<span 
+						class="value"  
+						onclick="navigateWizard('temperature')" 
+						style="text-decoration: underline; cursor: pointer;" 
+						data-conf-tooltip="config.field.temperature"
+						rel="temperature">
+						
+						Neutral (4500K CCT)
+					</span>
 					<button class="button-help icon ion-help"></button>
-					
-					<div class="tooltip help">
-						<div class="arrow"></div>						
-						This Derate feature allows you to change the calculated margin for power variances that occur due to temperature shifts. A Derating factor is specified because a power supply should not be operated at its rated power/current thresh-old. Doing so leaves no margin for any variances. A 10% derate margin works for most common applications where the IllumiTile arrays and power supplies have ample cooling, and the power supplies are of high quality. If the LED system is to be placed in a room/environment where the temperature may vary greatly, then a derating factor of 20% is appropriate, otherwise 10% for most applications is acceptable.
-					</div>
 				</div>
 
-				<div class="setting" style="text-decoration: underline; cursor: pointer;" onclick="navigateWizard('temperature')">Change configuration...</div>
+				<div 
+					class="setting" 
+					onclick="navigateWizard('temperature')"
+					data-conf-tooltip="config.field.wizard"
+					style="text-decoration: underline; cursor: pointer;">
+					
+					Change configuration...
+				</div>
 			</section>
 
 			<section class="components">
@@ -385,8 +400,8 @@
 				</table>
 				
 				<div class="buttons">
-					<button class="conf-button button-main"><div class="drop-shadow"></div>Export to PDF</button>
-					<button class="conf-button button-main"><div class="drop-shadow"></div>Where to Buy</button>
+					<button class="conf-button button-main" data-conf-tooltip="components.button.pdfExport"><div class="drop-shadow"></div>Export to PDF</button>
+					<button class="conf-button button-main" data-conf-tooltip="components.button.buy"><div class="drop-shadow"></div>Where to Buy</button>
 				</div>
 			</section>
 		</footer>

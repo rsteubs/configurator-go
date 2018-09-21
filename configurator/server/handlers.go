@@ -495,8 +495,6 @@ func authUser(c *EchoContext) (service.User, error) {
 	claims := c.Get("user").(claim)
 	asUser := c.Request().Header.Get("x-configurator-user")
 
-	context.Logf(context.Trace, "Using impersonation: %s", asUser)
-
 	if u, err := service.Authorize(claims.H, claims.t, c.Context()); err != nil {
 		if uErr, ok := err.(service.Error); ok {
 			c.Error(http.StatusUnauthorized, uErr)

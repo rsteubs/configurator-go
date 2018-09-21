@@ -43,6 +43,11 @@ $(function() {
                 break;
             }
             
+            case "projects": {
+                window.location = "../../workspace/";
+                break;
+            }
+            
             case "logout": {
                 Cookies.remove("auth");
                 window.location = "/";

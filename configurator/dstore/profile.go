@@ -149,13 +149,39 @@ func FetchUser(h string, status uint8, c *context.C) (Account, Profile, error) {
 
 func SetAccountStatus(handle string, status uint8, c *context.C) error {
 	db := c.NewDB(context.DefaultDB, "update account status")
-	query := "UPDATE account SET status = ? WHERE handle = ?"
 
-	if _, err := db.Connection().Exec(query, status, handle); err != nil {
-		context.Logf(context.Error, "Error updating profile: %v", err)
-		db.Error(err)
-		return err
-	}
+	tx := c.Start("update account status: %s - %v", handle, status)
+
+	tx.
+		NewThread("updating account record").
+		Run(func(tx *context.Tx) {
+			db := c.NewDB(context.DefaultDB, "update account status")
+			query := "UPDATE account SET status = ? WHERE handle = ?"
+
+			if _, err := db.Connection().Exec(query, status, handle); err != nil {
+				context.Logf(context.Error, "Error updating account: %v", err)
+				db.Error(err)
+
+				tx.Start("fail")
+			} else {
+				tx.Start("ok")
+			}
+		})
+
+	tx.
+		NewThread("updating profile record").
+		Run(func(tx *context.Tx) {
+			query := "UPDATE profile SET status = ? WHERE handle = ?"
+
+			if _, err := db.Connection().Exec(query, status, handle); err != nil {
+				context.Logf(context.Error, "Error updating profile: %v", err)
+				db.Error(err)
+
+				tx.Start("fail")
+			} else {
+				tx.Start("ok")
+			}
+		})
 
 	return nil
 }

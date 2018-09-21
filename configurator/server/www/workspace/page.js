@@ -57,6 +57,32 @@ temperatureOptions["cool"] = "Cool (6000K CCT)";
 temperatureOptions["neutral"] = "Neutral (4500K CCT)";
 temperatureOptions["warm"] = "Warm (3000K CCT)";
 
+var uiTooltips = [];
+uiTooltips["_default"] = "PUT TOOLTIPS IN ME";
+
+uiTooltips["workspace.toolbar.handle"] = "Click-Drag to Move the Toolbar";
+uiTooltips["workspace.toolbar.zoomIn"] = "Zoom-In where the Pointer is Located";
+uiTooltips["workspace.toolbar.zoomOut"] = "Zoom-Out where the Pointer is Located";
+uiTooltips["workspace.toolbar.undo"] = "Click to Undo Previous Actions";
+uiTooltips["workspace.toolbar.redo"] = "Click to Redo Previous Actions";
+uiTooltips["workspace.toolbar.delete"] = "Delete IllumiTiles, Harnesses or Power Supplies in Manual Mode";
+
+uiTooltips["config.field.wizard"] = undefined;
+uiTooltips["config.field.workMode"] = undefined;
+uiTooltips["config.field.temperature"] = undefined;
+uiTooltips["config.field.wizard"] = undefined;
+uiTooltips["components.button.pdfExport"] = undefined;
+uiTooltips["components.button.buy"] = undefined;
+
+uiTooltips["footer.tools.tile"] = "Click-Drag an IllumiTile onto the Workspace in Manual Mode";
+uiTooltips["footer.tools.harness"] = "Click-Drag a Harness Between Adjacent IllumiTile Connectors in Manual Mode";
+uiTooltips["footer.tools.power"] = "Click-Drag a Power Supply onto a Specific IllumiTile Connector in Manual Mode";
+uiTooltips["footer.tools.handle"] = "Click-Drag to Move the Object Bar";
+uiTooltips["footer.field.voltage"] = undefined;
+uiTooltips["footer.field.current"] = undefined;
+uiTooltips["footer.field.power"] = undefined;
+uiTooltips["footer.field.derate"] = "This Derate feature allows you to change the calculated margin for power variances that occur due to temperature shifts. A Derating factor is specified because a power supply should not be operated at its rated power/current thresh-old. Doing so leaves no margin for any variances. A 10% derate margin works for most common applications where the IllumiTile arrays and power supplies have ample cooling, and the power supplies are of high quality. If the LED system is to be placed in a room/environment where the temperature may vary greatly, then a derating factor of 20% is appropriate, otherwise 10% for most applications is acceptable.";
+
 $( function() {
 	if (!Cookies.get("auth")) {
 		window.location = "/account.html";
@@ -317,6 +343,21 @@ $( function() {
 			if (Project.active) {
 				Project.active.configuration.derate = parseFloat(field.val());
 				buildComponentList();
+			}
+		});
+		
+	$("[data-conf-tooltip]")
+		.poshytip({
+			className: "tip-violet",
+			content: function(next) {
+				var el = $(this);
+				var tip = uiTooltips[el.attr("data-conf-tooltip")];
+				
+				if (tip === undefined) {
+					tip = uiTooltips["_default"];
+				}
+				
+				return tip;
 			}
 		});
 });
@@ -1962,4 +2003,22 @@ function hideProjectSettings() {
 	console.log("wrote settings", project.settings);
 
 	dialog.hide();
+}
+
+function updateProjectSetting(ev) {
+	var el = $(ev.target);
+	
+	console.log("setting changed", el.attr("rel"), el.prop("checked"));
+	
+	switch (el.attr("rel")) {
+		case "tooltips": {
+			if (el.prop("checked") === true) {
+				$("[data-conf-tooltip]")
+					.poshytip("enable");
+			} else {
+				$("[data-conf-tooltip]")
+					.poshytip("disable");
+			}
+		}
+	}
 }

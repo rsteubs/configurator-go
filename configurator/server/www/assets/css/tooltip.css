@@ -5,7 +5,7 @@
 
 .tooltip {
   pointer-events: none;
-  display: none;
+  display: block;
   position: absolute;
   padding: 10px 20px;
   color: white;
